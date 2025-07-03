@@ -9,6 +9,7 @@ import {
   MenuItem,
   Box,
   Chip,
+  Badge,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -21,7 +22,11 @@ import {
   ShoppingCart as ShoppingCartIcon,
   MonitorHeart as MonitorIcon,
   Inventory as InventoryIcon,
+  Wifi as WifiIcon,
+  WifiOff as WifiOffIcon,
+  Notifications as NotificationsIcon,
 } from "@mui/icons-material";
+import { useAppContext } from "../hooks/useAppContext";
 
 const navigationItems = [
   {
@@ -85,6 +90,11 @@ function NavigationBar() {
   const location = useLocation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  
+  const { state } = useAppContext();
+  const { systemState, connectionStatus, notifications } = state;
+  
+  const unreadNotifications = notifications.filter(n => !n.is_confirmed).length;
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -108,6 +118,45 @@ function NavigationBar() {
 
   const currentPage = getCurrentPageInfo();
 
+  const getConnectionStatusColor = () => {
+    switch (connectionStatus) {
+      case "connected":
+        return "success";
+      case "connecting":
+        return "warning";
+      case "disconnected":
+        return "error";
+      default:
+        return "default";
+    }
+  };
+
+  const getConnectionStatusText = () => {
+    switch (connectionStatus) {
+      case "connected":
+        return "接続中";
+      case "connecting":
+        return "接続中...";
+      case "disconnected":
+        return "切断";
+      default:
+        return "不明";
+    }
+  };
+
+  const getOperatingStatusColor = () => {
+    switch (systemState.営業状況) {
+      case "営業中":
+        return "success";
+      case "準備中":
+        return "warning";
+      case "終了":
+        return "error";
+      default:
+        return "default";
+    }
+  };
+
   return (
     <AppBar position="static" sx={{ mb: 0 }}>
       <Toolbar>
@@ -128,7 +177,52 @@ function NavigationBar() {
           </Typography>
         </Box>
 
-        <Chip label="営業中" color="success" variant="filled" sx={{ mr: 2 }} />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {/* 営業状況 */}
+          <Chip 
+            label={systemState.営業状況} 
+            color={getOperatingStatusColor()} 
+            variant="filled" 
+            size="small"
+          />
+          
+          {/* 待ち件数 */}
+          {systemState.待ち件数 > 0 && (
+            <Chip 
+              label={`待ち${systemState.待ち件数}件`} 
+              color={systemState.待ち件数 > 10 ? "error" : "info"} 
+              variant="outlined" 
+              size="small"
+            />
+          )}
+          
+          {/* 混雑状況 */}
+          <Chip 
+            label={systemState.混雑状況} 
+            color={
+              systemState.混雑状況 === "混雑" ? "error" :
+              systemState.混雑状況 === "普通" ? "warning" : "success"
+            } 
+            variant="outlined" 
+            size="small"
+          />
+
+          {/* 接続状況 */}
+          <Chip 
+            icon={connectionStatus === "connected" ? <WifiIcon /> : <WifiOffIcon />}
+            label={getConnectionStatusText()} 
+            color={getConnectionStatusColor()} 
+            variant="outlined" 
+            size="small"
+          />
+
+          {/* 通知 */}
+          {unreadNotifications > 0 && (
+            <Badge badgeContent={unreadNotifications} color="error">
+              <NotificationsIcon color="inherit" />
+            </Badge>
+          )}
+        </Box>
 
         <Menu
           id="navigation-menu"

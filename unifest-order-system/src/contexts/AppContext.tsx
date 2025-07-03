@@ -12,6 +12,11 @@ import type {
   StockInfo,
   StockHistory,
   StockAlert,
+  WaitTimeInfo,
+  TakoyakiCooker,
+  DetailedCookingStatus,
+  TemperatureManagement,
+  CongestionStatus,
 } from "../types";
 import { audioNotificationService } from "../utils/audioNotification";
 
@@ -27,6 +32,12 @@ interface AppState {
   stockInfo: StockInfo[];
   stockHistory: StockHistory[];
   stockAlerts: StockAlert[];
+  // 待ち時間管理関連
+  waitTimeInfo: WaitTimeInfo[];
+  takoyakiCookers: TakoyakiCooker[];
+  detailedCookingStatus: DetailedCookingStatus[];
+  temperatureManagement: TemperatureManagement[];
+  congestionStatus: CongestionStatus;
   currentUser?: {
     id: string;
     name: string;
@@ -70,7 +81,17 @@ type AppAction =
     }
   | { type: "ADD_STOCK_HISTORY"; payload: StockHistory }
   | { type: "ADD_STOCK_ALERT"; payload: StockAlert }
-  | { type: "RESOLVE_STOCK_ALERT"; payload: number };
+  | { type: "RESOLVE_STOCK_ALERT"; payload: number }
+  // 待ち時間管理アクション
+  | { type: "SET_WAIT_TIME_INFO"; payload: WaitTimeInfo[] }
+  | { type: "UPDATE_WAIT_TIME"; payload: WaitTimeInfo }
+  | { type: "SET_TAKOYAKI_COOKERS"; payload: TakoyakiCooker[] }
+  | { type: "UPDATE_COOKER_STATUS"; payload: TakoyakiCooker }
+  | { type: "SET_DETAILED_COOKING_STATUS"; payload: DetailedCookingStatus[] }
+  | { type: "UPDATE_COOKING_PROGRESS"; payload: DetailedCookingStatus }
+  | { type: "SET_TEMPERATURE_MANAGEMENT"; payload: TemperatureManagement[] }
+  | { type: "UPDATE_TEMPERATURE_STATUS"; payload: TemperatureManagement }
+  | { type: "SET_CONGESTION_STATUS"; payload: CongestionStatus };
 
 // 初期状態
 const initialState: AppState = {
@@ -101,6 +122,21 @@ const initialState: AppState = {
   stockInfo: [],
   stockHistory: [],
   stockAlerts: [],
+  // 待ち時間管理の初期状態
+  waitTimeInfo: [],
+  takoyakiCookers: [],
+  detailedCookingStatus: [],
+  temperatureManagement: [],
+  congestionStatus: {
+    current_wait_count: 0,
+    current_cooking_count: 0,
+    average_wait_time: 0,
+    congestion_level: "空いている",
+    estimated_new_order_wait: 8,
+    cooker_utilization_rate: 0,
+    peak_time_prediction: "",
+    updated_at: new Date().toISOString(),
+  },
   currentUser: undefined,
   connectionStatus: "connecting",
   lastUpdated: new Date().toISOString(),
@@ -322,6 +358,56 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ),
       };
 
+    // 待ち時間管理ケース
+    case "SET_WAIT_TIME_INFO":
+      return { ...state, waitTimeInfo: action.payload };
+
+    case "UPDATE_WAIT_TIME":
+      return {
+        ...state,
+        waitTimeInfo: state.waitTimeInfo.map((wait) =>
+          wait.order_id === action.payload.order_id ? action.payload : wait
+        ),
+      };
+
+    case "SET_TAKOYAKI_COOKERS":
+      return { ...state, takoyakiCookers: action.payload };
+
+    case "UPDATE_COOKER_STATUS":
+      return {
+        ...state,
+        takoyakiCookers: state.takoyakiCookers.map((cooker) =>
+          cooker.cooker_id === action.payload.cooker_id
+            ? action.payload
+            : cooker
+        ),
+      };
+
+    case "SET_DETAILED_COOKING_STATUS":
+      return { ...state, detailedCookingStatus: action.payload };
+
+    case "UPDATE_COOKING_PROGRESS":
+      return {
+        ...state,
+        detailedCookingStatus: state.detailedCookingStatus.map((status) =>
+          status.order_id === action.payload.order_id ? action.payload : status
+        ),
+      };
+
+    case "SET_TEMPERATURE_MANAGEMENT":
+      return { ...state, temperatureManagement: action.payload };
+
+    case "UPDATE_TEMPERATURE_STATUS":
+      return {
+        ...state,
+        temperatureManagement: state.temperatureManagement.map((temp) =>
+          temp.order_id === action.payload.order_id ? action.payload : temp
+        ),
+      };
+
+    case "SET_CONGESTION_STATUS":
+      return { ...state, congestionStatus: action.payload };
+
     default:
       return state;
   }
@@ -409,6 +495,79 @@ const generateDummyOrders = (): Order[] => {
   }));
 };
 
+// たこ焼き器の初期データを生成
+const generateDummyTakoyakiCookers = (): TakoyakiCooker[] => {
+  return [
+    {
+      cooker_id: 1,
+      cooker_name: "たこ焼き器1",
+      status: "使用中",
+      current_order_id: 1,
+      cooking_start_time: new Date(Date.now() - 5 * 60000).toISOString(),
+      estimated_completion_time: new Date(Date.now() + 3 * 60000).toISOString(),
+      max_capacity: 48,
+      current_load: 24,
+      last_used_at: new Date().toISOString(),
+      maintenance_required: false,
+    },
+    {
+      cooker_id: 2,
+      cooker_name: "たこ焼き器2",
+      status: "空き",
+      max_capacity: 48,
+      current_load: 0,
+      last_used_at: new Date(Date.now() - 15 * 60000).toISOString(),
+      maintenance_required: false,
+    },
+    {
+      cooker_id: 3,
+      cooker_name: "たこ焼き器3",
+      status: "清掃中",
+      max_capacity: 48,
+      current_load: 0,
+      last_used_at: new Date(Date.now() - 30 * 60000).toISOString(),
+      maintenance_required: true,
+    },
+  ];
+};
+
+// 待ち時間情報の初期データを生成
+const generateDummyWaitTimeInfo = (): WaitTimeInfo[] => {
+  const baseTime = new Date();
+  return [
+    {
+      order_id: 1,
+      estimated_completion_time: new Date(
+        baseTime.getTime() + 3 * 60000
+      ).toISOString(),
+      estimated_wait_minutes: 3,
+      current_status: "調理中",
+      cooking_start_time: new Date(
+        baseTime.getTime() - 5 * 60000
+      ).toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      order_id: 2,
+      estimated_completion_time: new Date(
+        baseTime.getTime() + 8 * 60000
+      ).toISOString(),
+      estimated_wait_minutes: 8,
+      current_status: "待機中",
+      updated_at: new Date().toISOString(),
+    },
+    {
+      order_id: 3,
+      estimated_completion_time: new Date(
+        baseTime.getTime() + 15 * 60000
+      ).toISOString(),
+      estimated_wait_minutes: 15,
+      current_status: "待機中",
+      updated_at: new Date().toISOString(),
+    },
+  ];
+};
+
 // Context作成
 export const AppContext = createContext<{
   state: AppState;
@@ -436,6 +595,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_CONNECTION_STATUS", payload: "connected" });
       dispatch({ type: "SET_ORDERS", payload: generateDummyOrders() });
       dispatch({ type: "SET_STOCK_INFO", payload: generateDummyStockInfo() });
+      dispatch({
+        type: "SET_TAKOYAKI_COOKERS",
+        payload: generateDummyTakoyakiCookers(),
+      });
+      dispatch({
+        type: "SET_WAIT_TIME_INFO",
+        payload: generateDummyWaitTimeInfo(),
+      });
       dispatch({ type: "UPDATE_LAST_UPDATED" });
     }, 1000);
 

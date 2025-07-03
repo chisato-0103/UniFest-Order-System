@@ -179,6 +179,83 @@ export interface StockAlert {
   resolved_at?: string;
 }
 
+// 待ち時間管理関連
+export interface WaitTimeInfo {
+  order_id: number;
+  estimated_completion_time: string; // 予想完了時刻
+  estimated_wait_minutes: number; // 予想待ち時間（分）
+  current_status: "待機中" | "調理中" | "完成" | "温度管理中" | "受け渡し可能";
+  cooking_start_time?: string; // 調理開始時刻
+  cooking_completion_time?: string; // 調理完了時刻
+  temperature_alert_time?: string; // 温度管理アラート時刻
+  updated_at: string;
+}
+
+// たこ焼き器管理関連
+export interface TakoyakiCooker {
+  cooker_id: number;
+  cooker_name: string; // "たこ焼き器1", "たこ焼き器2"など
+  status: "空き" | "使用中" | "清掃中" | "故障中";
+  current_order_id?: number; // 現在調理中の注文ID
+  cooking_start_time?: string; // 調理開始時刻
+  estimated_completion_time?: string; // 調理完了予定時刻
+  max_capacity: number; // 同時調理可能数（個数）
+  current_load: number; // 現在の調理負荷（個数）
+  last_used_at?: string; // 最終使用時刻
+  maintenance_required: boolean; // メンテナンス要否
+}
+
+// 詳細調理管理関連
+export interface DetailedCookingStatus {
+  order_id: number;
+  cooker_id?: number; // 使用中のたこ焼き器ID
+  cooking_stage:
+    | "待機中"
+    | "調理開始"
+    | "焼き工程"
+    | "焼き上がり"
+    | "盛り付け"
+    | "完成";
+  progress_percentage: number; // 調理進捗（0-100%）
+  quality_check: {
+    doneness: "生焼け" | "適切" | "焼きすぎ"; // 焼き加減
+    appearance: "良好" | "要確認" | "不良"; // 見た目
+    temperature: "適温" | "熱すぎ" | "冷めている"; // 温度
+  };
+  estimated_completion_time: string;
+  actual_completion_time?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// 温度管理関連
+export interface TemperatureManagement {
+  order_id: number;
+  completion_time: string; // 調理完了時刻
+  current_temperature_status: "熱々" | "温かい" | "やや冷め" | "冷めている";
+  optimal_serving_deadline: string; // 最適な提供期限
+  temperature_alerts: {
+    alert_time: string;
+    alert_type: "5分経過" | "10分経過" | "15分経過" | "再加熱推奨";
+    is_resolved: boolean;
+  }[];
+  reheating_required: boolean; // 再加熱要否
+  created_at: string;
+  updated_at: string;
+}
+
+// 混雑状況管理
+export interface CongestionStatus {
+  current_wait_count: number; // 現在の待ち件数
+  current_cooking_count: number; // 現在調理中件数
+  average_wait_time: number; // 平均待ち時間（分）
+  congestion_level: "空いている" | "やや混雑" | "混雑" | "非常に混雑";
+  estimated_new_order_wait: number; // 新規注文の予想待ち時間
+  cooker_utilization_rate: number; // たこ焼き器稼働率（0-100%）
+  peak_time_prediction: string; // ピーク時間予測
+  updated_at: string;
+}
+
 // APIレスポンス型
 export interface ApiResponse<T> {
   success: boolean;

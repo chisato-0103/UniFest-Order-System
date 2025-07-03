@@ -34,6 +34,7 @@ import {
   Search as SearchIcon,
 } from "@mui/icons-material";
 import type { Order, OrderStatus } from "../types";
+import WaitTimeDisplay from "../components/WaitTimeDisplay";
 
 // ダミーデータ（後でAPIから取得）
 const dummyOrder: Order = {
@@ -401,6 +402,14 @@ function CustomerStatusPage() {
               <Typography variant="h6" gutterBottom>
                 注文詳細
               </Typography>
+
+              {/* 待ち時間表示 */}
+              <Box sx={{ mb: 3 }}>
+                <WaitTimeDisplay
+                  orderId={order.order_id}
+                  showCongestionInfo={true}
+                />
+              </Box>
 
               <List>
                 {order.items.map((item) => (

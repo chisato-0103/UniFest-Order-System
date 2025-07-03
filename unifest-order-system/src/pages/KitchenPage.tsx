@@ -30,6 +30,7 @@ import {
   LocalFireDepartment as FireIcon,
 } from "@mui/icons-material";
 import type { Order, OrderStatus } from "../types";
+import WaitTimeDisplay from "../components/WaitTimeDisplay";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -288,6 +289,11 @@ function KitchenPage() {
                   <Chip label="緊急" color="error" size="small" />
                 </Badge>
               )}
+            </Box>
+
+            {/* 待ち時間表示（コンパクト表示） */}
+            <Box sx={{ my: 1 }}>
+              <WaitTimeDisplay orderId={order.order_id} compact={true} />
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Chip

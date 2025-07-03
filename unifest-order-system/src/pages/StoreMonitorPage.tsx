@@ -35,6 +35,7 @@ import {
   Inventory as InventoryIcon,
 } from "@mui/icons-material";
 import StockManagement from "../components/StockManagement";
+import TakoyakiCookerManagement from "../components/TakoyakiCookerManagement";
 import type { Order } from "../types";
 
 // ダミーデータ
@@ -272,6 +273,11 @@ function StoreMonitorPage() {
             iconPosition="start"
           />
           <Tab label="在庫管理" icon={<InventoryIcon />} iconPosition="start" />
+          <Tab
+            label="たこ焼き器管理"
+            icon={<StoreIcon />}
+            iconPosition="start"
+          />
         </Tabs>
       </Card>
 
@@ -547,6 +553,13 @@ function StoreMonitorPage() {
       {activeTab === 1 && (
         <Box>
           <StockManagement />
+        </Box>
+      )}
+
+      {/* たこ焼き器管理タブ */}
+      {activeTab === 2 && (
+        <Box>
+          <TakoyakiCookerManagement showDetailedView={true} />
         </Box>
       )}
     </Container>

@@ -505,7 +505,14 @@ function HistoryPage() {
                       <TableCell>
                         <Chip
                           label={order.status}
-                          color={getStatusColor(order.status) as "success" | "warning" | "error" | "info" | "primary"}
+                          color={
+                            getStatusColor(order.status) as
+                              | "success"
+                              | "warning"
+                              | "error"
+                              | "info"
+                              | "primary"
+                          }
                           size="small"
                         />
                       </TableCell>
@@ -595,7 +602,14 @@ function HistoryPage() {
                       </Typography>
                       <Chip
                         label={selectedOrder.status}
-                        color={getStatusColor(selectedOrder.status) as "success" | "warning" | "error" | "info" | "primary"}
+                        color={
+                          getStatusColor(selectedOrder.status) as
+                            | "success"
+                            | "warning"
+                            | "error"
+                            | "info"
+                            | "primary"
+                        }
                         size="small"
                       />
                     </Box>

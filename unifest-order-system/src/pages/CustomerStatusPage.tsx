@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -19,6 +20,9 @@ import {
   ListItemAvatar,
   Avatar,
   IconButton,
+  TextField,
+  Button,
+  Paper,
 } from "@mui/material";
 import {
   ShoppingCart as CartIcon,
@@ -27,6 +31,7 @@ import {
   CheckCircle as CheckCircleIcon,
   QrCode as QrCodeIcon,
   Refresh as RefreshIcon,
+  Search as SearchIcon,
 } from "@mui/icons-material";
 import type { Order, OrderStatus } from "../types";
 
@@ -116,22 +121,77 @@ const orderSteps = [
 ];
 
 function CustomerStatusPage() {
-  const [order] = useState<Order>(dummyOrder);
+  const [searchParams] = useSearchParams();
+  const [order, setOrder] = useState<Order | null>(null);
   const [activeStep, setActiveStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [orderNotFound, setOrderNotFound] = useState(false);
+  const [searchOrderNumber, setSearchOrderNumber] = useState("");
+
+  // URLパラメータから注文番号を取得
+  const orderNumberFromUrl = searchParams.get("order");
+
+  // 注文データを取得する関数
+  const fetchOrderData = useCallback(async (orderNumber: string) => {
+    setLoading(true);
+    setOrderNotFound(false);
+
+    try {
+      // TODO: APIから注文データを取得
+      // 現在はダミーデータで対応
+      if (orderNumber === dummyOrder.order_number) {
+        setOrder(dummyOrder);
+        // ステータスに応じてステップを設定
+        switch (dummyOrder.status) {
+          case "注文受付":
+            setActiveStep(0);
+            break;
+          case "調理中":
+            setActiveStep(1);
+            break;
+          case "調理完了":
+            setActiveStep(2);
+            break;
+          case "受け取り済み":
+            setActiveStep(3);
+            break;
+          default:
+            setActiveStep(0);
+        }
+      } else {
+        setOrderNotFound(true);
+        setOrder(null);
+      }
+    } catch (error) {
+      console.error("注文データの取得に失敗:", error);
+      setOrderNotFound(true);
+      setOrder(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ページ読み込み時にURLパラメータの注文番号で検索
+  useEffect(() => {
+    if (orderNumberFromUrl) {
+      setSearchOrderNumber(orderNumberFromUrl);
+      fetchOrderData(orderNumberFromUrl);
+    }
+  }, [orderNumberFromUrl, fetchOrderData]);
+
+  // 手動検索処理
+  const handleSearch = () => {
+    if (searchOrderNumber.trim()) {
+      fetchOrderData(searchOrderNumber.trim());
+    }
+  };
 
   // 注文状況の更新（リアルタイム通信で実装予定）
   const handleRefresh = useCallback(() => {
-    setLoading(true);
-    // TODO: API呼び出し
-    setTimeout(() => {
-      setLoading(false);
-      // ダミーの状況更新
-      if (activeStep < 3) {
-        setActiveStep((prev) => prev + 1);
-      }
-    }, 1000);
-  }, [activeStep]);
+    if (order) {
+      fetchOrderData(order.order_number);
+    }
+  }, [order, fetchOrderData]);
 
   // 自動更新（30秒ごと）
   useEffect(() => {
@@ -158,6 +218,7 @@ function CustomerStatusPage() {
   };
 
   const getEstimatedWaitTime = () => {
+    if (!order) return 0;
     const now = new Date();
     const pickupTime = new Date(order.estimated_pickup_time);
     const diffMinutes = Math.max(
@@ -166,6 +227,72 @@ function CustomerStatusPage() {
     );
     return diffMinutes;
   };
+
+  // 注文が見つからない場合の検索UI
+  if (!order && !loading) {
+    return (
+      <Container maxWidth="md" sx={{ py: 3 }}>
+        <Box sx={{ textAlign: "center", mb: 3 }}>
+          <QrCodeIcon sx={{ fontSize: 64, color: "primary.main", mb: 2 }} />
+          <Typography variant="h4" component="h1" gutterBottom color="primary">
+            注文状況確認
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            注文番号を入力するか、QRコードからアクセスしてください
+          </Typography>
+        </Box>
+
+        <Paper sx={{ p: 4, maxWidth: 400, mx: "auto" }}>
+          <TextField
+            fullWidth
+            label="注文番号"
+            value={searchOrderNumber}
+            onChange={(e) => setSearchOrderNumber(e.target.value)}
+            placeholder="例：A001"
+            sx={{ mb: 3 }}
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
+          />
+          <Button
+            fullWidth
+            variant="contained"
+            size="large"
+            onClick={handleSearch}
+            startIcon={<SearchIcon />}
+            disabled={!searchOrderNumber.trim()}
+          >
+            注文状況を確認
+          </Button>
+
+          {orderNotFound && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              注文番号「{searchOrderNumber}」が見つかりません。
+              <br />
+              注文番号をご確認ください。
+            </Alert>
+          )}
+        </Paper>
+      </Container>
+    );
+  }
+
+  // ローディング中
+  if (loading) {
+    return (
+      <Container maxWidth="md" sx={{ py: 3 }}>
+        <Box sx={{ textAlign: "center" }}>
+          <LinearProgress sx={{ mb: 2 }} />
+          <Typography variant="h6">注文情報を取得中...</Typography>
+        </Box>
+      </Container>
+    );
+  }
+
+  // 注文データが存在する場合の表示
+  if (!order) return null;
 
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>

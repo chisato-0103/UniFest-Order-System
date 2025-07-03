@@ -445,10 +445,22 @@ function DeliveryPage() {
                               gap: 1,
                             }}
                           >
-                            <TempIcon color={tempStatus.color as "success" | "warning" | "error"} />
+                            <TempIcon
+                              color={
+                                tempStatus.color as
+                                  | "success"
+                                  | "warning"
+                                  | "error"
+                              }
+                            />
                             <Chip
                               label={tempStatus.label}
-                              color={tempStatus.color as "success" | "warning" | "error"}
+                              color={
+                                tempStatus.color as
+                                  | "success"
+                                  | "warning"
+                                  | "error"
+                              }
                               size="small"
                             />
                           </Box>

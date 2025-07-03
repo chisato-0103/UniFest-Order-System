@@ -19,6 +19,8 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
   Restaurant as RestaurantIcon,
@@ -30,7 +32,9 @@ import {
   Refresh as RefreshIcon,
   Notifications as NotificationsIcon,
   Store as StoreIcon,
+  Inventory as InventoryIcon,
 } from "@mui/icons-material";
+import StockManagement from "../components/StockManagement";
 import type { Order } from "../types";
 
 // ダミーデータ
@@ -171,6 +175,7 @@ const dummyOrders: Order[] = [
 function StoreMonitorPage() {
   const [orders] = useState<Order[]>(dummyOrders);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [activeTab, setActiveTab] = useState(0);
 
   // 現在時刻を更新
   useEffect(() => {
@@ -254,257 +259,296 @@ function StoreMonitorPage() {
         </Toolbar>
       </AppBar>
 
-      {/* 統計情報 */}
-      <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
-        <Card sx={{ minWidth: 200 }}>
-          <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <PeopleIcon color="primary" />
-              <Typography variant="h6">総注文数</Typography>
-            </Box>
-            <Typography variant="h4" color="primary">
-              {stats.totalOrders}
-            </Typography>
-          </CardContent>
-        </Card>
+      {/* タブナビゲーション */}
+      <Card sx={{ mb: 3 }}>
+        <Tabs
+          value={activeTab}
+          onChange={(_, newValue) => setActiveTab(newValue)}
+          aria-label="店舗モニタータブ"
+        >
+          <Tab
+            label="注文監視"
+            icon={<RestaurantIcon />}
+            iconPosition="start"
+          />
+          <Tab label="在庫管理" icon={<InventoryIcon />} iconPosition="start" />
+        </Tabs>
+      </Card>
 
-        <Card sx={{ minWidth: 200 }}>
-          <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <TrendingUpIcon color="success" />
-              <Typography variant="h6">総売上</Typography>
-            </Box>
-            <Typography variant="h4" color="success.main">
-              ¥{stats.totalSales.toLocaleString()}
-            </Typography>
-          </CardContent>
-        </Card>
+      {/* タブコンテンツ */}
+      {activeTab === 0 && (
+        <Box>
+          {/* 統計情報 */}
+          <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
+            <Card sx={{ minWidth: 200 }}>
+              <CardContent>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <PeopleIcon color="primary" />
+                  <Typography variant="h6">総注文数</Typography>
+                </Box>
+                <Typography variant="h4" color="primary">
+                  {stats.totalOrders}
+                </Typography>
+              </CardContent>
+            </Card>
 
-        <Card sx={{ minWidth: 200 }}>
-          <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <TimerIcon color="warning" />
-              <Typography variant="h6">調理待ち</Typography>
-            </Box>
-            <Typography variant="h4" color="warning.main">
-              {stats.waitingOrders}
-            </Typography>
-          </CardContent>
-        </Card>
+            <Card sx={{ minWidth: 200 }}>
+              <CardContent>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <TrendingUpIcon color="success" />
+                  <Typography variant="h6">総売上</Typography>
+                </Box>
+                <Typography variant="h4" color="success.main">
+                  ¥{stats.totalSales.toLocaleString()}
+                </Typography>
+              </CardContent>
+            </Card>
 
-        <Card sx={{ minWidth: 200 }}>
-          <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <RestaurantIcon color="info" />
-              <Typography variant="h6">調理中</Typography>
-            </Box>
-            <Typography variant="h4" color="info.main">
-              {stats.cookingOrders}
-            </Typography>
-          </CardContent>
-        </Card>
+            <Card sx={{ minWidth: 200 }}>
+              <CardContent>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <TimerIcon color="warning" />
+                  <Typography variant="h6">調理待ち</Typography>
+                </Box>
+                <Typography variant="h4" color="warning.main">
+                  {stats.waitingOrders}
+                </Typography>
+              </CardContent>
+            </Card>
 
-        <Card sx={{ minWidth: 200 }}>
-          <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <CheckCircleIcon color="success" />
-              <Typography variant="h6">調理完了</Typography>
-            </Box>
-            <Typography variant="h4" color="success.main">
-              {stats.completedOrders}
-            </Typography>
-          </CardContent>
-        </Card>
-      </Box>
+            <Card sx={{ minWidth: 200 }}>
+              <CardContent>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <RestaurantIcon color="info" />
+                  <Typography variant="h6">調理中</Typography>
+                </Box>
+                <Typography variant="h4" color="info.main">
+                  {stats.cookingOrders}
+                </Typography>
+              </CardContent>
+            </Card>
 
-      {/* 緊急注文の警告 */}
-      {orders.some(isUrgent) && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <WarningIcon />
-            <Typography variant="h6">緊急注文あり</Typography>
+            <Card sx={{ minWidth: 200 }}>
+              <CardContent>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <CheckCircleIcon color="success" />
+                  <Typography variant="h6">調理完了</Typography>
+                </Box>
+                <Typography variant="h4" color="success.main">
+                  {stats.completedOrders}
+                </Typography>
+              </CardContent>
+            </Card>
           </Box>
-          <Typography variant="body2">
-            15分以上経過している注文があります。優先的に処理してください。
-          </Typography>
-        </Alert>
+
+          {/* 緊急注文の警告 */}
+          {orders.some(isUrgent) && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <WarningIcon />
+                <Typography variant="h6">緊急注文あり</Typography>
+              </Box>
+              <Typography variant="body2">
+                15分以上経過している注文があります。優先的に処理してください。
+              </Typography>
+            </Alert>
+          )}
+
+          {/* 注文一覧テーブル */}
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                注文一覧
+              </Typography>
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>注文番号</TableCell>
+                      <TableCell>商品</TableCell>
+                      <TableCell>金額</TableCell>
+                      <TableCell>状態</TableCell>
+                      <TableCell>支払い</TableCell>
+                      <TableCell>経過時間</TableCell>
+                      <TableCell>予定時刻</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {orders.map((order) => (
+                      <TableRow
+                        key={order.order_id}
+                        sx={{
+                          bgcolor: isUrgent(order) ? "error.light" : "inherit",
+                          "&:hover": { bgcolor: "action.hover" },
+                        }}
+                      >
+                        <TableCell>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Typography variant="body1" fontWeight="bold">
+                              {order.order_number}
+                            </Typography>
+                            {isUrgent(order) && (
+                              <Badge
+                                badgeContent={<WarningIcon />}
+                                color="error"
+                              >
+                                <NotificationsIcon />
+                              </Badge>
+                            )}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Box>
+                            {order.items.map((item, index) => (
+                              <Typography key={index} variant="body2">
+                                {item.product_name} × {item.quantity}
+                                {item.toppings.length > 0 && (
+                                  <Box component="span" sx={{ ml: 1 }}>
+                                    (
+                                    {item.toppings
+                                      .map((t) => t.topping_name)
+                                      .join(", ")}
+                                    )
+                                  </Box>
+                                )}
+                              </Typography>
+                            ))}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body1" fontWeight="bold">
+                            ¥{order.total_amount.toLocaleString()}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={order.status}
+                            color={
+                              getStatusColor(order.status) as
+                                | "warning"
+                                | "info"
+                                | "success"
+                                | "default"
+                            }
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={order.payment_status}
+                            color={
+                              order.payment_status === "支払済み"
+                                ? "success"
+                                : "warning"
+                            }
+                            size="small"
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Typography
+                            variant="body2"
+                            color={
+                              getElapsedTime(order.created_at) > 15
+                                ? "error"
+                                : "text.secondary"
+                            }
+                          >
+                            {getElapsedTime(order.created_at)}分
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {new Date(
+                              order.estimated_pickup_time
+                            ).toLocaleTimeString()}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+
+          {/* 進捗状況バー */}
+          <Card sx={{ mt: 3 }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                調理進捗状況
+              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
+                >
+                  <Typography variant="body2">調理完了率</Typography>
+                  <Typography variant="body2">
+                    {stats.totalOrders > 0
+                      ? Math.round(
+                          ((stats.completedOrders + stats.deliveredOrders) /
+                            stats.totalOrders) *
+                            100
+                        )
+                      : 0}
+                    %
+                  </Typography>
+                </Box>
+                <LinearProgress
+                  variant="determinate"
+                  value={
+                    stats.totalOrders > 0
+                      ? ((stats.completedOrders + stats.deliveredOrders) /
+                          stats.totalOrders) *
+                        100
+                      : 0
+                  }
+                  sx={{ height: 10, borderRadius: 5 }}
+                />
+              </Box>
+              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                <Chip
+                  label={`調理待ち: ${stats.waitingOrders}`}
+                  color="warning"
+                  size="small"
+                />
+                <Chip
+                  label={`調理中: ${stats.cookingOrders}`}
+                  color="info"
+                  size="small"
+                />
+                <Chip
+                  label={`調理完了: ${stats.completedOrders}`}
+                  color="success"
+                  size="small"
+                />
+                <Chip
+                  label={`受け取り済み: ${stats.deliveredOrders}`}
+                  color="default"
+                  size="small"
+                />
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
       )}
 
-      {/* 注文一覧テーブル */}
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            注文一覧
-          </Typography>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>注文番号</TableCell>
-                  <TableCell>商品</TableCell>
-                  <TableCell>金額</TableCell>
-                  <TableCell>状態</TableCell>
-                  <TableCell>支払い</TableCell>
-                  <TableCell>経過時間</TableCell>
-                  <TableCell>予定時刻</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {orders.map((order) => (
-                  <TableRow
-                    key={order.order_id}
-                    sx={{
-                      bgcolor: isUrgent(order) ? "error.light" : "inherit",
-                      "&:hover": { bgcolor: "action.hover" },
-                    }}
-                  >
-                    <TableCell>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Typography variant="body1" fontWeight="bold">
-                          {order.order_number}
-                        </Typography>
-                        {isUrgent(order) && (
-                          <Badge badgeContent={<WarningIcon />} color="error">
-                            <NotificationsIcon />
-                          </Badge>
-                        )}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box>
-                        {order.items.map((item, index) => (
-                          <Typography key={index} variant="body2">
-                            {item.product_name} × {item.quantity}
-                            {item.toppings.length > 0 && (
-                              <Box component="span" sx={{ ml: 1 }}>
-                                (
-                                {item.toppings
-                                  .map((t) => t.topping_name)
-                                  .join(", ")}
-                                )
-                              </Box>
-                            )}
-                          </Typography>
-                        ))}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body1" fontWeight="bold">
-                        ¥{order.total_amount.toLocaleString()}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={order.status}
-                        color={
-                          getStatusColor(order.status) as
-                            | "warning"
-                            | "info"
-                            | "success"
-                            | "default"
-                        }
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={order.payment_status}
-                        color={
-                          order.payment_status === "支払済み"
-                            ? "success"
-                            : "warning"
-                        }
-                        size="small"
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Typography
-                        variant="body2"
-                        color={
-                          getElapsedTime(order.created_at) > 15
-                            ? "error"
-                            : "text.secondary"
-                        }
-                      >
-                        {getElapsedTime(order.created_at)}分
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {new Date(
-                          order.estimated_pickup_time
-                        ).toLocaleTimeString()}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
-
-      {/* 進捗状況バー */}
-      <Card sx={{ mt: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            調理進捗状況
-          </Typography>
-          <Box sx={{ mb: 2 }}>
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
-            >
-              <Typography variant="body2">調理完了率</Typography>
-              <Typography variant="body2">
-                {stats.totalOrders > 0
-                  ? Math.round(
-                      ((stats.completedOrders + stats.deliveredOrders) /
-                        stats.totalOrders) *
-                        100
-                    )
-                  : 0}
-                %
-              </Typography>
-            </Box>
-            <LinearProgress
-              variant="determinate"
-              value={
-                stats.totalOrders > 0
-                  ? ((stats.completedOrders + stats.deliveredOrders) /
-                      stats.totalOrders) *
-                    100
-                  : 0
-              }
-              sx={{ height: 10, borderRadius: 5 }}
-            />
-          </Box>
-          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-            <Chip
-              label={`調理待ち: ${stats.waitingOrders}`}
-              color="warning"
-              size="small"
-            />
-            <Chip
-              label={`調理中: ${stats.cookingOrders}`}
-              color="info"
-              size="small"
-            />
-            <Chip
-              label={`調理完了: ${stats.completedOrders}`}
-              color="success"
-              size="small"
-            />
-            <Chip
-              label={`受け取り済み: ${stats.deliveredOrders}`}
-              color="default"
-              size="small"
-            />
-          </Box>
-        </CardContent>
-      </Card>
+      {/* 在庫管理タブ */}
+      {activeTab === 1 && (
+        <Box>
+          <StockManagement />
+        </Box>
+      )}
     </Container>
   );
 }

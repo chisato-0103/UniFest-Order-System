@@ -15,6 +15,11 @@ export interface Product {
   deleted_flag: boolean;
   created_at: string;
   updated_at: string;
+  // 在庫管理関連
+  stock_quantity?: number; // 現在在庫数
+  initial_stock?: number; // 初期在庫数
+  low_stock_threshold?: number; // 在庫少量アラートの閾値
+  auto_disable_on_zero?: boolean; // 在庫0時の自動無効化
 }
 
 export interface Category {
@@ -138,6 +143,41 @@ export type CookingStatus =
   | "焼き開始"
   | "焼き上がり"
   | "盛り付け完了";
+
+// 在庫管理関連型
+export interface StockInfo {
+  product_id: number;
+  current_stock: number;
+  initial_stock: number;
+  reserved_stock: number; // 調理中などで予約されている在庫
+  available_stock: number; // 実際に注文可能な在庫
+  low_stock_threshold: number;
+  last_updated: string;
+  auto_management: boolean; // 自動在庫管理の有効/無効
+}
+
+export interface StockHistory {
+  history_id: number;
+  product_id: number;
+  change_type: "増加" | "減少" | "調整" | "初期設定";
+  change_amount: number;
+  previous_stock: number;
+  new_stock: number;
+  reason: string;
+  order_id?: number; // 注文による在庫変動の場合
+  created_by: string;
+  created_at: string;
+}
+
+export interface StockAlert {
+  alert_id: number;
+  product_id: number;
+  alert_type: "低在庫" | "在庫切れ" | "在庫過多";
+  message: string;
+  is_resolved: boolean;
+  created_at: string;
+  resolved_at?: string;
+}
 
 // APIレスポンス型
 export interface ApiResponse<T> {

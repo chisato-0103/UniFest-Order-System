@@ -9,6 +9,9 @@ import type {
   Cart,
   SystemState,
   Notification,
+  StockInfo,
+  StockHistory,
+  StockAlert,
 } from "../types";
 import { audioNotificationService } from "../utils/audioNotification";
 
@@ -21,6 +24,9 @@ interface AppState {
   cart: Cart;
   systemState: SystemState;
   notifications: Notification[];
+  stockInfo: StockInfo[];
+  stockHistory: StockHistory[];
+  stockAlerts: StockAlert[];
   currentUser?: {
     id: string;
     name: string;
@@ -55,7 +61,16 @@ type AppAction =
       type: "SET_CONNECTION_STATUS";
       payload: "connected" | "disconnected" | "connecting";
     }
-  | { type: "UPDATE_LAST_UPDATED" };
+  | { type: "UPDATE_LAST_UPDATED" }
+  // 在庫管理アクション
+  | { type: "SET_STOCK_INFO"; payload: StockInfo[] }
+  | {
+      type: "UPDATE_STOCK";
+      payload: { product_id: number; quantity: number; reason: string };
+    }
+  | { type: "ADD_STOCK_HISTORY"; payload: StockHistory }
+  | { type: "ADD_STOCK_ALERT"; payload: StockAlert }
+  | { type: "RESOLVE_STOCK_ALERT"; payload: number };
 
 // 初期状態
 const initialState: AppState = {
@@ -83,6 +98,9 @@ const initialState: AppState = {
     },
   },
   notifications: [],
+  stockInfo: [],
+  stockHistory: [],
+  stockAlerts: [],
   currentUser: undefined,
   connectionStatus: "connecting",
   lastUpdated: new Date().toISOString(),
@@ -235,10 +253,115 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case "UPDATE_LAST_UPDATED":
       return { ...state, lastUpdated: new Date().toISOString() };
 
+    // 在庫管理ケース
+    case "SET_STOCK_INFO":
+      return { ...state, stockInfo: action.payload };
+
+    case "UPDATE_STOCK": {
+      const { product_id, quantity, reason } = action.payload;
+      const updatedStockInfo = state.stockInfo.map((stock) => {
+        if (stock.product_id === product_id) {
+          const newStock = Math.max(0, stock.current_stock + quantity);
+          return {
+            ...stock,
+            current_stock: newStock,
+            available_stock: Math.max(0, newStock - stock.reserved_stock),
+            last_updated: new Date().toISOString(),
+          };
+        }
+        return stock;
+      });
+
+      // 在庫履歴を自動追加
+      const stockInfo = state.stockInfo.find(
+        (s) => s.product_id === product_id
+      );
+      if (stockInfo) {
+        const historyEntry: StockHistory = {
+          history_id: Date.now(),
+          product_id,
+          change_type: quantity > 0 ? "増加" : "減少",
+          change_amount: Math.abs(quantity),
+          previous_stock: stockInfo.current_stock,
+          new_stock: Math.max(0, stockInfo.current_stock + quantity),
+          reason,
+          created_by: "system",
+          created_at: new Date().toISOString(),
+        };
+
+        return {
+          ...state,
+          stockInfo: updatedStockInfo,
+          stockHistory: [...state.stockHistory, historyEntry],
+        };
+      }
+
+      return { ...state, stockInfo: updatedStockInfo };
+    }
+
+    case "ADD_STOCK_HISTORY":
+      return {
+        ...state,
+        stockHistory: [...state.stockHistory, action.payload],
+      };
+
+    case "ADD_STOCK_ALERT":
+      return { ...state, stockAlerts: [...state.stockAlerts, action.payload] };
+
+    case "RESOLVE_STOCK_ALERT":
+      return {
+        ...state,
+        stockAlerts: state.stockAlerts.map((alert) =>
+          alert.alert_id === action.payload
+            ? {
+                ...alert,
+                is_resolved: true,
+                resolved_at: new Date().toISOString(),
+              }
+            : alert
+        ),
+      };
+
     default:
       return state;
   }
 }
+
+// 在庫データを生成する関数
+const generateDummyStockInfo = (): StockInfo[] => {
+  return [
+    {
+      product_id: 1,
+      current_stock: 80,
+      initial_stock: 100,
+      reserved_stock: 5, // 調理中のため予約
+      available_stock: 75,
+      low_stock_threshold: 20,
+      last_updated: new Date().toISOString(),
+      auto_management: true,
+    },
+    {
+      product_id: 2,
+      current_stock: 45,
+      initial_stock: 60,
+      reserved_stock: 8,
+      available_stock: 37,
+      low_stock_threshold: 15,
+      last_updated: new Date().toISOString(),
+      auto_management: true,
+    },
+    {
+      product_id: 3,
+      current_stock: 12, // 低在庫状態
+      initial_stock: 40,
+      reserved_stock: 2,
+      available_stock: 10,
+      low_stock_threshold: 15,
+      last_updated: new Date().toISOString(),
+      auto_management: true,
+    },
+  ];
+};
 
 // ダミーデータを生成する関数
 const generateDummyOrders = (): Order[] => {
@@ -312,6 +435,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const connectTimer = setTimeout(() => {
       dispatch({ type: "SET_CONNECTION_STATUS", payload: "connected" });
       dispatch({ type: "SET_ORDERS", payload: generateDummyOrders() });
+      dispatch({ type: "SET_STOCK_INFO", payload: generateDummyStockInfo() });
       dispatch({ type: "UPDATE_LAST_UPDATED" });
     }, 1000);
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Container,
@@ -33,7 +33,7 @@ import {
   Refresh as RefreshIcon,
   Search as SearchIcon,
 } from "@mui/icons-material";
-import type { Order, OrderStatus } from "../types";
+import type { Order, OrderStatus, OrderItem, OrderTopping } from "../types";
 import WaitTimeDisplay from "../components/WaitTimeDisplay";
 
 // ダミーデータ（後でAPIから取得）
@@ -248,11 +248,13 @@ function CustomerStatusPage() {
             fullWidth
             label="注文番号"
             value={searchOrderNumber}
-            onChange={(e) => setSearchOrderNumber(e.target.value)}
+            onChange={(e: unknown) =>
+              setSearchOrderNumber((e as any).target.value)
+            }
             placeholder="例：A001"
             sx={{ mb: 3 }}
-            onKeyPress={(e) => {
-              if (e.key === "Enter") {
+            onKeyPress={(e: unknown) => {
+              if ((e as any).key === "Enter") {
                 handleSearch();
               }
             }}
@@ -348,7 +350,13 @@ function CustomerStatusPage() {
                 {orderSteps.map((step) => (
                   <Step key={step.label}>
                     <StepLabel
-                      StepIconComponent={({ active, completed }) => (
+                      StepIconComponent={({
+                        active,
+                        completed,
+                      }: {
+                        active?: boolean;
+                        completed?: boolean;
+                      }) => (
                         <Avatar
                           sx={{
                             bgcolor: completed
@@ -412,7 +420,7 @@ function CustomerStatusPage() {
               </Box>
 
               <List>
-                {order.items.map((item) => (
+                {order.items.map((item: OrderItem) => (
                   <ListItem key={item.order_item_id} divider>
                     <ListItemAvatar>
                       <Avatar sx={{ bgcolor: "orange.light" }}>
@@ -426,9 +434,9 @@ function CustomerStatusPage() {
                           <Typography variant="body2" color="text.secondary">
                             ¥{item.total_price.toLocaleString()}
                           </Typography>
-                          {item.toppings.length > 0 && (
+                          {item.toppings && item.toppings.length > 0 && (
                             <Box sx={{ mt: 1 }}>
-                              {item.toppings.map((topping) => (
+                              {item.toppings.map((topping: OrderTopping) => (
                                 <Chip
                                   key={topping.topping_id}
                                   label={topping.topping_name}

@@ -15,7 +15,7 @@ import {
   HourglassTop as HourglassIcon,
 } from "@mui/icons-material";
 import { useAppContext } from "../hooks/useAppContext";
-import type { CongestionStatus } from "../types";
+import type { CongestionStatus, WaitTimeInfo } from "../types";
 
 interface WaitTimeDisplayProps {
   orderId?: number;
@@ -23,17 +23,14 @@ interface WaitTimeDisplayProps {
   compact?: boolean;
 }
 
-const WaitTimeDisplay: React.FC<WaitTimeDisplayProps> = ({
-  orderId,
-  showCongestionInfo = false,
-  compact = false,
-}) => {
+const WaitTimeDisplay: React.FC<WaitTimeDisplayProps> = (props) => {
+  const { orderId, showCongestionInfo = false, compact = false } = props;
   const { state } = useAppContext();
   const { waitTimeInfo, congestionStatus } = state;
 
   // 特定の注文の待ち時間情報を取得
   const orderWaitInfo = orderId
-    ? waitTimeInfo.find((info) => info.order_id === orderId)
+    ? waitTimeInfo.find((info: WaitTimeInfo) => info.order_id === orderId)
     : null;
 
   // 待ち時間の色とアイコンを取得

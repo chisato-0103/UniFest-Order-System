@@ -49,134 +49,59 @@ export interface OrderItem {
   product_name: string;
   quantity: number;
   unit_price: number;
-  total_price: number;
-  toppings: Topping[];
-  cooking_time: number;
-  cooking_instruction?: string;
+  subtotal: number;
+  toppings?: OrderTopping[];
+  cooking_status: CookingStatus;
+  cooking_start_time?: string;
+  cooking_completion_time?: string;
   created_at: string;
+  updated_at: string;
+
+  // CustomerStatusPageで使用される追加プロパティ
+  total_price: number; // subtotalのエイリアス
+  cooking_time: number;
+  cooking_instruction: string;
+}
+
+export interface OrderTopping {
+  order_topping_id: number;
+  order_item_id: number;
+  topping_id: number;
+  topping_name: string;
+  price: number;
+  created_at: string;
+
+  // CustomerStatusPageで使用される追加プロパティ
+  is_active: boolean;
+  target_product_ids: number[];
+  display_order: number;
   updated_at: string;
 }
 
 export interface Order {
   order_id: number;
-  customer_id: number;
   order_number: string;
-  items: OrderItem[];
-  total_amount: number;
-  status:
-    | "注文受付"
-    | "調理待ち"
-    | "調理中"
-    | "調理完了"
-    | "受け取り済み"
-    | "キャンセル";
-  payment_status: "未払い" | "支払済み";
-  payment_method: "現金" | "クレジットカード" | "PayPay" | "その他";
+  customer_id?: number;
+  order_status: OrderStatus;
+  payment_status: PaymentStatus;
+  total_price: number;
+  order_items: OrderItem[];
+  estimated_completion_time?: string;
+  actual_completion_time?: string;
+  pickup_time?: string;
+  special_requests?: string;
+  qr_code?: string;
+  created_at: string;
+  updated_at: string;
+
+  // CustomerStatusPageで使用される追加プロパティ
+  items: OrderItem[]; // order_itemsのエイリアス
+  total_amount: number; // total_priceのエイリアス
+  status: OrderStatus; // order_statusのエイリアス
+  payment_method: string;
   estimated_pickup_time: string;
-  actual_pickup_time?: string | null;
+  actual_pickup_time?: string;
   special_instructions?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export type OrderStatus =
-  | "注文受付"
-  | "調理待ち"
-  | "調理中"
-  | "調理完了"
-  | "受け取り済み"
-  | "キャンセル";
-
-export interface Notification {
-  notification_id: number;
-  notification_type: string;
-  target_order_number?: string;
-  notification_time: string;
-  content: string;
-  priority: "緊急" | "通常" | "情報";
-  is_confirmed: boolean;
-  created_at: string;
-}
-
-export interface SystemSetting {
-  setting_id: number;
-  setting_name: string;
-  setting_value: string;
-  data_type: "string" | "number" | "boolean";
-  description?: string;
-  updated_at: string;
-  updated_by?: string;
-}
-
-// カート関連
-export interface CartItem {
-  product: Product;
-  quantity: number;
-  selectedToppings: Topping[];
-}
-
-export interface Cart {
-  items: CartItem[];
-  total: number;
-}
-
-// システム状態
-export interface SystemState {
-  混雑状況: "空いている" | "普通" | "混雑";
-  待ち件数: number;
-  緊急停止状態: boolean;
-  営業状況: "営業中" | "準備中" | "終了";
-  手動運用モード: boolean;
-  音声通知設定: {
-    有効: boolean;
-    音量: number; // 0.0 - 1.0
-    新規注文通知: boolean;
-    調理完了通知: boolean;
-    遅延アラート: boolean;
-    緊急通知: boolean;
-  };
-}
-
-// 調理進捗状態
-export type CookingStatus =
-  | "準備中"
-  | "焼き開始"
-  | "焼き上がり"
-  | "盛り付け完了";
-
-// 在庫管理関連型
-export interface StockInfo {
-  product_id: number;
-  current_stock: number;
-  initial_stock: number;
-  reserved_stock: number; // 調理中などで予約されている在庫
-  available_stock: number; // 実際に注文可能な在庫
-  low_stock_threshold: number;
-  last_updated: string;
-  auto_management: boolean; // 自動在庫管理の有効/無効
-}
-
-export interface StockHistory {
-  history_id: number;
-  product_id: number;
-  change_type: "増加" | "減少" | "調整" | "初期設定";
-  change_amount: number;
-  previous_stock: number;
-  new_stock: number;
-  reason: string;
-  order_id?: number; // 注文による在庫変動の場合
-  created_by: string;
-  created_at: string;
-}
-
-export interface StockAlert {
-  alert_id: number;
-  product_id: number;
-  alert_type: "低在庫" | "在庫切れ" | "在庫過多";
-  message: string;
-  is_resolved: boolean;
-  created_at: string;
-  resolved_at?: string;
 }
 
 // 待ち時間管理関連
@@ -191,6 +116,16 @@ export interface WaitTimeInfo {
   updated_at: string;
 }
 
+// 混雑状況管理
+export type CongestionStatus = "空いている" | "やや混雑" | "混雑" | "大変混雑";
+
+export interface CongestionInfo {
+  status: CongestionStatus;
+  waiting_orders: number;
+  estimated_wait_minutes: number;
+  last_updated: string;
+}
+
 // たこ焼き器管理関連
 export interface TakoyakiCooker {
   cooker_id: number;
@@ -198,96 +133,180 @@ export interface TakoyakiCooker {
   status: "空き" | "使用中" | "清掃中" | "故障中";
   current_order_id?: number; // 現在調理中の注文ID
   cooking_start_time?: string; // 調理開始時刻
-  estimated_completion_time?: string; // 調理完了予定時刻
-  max_capacity: number; // 同時調理可能数（個数）
-  current_load: number; // 現在の調理負荷（個数）
-  last_used_at?: string; // 最終使用時刻
-  maintenance_required: boolean; // メンテナンス要否
-}
-
-// 詳細調理管理関連
-export interface DetailedCookingStatus {
-  order_id: number;
-  cooker_id?: number; // 使用中のたこ焼き器ID
-  cooking_stage:
-    | "待機中"
-    | "調理開始"
-    | "焼き工程"
-    | "焼き上がり"
-    | "盛り付け"
-    | "完成";
-  progress_percentage: number; // 調理進捗（0-100%）
-  quality_check: {
-    doneness: "生焼け" | "適切" | "焼きすぎ"; // 焼き加減
-    appearance: "良好" | "要確認" | "不良"; // 見た目
-    temperature: "適温" | "熱すぎ" | "冷めている"; // 温度
-  };
-  estimated_completion_time: string;
-  actual_completion_time?: string;
+  estimated_completion_time?: string; // 予想完了時刻
+  temperature: number; // 現在の温度
+  optimal_temperature_range: { min: number; max: number }; // 最適温度範囲
+  last_cleaned_at?: string; // 最終清掃時刻
+  maintenance_notes?: string; // メンテナンス記録
   created_at: string;
   updated_at: string;
 }
 
-// 温度管理関連
-export interface TemperatureManagement {
-  order_id: number;
-  completion_time: string; // 調理完了時刻
-  current_temperature_status: "熱々" | "温かい" | "やや冷め" | "冷めている";
-  optimal_serving_deadline: string; // 最適な提供期限
-  temperature_alerts: {
-    alert_time: string;
-    alert_type: "5分経過" | "10分経過" | "15分経過" | "再加熱推奨";
-    is_resolved: boolean;
-  }[];
-  reheating_required: boolean; // 再加熱要否
+// システム設定
+export interface SystemSettings {
+  setting_id: number;
+  setting_key: string;
+  setting_value: string;
+  description?: string;
+  updated_by?: string;
+  updated_at: string;
+}
+
+// 在庫管理
+export interface StockLog {
+  stock_log_id: number;
+  product_id: number;
+  change_type: "入庫" | "出庫" | "調整" | "廃棄";
+  quantity_change: number;
+  previous_quantity: number;
+  new_quantity: number;
+  reason?: string;
+  performed_by?: string;
   created_at: string;
-  updated_at: string;
 }
 
-// 混雑状況管理
-export interface CongestionStatus {
-  current_wait_count: number; // 現在の待ち件数
-  current_cooking_count: number; // 現在調理中件数
-  average_wait_time: number; // 平均待ち時間（分）
-  congestion_level: "空いている" | "やや混雑" | "混雑" | "非常に混雑";
-  estimated_new_order_wait: number; // 新規注文の予想待ち時間
-  cooker_utilization_rate: number; // たこ焼き器稼働率（0-100%）
-  peak_time_prediction: string; // ピーク時間予測
-  updated_at: string;
+// 調理ログ
+export interface CookingLog {
+  cooking_log_id: number;
+  order_id: number;
+  cooker_id: number;
+  cooking_start_time: string;
+  cooking_completion_time?: string;
+  cooking_duration_minutes?: number;
+  temperature_readings?: TemperatureReading[];
+  quality_rating?: number; // 1-5の品質評価
+  notes?: string;
+  performed_by?: string;
+  created_at: string;
 }
 
-// 緊急時対応関連
-export interface EmergencyState {
-  is_active: boolean; // 緊急事態フラグ
-  emergency_type: "システム停止" | "手動運用" | "設備故障" | "その他" | null;
-  message: string; // 緊急時メッセージ
-  activated_at?: string; // 緊急事態開始時刻
-  activated_by?: string; // 緊急事態を開始したユーザー
-  deactivated_at?: string; // 緊急事態終了時刻
-  deactivated_by?: string; // 緊急事態を終了したユーザー
-  auto_deactivate_at?: string; // 自動終了予定時刻
-}
-
-export interface EmergencyLog {
-  log_id: number;
-  emergency_type: "システム停止" | "手動運用" | "設備故障" | "その他";
-  action: "開始" | "終了" | "メッセージ更新";
-  message: string;
-  user_name: string;
+export interface TemperatureReading {
   timestamp: string;
-  duration_minutes?: number; // 継続時間（分）
+  temperature: number;
+  cooker_id: number;
 }
 
-// APIレスポンス型
-export interface ApiResponse<T> {
+// 統計・分析用データ
+export interface OrderStatistics {
+  total_orders: number;
+  total_revenue: number;
+  average_order_value: number;
+  average_cooking_time: number;
+  peak_hours: Array<{ hour: number; order_count: number }>;
+  popular_products: Array<{
+    product_id: number;
+    product_name: string;
+    quantity_sold: number;
+  }>;
+  date_range: { start: string; end: string };
+  last_updated: string;
+}
+
+// UI状態管理用
+export interface AppState {
+  // 注文関連
+  orders: Order[];
+  currentOrder?: Order;
+  waitTimeInfo: WaitTimeInfo[];
+  congestionStatus: CongestionInfo;
+
+  // 商品・カテゴリ関連
+  products: Product[];
+  categories: Category[];
+  toppings: Topping[];
+
+  // 調理・厨房関連
+  takoyakiCookers: TakoyakiCooker[];
+  cookingLogs: CookingLog[];
+
+  // システム関連
+  systemSettings: SystemSettings[];
+  stockLogs: StockLog[];
+  statistics: OrderStatistics;
+
+  // UI状態
+  loading: boolean;
+  error?: string;
+  notifications: NotificationData[];
+}
+
+// 通知システム
+export interface NotificationData {
+  id: number;
+  title: string;
+  content: string;
+  priority: "緊急" | "通常" | "低";
+  category: "注文" | "調理" | "在庫" | "システム" | "緊急";
+  target_user_types: Array<
+    "customer" | "kitchen" | "cashier" | "pickup" | "admin"
+  >;
+  is_read: boolean;
+  created_at: string;
+  expires_at?: string;
+}
+
+// Socket.io通信用型定義
+export interface SocketEventData {
+  type: string;
+  data: Record<string, unknown>;
+  timestamp: string;
+  user_type?: "customer" | "kitchen" | "cashier" | "pickup" | "admin";
+}
+
+// フォーム用型定義
+export interface ProductFormData {
+  product_name: string;
+  price: number;
+  category_id: number;
+  description?: string;
+  allergy_info?: string;
+  cooking_time: number;
+  max_simultaneous_cooking: number;
+  initial_stock?: number;
+  low_stock_threshold?: number;
+}
+
+export interface OrderFormData {
+  items: Array<{
+    product_id: number;
+    quantity: number;
+    toppings: number[];
+  }>;
+  special_requests?: string;
+}
+
+// API レスポンス用型定義
+export interface ApiResponse<T = Record<string, unknown>> {
   success: boolean;
-  data: T;
+  data?: T;
   message?: string;
+  error?: string;
 }
 
-// エラー型
-export interface ApiError {
-  message: string;
-  code?: string;
-  status?: number;
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
+
+// エラーハンドリング用
+export interface AppError {
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
+  timestamp: string;
+}
+
+// ステータス関連の型定義
+export type OrderStatus =
+  | "注文受付"
+  | "調理待ち"
+  | "調理中"
+  | "調理完了"
+  | "受け渡し完了"
+  | "受け取り済み"
+  | "キャンセル";
+export type PaymentStatus = "未払い" | "支払い済み" | "返金";
+export type CookingStatus = "待機中" | "調理中" | "完成" | "温度管理中";

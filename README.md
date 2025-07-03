@@ -117,3 +117,136 @@ unifest-order-system/
 ## ライセンス
 
 MIT License
+
+## 🚀 デプロイメント
+
+### 前提条件
+
+- Docker 20.10+
+- Docker Compose 2.0+
+- Git
+
+### 本番環境デプロイ
+
+1. **リポジトリをクローン**
+
+```bash
+git clone https://github.com/chisato-0103/UniFest-Order-System.git
+cd UniFest-Order-System
+```
+
+2. **環境変数を設定**
+
+```bash
+# 本番環境用の環境変数をコピー・編集
+cp .env.production .env
+# 必要に応じて値を変更（JWT_SECRET、データベースパスワード等）
+nano .env
+```
+
+3. **Docker コンテナでデプロイ**
+
+```bash
+# 簡単デプロイ
+./deploy.sh production
+
+# または手動デプロイ
+docker-compose --env-file .env.production up -d
+```
+
+### 開発環境セットアップ
+
+1. **必要な依存関係をインストール**
+
+```bash
+# バックエンド
+cd backend
+npm install
+
+# フロントエンド
+cd ../unifest-order-system
+npm install
+```
+
+2. **データベースセットアップ**
+
+```bash
+# PostgreSQLをインストール・起動
+brew install postgresql@15
+brew services start postgresql@15
+
+# データベース作成
+createdb unifest_order_system
+psql -d unifest_order_system -f backend/src/database/init.sql
+psql -d unifest_order_system -f backend/src/database/init-settings.sql
+```
+
+3. **環境変数設定**
+
+```bash
+# バックエンド
+cd backend
+cp .env.example .env
+# .envファイルを編集
+
+# フロントエンド
+cd ../unifest-order-system
+echo "VITE_API_URL=http://localhost:3001" > .env
+```
+
+4. **アプリケーション起動**
+
+```bash
+# バックエンド（別ターミナル）
+cd backend
+npm run dev
+
+# フロントエンド（別ターミナル）
+cd unifest-order-system
+npm run dev
+```
+
+### サービス起動確認
+
+- 📱 **フロントエンド**: http://localhost:8080 (本番) / http://localhost:5173 (開発)
+- 🔧 **バックエンド API**: http://localhost:3001
+- 🏥 **ヘルスチェック**: http://localhost:3001/health
+- 📊 **データベース**: localhost:5432
+
+### Docker コマンド
+
+```bash
+# サービス起動
+docker-compose up -d
+
+# ログ確認
+docker-compose logs -f
+
+# サービス停止
+docker-compose down
+
+# ボリューム含めて完全削除
+docker-compose down -v
+
+# 個別サービスの再起動
+docker-compose restart backend
+```
+
+### モニタリング
+
+```bash
+# システム状態確認
+curl http://localhost:3001/health
+
+# リアルタイム統計
+curl http://localhost:3001/api/stats/realtime
+
+# 接続状況確認
+docker-compose ps
+```
+
+### トラブルシューティング
+
+- **ポート競合**: 他のサービスが同じポートを使用している場合は、docker-compose.yml でポート番号を変更
+- **データベース接続エラー**: PostgreSQL コンテナの起動完了を待つか、ヘルスチェックを確認
+- **Socket.io 接続エラー**: CORS 設定とフロントエンドの API URL を確認

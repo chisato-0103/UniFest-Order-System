@@ -256,6 +256,28 @@ export interface CongestionStatus {
   updated_at: string;
 }
 
+// 緊急時対応関連
+export interface EmergencyState {
+  is_active: boolean; // 緊急事態フラグ
+  emergency_type: "システム停止" | "手動運用" | "設備故障" | "その他" | null;
+  message: string; // 緊急時メッセージ
+  activated_at?: string; // 緊急事態開始時刻
+  activated_by?: string; // 緊急事態を開始したユーザー
+  deactivated_at?: string; // 緊急事態終了時刻
+  deactivated_by?: string; // 緊急事態を終了したユーザー
+  auto_deactivate_at?: string; // 自動終了予定時刻
+}
+
+export interface EmergencyLog {
+  log_id: number;
+  emergency_type: "システム停止" | "手動運用" | "設備故障" | "その他";
+  action: "開始" | "終了" | "メッセージ更新";
+  message: string;
+  user_name: string;
+  timestamp: string;
+  duration_minutes?: number; // 継続時間（分）
+}
+
 // APIレスポンス型
 export interface ApiResponse<T> {
   success: boolean;

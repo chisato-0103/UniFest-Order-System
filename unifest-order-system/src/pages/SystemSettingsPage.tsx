@@ -44,6 +44,7 @@ import {
   PlayArrow as PlayIcon,
 } from "@mui/icons-material";
 import { audioNotificationService } from "../utils/audioNotification";
+import EmergencyControl from "../components/EmergencyControl";
 
 interface SystemSetting {
   id: string;
@@ -631,6 +632,11 @@ function SystemSettingsPage() {
           </Box>
         </CardContent>
       </Card>
+
+      {/* 緊急時対応管理 */}
+      <Box sx={{ mt: 4 }}>
+        <EmergencyControl />
+      </Box>
 
       {/* 確認ダイアログ */}
       <Dialog

@@ -17,6 +17,8 @@ import type {
   DetailedCookingStatus,
   TemperatureManagement,
   CongestionStatus,
+  EmergencyState,
+  EmergencyLog,
 } from "../types";
 import { audioNotificationService } from "../utils/audioNotification";
 
@@ -38,6 +40,9 @@ interface AppState {
   detailedCookingStatus: DetailedCookingStatus[];
   temperatureManagement: TemperatureManagement[];
   congestionStatus: CongestionStatus;
+  // 緊急時対応関連
+  emergencyState: EmergencyState;
+  emergencyLogs: EmergencyLog[];
   currentUser?: {
     id: string;
     name: string;
@@ -91,7 +96,22 @@ type AppAction =
   | { type: "UPDATE_COOKING_PROGRESS"; payload: DetailedCookingStatus }
   | { type: "SET_TEMPERATURE_MANAGEMENT"; payload: TemperatureManagement[] }
   | { type: "UPDATE_TEMPERATURE_STATUS"; payload: TemperatureManagement }
-  | { type: "SET_CONGESTION_STATUS"; payload: CongestionStatus };
+  | { type: "SET_CONGESTION_STATUS"; payload: CongestionStatus }
+  // 緊急時対応アクション
+  | {
+      type: "ACTIVATE_EMERGENCY";
+      payload: {
+        type: EmergencyState["emergency_type"];
+        message: string;
+        user: string;
+      };
+    }
+  | { type: "DEACTIVATE_EMERGENCY"; payload: { user: string } }
+  | {
+      type: "UPDATE_EMERGENCY_MESSAGE";
+      payload: { message: string; user: string };
+    }
+  | { type: "ADD_EMERGENCY_LOG"; payload: EmergencyLog };
 
 // 初期状態
 const initialState: AppState = {
@@ -137,6 +157,18 @@ const initialState: AppState = {
     peak_time_prediction: "",
     updated_at: new Date().toISOString(),
   },
+  // 緊急時対応の初期状態
+  emergencyState: {
+    is_active: false,
+    emergency_type: null,
+    message: "",
+    activated_at: undefined,
+    activated_by: undefined,
+    deactivated_at: undefined,
+    deactivated_by: undefined,
+    auto_deactivate_at: undefined,
+  },
+  emergencyLogs: [],
   currentUser: undefined,
   connectionStatus: "connecting",
   lastUpdated: new Date().toISOString(),
@@ -407,6 +439,97 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
     case "SET_CONGESTION_STATUS":
       return { ...state, congestionStatus: action.payload };
+
+    // 緊急時対応ケース
+    case "ACTIVATE_EMERGENCY": {
+      const now = new Date().toISOString();
+      const newLog: EmergencyLog = {
+        log_id: state.emergencyLogs.length + 1,
+        emergency_type: action.payload.type || "その他",
+        action: "開始",
+        message: action.payload.message,
+        user_name: action.payload.user,
+        timestamp: now,
+      };
+
+      return {
+        ...state,
+        emergencyState: {
+          is_active: true,
+          emergency_type: action.payload.type,
+          message: action.payload.message,
+          activated_at: now,
+          activated_by: action.payload.user,
+          deactivated_at: undefined,
+          deactivated_by: undefined,
+          auto_deactivate_at: undefined,
+        },
+        emergencyLogs: [...state.emergencyLogs, newLog],
+      };
+    }
+
+    case "DEACTIVATE_EMERGENCY": {
+      const now = new Date().toISOString();
+      const duration = state.emergencyState.activated_at
+        ? Math.round(
+            (new Date(now).getTime() -
+              new Date(state.emergencyState.activated_at).getTime()) /
+              60000
+          )
+        : undefined;
+
+      const newLog: EmergencyLog = {
+        log_id: state.emergencyLogs.length + 1,
+        emergency_type: state.emergencyState.emergency_type || "その他",
+        action: "終了",
+        message: "緊急事態が終了されました",
+        user_name: action.payload.user,
+        timestamp: now,
+        duration_minutes: duration,
+      };
+
+      return {
+        ...state,
+        emergencyState: {
+          is_active: false,
+          emergency_type: null,
+          message: "",
+          activated_at: undefined,
+          activated_by: undefined,
+          deactivated_at: now,
+          deactivated_by: action.payload.user,
+          auto_deactivate_at: undefined,
+        },
+        emergencyLogs: [...state.emergencyLogs, newLog],
+      };
+    }
+
+    case "UPDATE_EMERGENCY_MESSAGE": {
+      const now = new Date().toISOString();
+      const newLog: EmergencyLog = {
+        log_id: state.emergencyLogs.length + 1,
+        emergency_type: state.emergencyState.emergency_type || "その他",
+        action: "メッセージ更新",
+        message: action.payload.message,
+        user_name: action.payload.user,
+        timestamp: now,
+      };
+
+      return {
+        ...state,
+        emergencyState: {
+          ...state.emergencyState,
+          message: action.payload.message,
+        },
+        emergencyLogs: [...state.emergencyLogs, newLog],
+      };
+    }
+
+    case "ADD_EMERGENCY_LOG":
+      return {
+        ...state,
+        emergencyLogs: [...state.emergencyLogs, action.payload],
+      };
 
     default:
       return state;

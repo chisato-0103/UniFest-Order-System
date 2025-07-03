@@ -27,6 +27,7 @@ import {
   Notifications as NotificationsIcon,
 } from "@mui/icons-material";
 import { useAppContext } from "../hooks/useAppContext";
+import EmergencyControl from "./EmergencyControl";
 
 const navigationItems = [
   {
@@ -222,6 +223,9 @@ function NavigationBar() {
             variant="outlined"
             size="small"
           />
+
+          {/* 緊急時対応（コンパクト表示） */}
+          <EmergencyControl compactView={true} />
 
           {/* 通知 */}
           {unreadNotifications > 0 && (

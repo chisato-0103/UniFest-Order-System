@@ -469,7 +469,7 @@ function SystemSettingsPage() {
   }, {} as Record<string, SystemSetting[]>);
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <Container maxWidth="xl" sx={{ py: 3 }}>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom color="primary">
           システム設定

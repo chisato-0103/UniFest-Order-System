@@ -252,7 +252,7 @@ function OrderPage() {
     systemState.営業状況 === "営業中" && !systemState.緊急停止状態;
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <Container maxWidth="xl" sx={{ py: 3 }}>
       {/* ヘッダー */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom color="primary">

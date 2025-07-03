@@ -232,7 +232,7 @@ function CustomerStatusPage() {
   // 注文が見つからない場合の検索UI
   if (!order && !loading) {
     return (
-      <Container maxWidth="md" sx={{ py: 3 }}>
+      <Container maxWidth="lg" sx={{ py: 3 }}>
         <Box sx={{ textAlign: "center", mb: 3 }}>
           <QrCodeIcon sx={{ fontSize: 64, color: "primary.main", mb: 2 }} />
           <Typography variant="h4" component="h1" gutterBottom color="primary">
@@ -283,7 +283,7 @@ function CustomerStatusPage() {
   // ローディング中
   if (loading) {
     return (
-      <Container maxWidth="md" sx={{ py: 3 }}>
+      <Container maxWidth="lg" sx={{ py: 3 }}>
         <Box sx={{ textAlign: "center" }}>
           <LinearProgress sx={{ mb: 2 }} />
           <Typography variant="h6">注文情報を取得中...</Typography>
@@ -296,7 +296,7 @@ function CustomerStatusPage() {
   if (!order) return null;
 
   return (
-    <Container maxWidth="md" sx={{ py: 3 }}>
+    <Container maxWidth="lg" sx={{ py: 3 }}>
       <Box sx={{ textAlign: "center", mb: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom color="primary">
           注文状況確認

@@ -419,7 +419,7 @@ function KitchenPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <Container maxWidth="xl" sx={{ py: 3 }}>
       <AppBar position="static" color="default" sx={{ mb: 3 }}>
         <Toolbar>
           <FireIcon sx={{ mr: 2 }} />

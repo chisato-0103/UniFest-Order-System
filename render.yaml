@@ -31,7 +31,6 @@ services:
     name: unifest-frontend
     runtime: static
     plan: free
-    region: oregon
     buildCommand: cd unifest-order-system && npm install && npm run build
     staticPublishPath: unifest-order-system/dist
     envVars:

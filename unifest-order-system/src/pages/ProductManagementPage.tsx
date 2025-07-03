@@ -42,7 +42,7 @@ import {
   TrendingUp as TrendingUpIcon,
   Warning as WarningIcon,
 } from "@mui/icons-material";
-// import type { Product, Topping } from "../types";
+import { useAppContext } from "../hooks/useAppContext";
 
 interface ProductWithStock {
   id: string;
@@ -81,6 +81,9 @@ interface ToppingFormData {
 }
 
 function ProductManagementPage() {
+  const { state } = useAppContext();
+  const { products: contextProducts, stockInfo } = state;
+
   const [products, setProducts] = useState<ProductWithStock[]>([]);
   const [toppings, setToppings] = useState<SimplifiedTopping[]>([]);
   const [openProductDialog, setOpenProductDialog] = useState(false);
@@ -96,58 +99,85 @@ function ProductManagementPage() {
     "success"
   );
 
-  // ダミーデータ
+  // ダミーデータとAppContextの統合
   useEffect(() => {
-    const dummyProducts: ProductWithStock[] = [
-      {
-        id: "1",
-        name: "たこ焼き（6個）",
-        price: 500,
-        category: "メイン",
-        description: "定番のたこ焼き6個セット",
-        available: true,
-        stock: 45,
-        lowStockThreshold: 10,
-        totalSold: 128,
-        revenue: 64000,
-      },
-      {
-        id: "2",
-        name: "たこ焼き（8個）",
-        price: 650,
-        category: "メイン",
-        description: "たこ焼き8個セット",
-        available: true,
-        stock: 32,
-        lowStockThreshold: 10,
-        totalSold: 89,
-        revenue: 57850,
-      },
-      {
-        id: "3",
-        name: "特製たこ焼き（6個）",
-        price: 700,
-        category: "特製",
-        description: "特製だし入りたこ焼き",
-        available: true,
-        stock: 15,
-        lowStockThreshold: 5,
-        totalSold: 67,
-        revenue: 46900,
-      },
-      {
-        id: "4",
-        name: "たこ焼きセット",
-        price: 800,
-        category: "セット",
-        description: "たこ焼き6個+ドリンク",
-        available: false,
-        stock: 0,
-        lowStockThreshold: 3,
-        totalSold: 34,
-        revenue: 27200,
-      },
-    ];
+    // AppContextの商品データに在庫情報を統合
+    const productsWithStock: ProductWithStock[] = contextProducts.map(
+      (product) => {
+        const stock = stockInfo.find(
+          (s) => s.product_id === product.product_id
+        );
+        return {
+          id: product.product_id.toString(),
+          name: product.product_name,
+          price: product.price,
+          category: "メイン", // TODO: Productの型にcategoryを追加
+          description: product.description,
+          available: product.status === "有効",
+          stock: stock?.current_stock || 0,
+          lowStockThreshold: stock?.low_stock_threshold || 5,
+          totalSold: 0, // TODO: 実際の売上データと統合
+          revenue: 0, // TODO: 実際の売上データと統合
+        };
+      }
+    );
+
+    // AppContextにデータがない場合はダミーデータを使用
+    if (productsWithStock.length === 0) {
+      const dummyProducts: ProductWithStock[] = [
+        {
+          id: "1",
+          name: "たこ焼き（6個）",
+          price: 500,
+          category: "メイン",
+          description: "定番のたこ焼き6個セット",
+          available: true,
+          stock: 45,
+          lowStockThreshold: 10,
+          totalSold: 128,
+          revenue: 64000,
+        },
+        {
+          id: "2",
+          name: "たこ焼き（8個）",
+          price: 650,
+          category: "メイン",
+          description: "たこ焼き8個セット",
+          available: true,
+          stock: 32,
+          lowStockThreshold: 10,
+          totalSold: 89,
+          revenue: 57850,
+        },
+        {
+          id: "3",
+          name: "特製たこ焼き（6個）",
+          price: 700,
+          category: "特製",
+          description: "特製だし入りたこ焼き",
+          available: true,
+          stock: 15,
+          lowStockThreshold: 5,
+          totalSold: 67,
+          revenue: 46900,
+        },
+        {
+          id: "4",
+          name: "たこ焼きセット",
+          price: 800,
+          category: "セット",
+          description: "たこ焼き6個+ドリンク",
+          available: false,
+          stock: 0,
+          lowStockThreshold: 3,
+          totalSold: 34,
+          revenue: 27200,
+        },
+      ];
+      setProducts(dummyProducts);
+    } else {
+      setProducts(productsWithStock);
+    }
 
     const dummyToppings: SimplifiedTopping[] = [
       { id: "1", name: "ソース", price: 0, available: true },
@@ -158,9 +188,8 @@ function ProductManagementPage() {
       { id: "6", name: "明太子", price: 150, available: false },
     ];
 
-    setProducts(dummyProducts);
     setToppings(dummyToppings);
-  }, []);
+  }, [contextProducts, stockInfo]);
 
   const handleProductSave = (productData: ProductFormData) => {
     if (editingProduct) {

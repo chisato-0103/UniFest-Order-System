@@ -40,7 +40,10 @@ import {
   RestartAlt as RestartIcon,
   Backup as BackupIcon,
   CloudDownload as RestoreIcon,
+  VolumeUp as VolumeIcon,
+  PlayArrow as PlayIcon,
 } from "@mui/icons-material";
+import { audioNotificationService } from "../utils/audioNotification";
 
 interface SystemSetting {
   id: string;
@@ -168,18 +171,50 @@ function SystemSettingsPage() {
         name: "音声通知",
         value: true,
         type: "boolean",
-        description: "注文完了時の音声通知を有効にする",
+        description: "音声通知システムを有効にする",
       },
       {
         id: "13",
         category: "通知設定",
         name: "通知音量",
-        value: 80,
+        value: 70,
         type: "number",
         description: "通知音の音量（0-100）",
       },
       {
         id: "14",
+        category: "通知設定",
+        name: "新規注文通知",
+        value: true,
+        type: "boolean",
+        description: "新しい注文が入った時の音声通知",
+      },
+      {
+        id: "15",
+        category: "通知設定",
+        name: "調理完了通知",
+        value: true,
+        type: "boolean",
+        description: "調理が完了した時の音声通知",
+      },
+      {
+        id: "16",
+        category: "通知設定",
+        name: "遅延アラート通知",
+        value: true,
+        type: "boolean",
+        description: "受け渡し遅延時のアラート通知",
+      },
+      {
+        id: "17",
+        category: "通知設定",
+        name: "緊急通知",
+        value: true,
+        type: "boolean",
+        description: "緊急停止時などの重要な通知",
+      },
+      {
+        id: "18",
         category: "通知設定",
         name: "完了通知間隔",
         value: 30,
@@ -237,6 +272,44 @@ function SystemSettingsPage() {
     setSnackbarMessage("設定を保存しました");
     setSnackbarSeverity("success");
     setSnackbarOpen(true);
+  };
+
+  // 音声通知テスト機能
+  const handleAudioTest = async (testType: string) => {
+    try {
+      // Web Audio Contextを再開（ブラウザのポリシー対応）
+      await audioNotificationService.resumeAudioContext();
+
+      switch (testType) {
+        case "new_order":
+          await audioNotificationService.playNewOrder();
+          break;
+        case "order_ready":
+          await audioNotificationService.playOrderReady("TEST");
+          break;
+        case "delay_alert":
+          await audioNotificationService.playDelayAlert("TEST");
+          break;
+        case "emergency":
+          await audioNotificationService.playEmergencyAlert();
+          break;
+        default:
+          await audioNotificationService.playCustomNotification(
+            "テスト通知です",
+            700,
+            2
+          );
+      }
+
+      setSnackbarMessage(`${testType}の音声通知をテストしました`);
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("音声通知テストエラー:", error);
+      setSnackbarMessage("音声通知のテストに失敗しました");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
   };
 
   const handleSystemRestart = () => {
@@ -472,6 +545,54 @@ function SystemSettingsPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+
+            {/* 音声通知テストボタン（通知設定セクションのみ） */}
+            {category === "通知設定" && (
+              <Box sx={{ mt: 3, p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
+                >
+                  <VolumeIcon />
+                  音声通知テスト
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<PlayIcon />}
+                    onClick={() => handleAudioTest("new_order")}
+                  >
+                    新規注文
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<PlayIcon />}
+                    onClick={() => handleAudioTest("order_ready")}
+                  >
+                    調理完了
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<PlayIcon />}
+                    onClick={() => handleAudioTest("delay_alert")}
+                  >
+                    遅延アラート
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<PlayIcon />}
+                    onClick={() => handleAudioTest("emergency")}
+                    color="error"
+                  >
+                    緊急通知
+                  </Button>
+                </Box>
+              </Box>
+            )}
           </CardContent>
         </Card>
       ))}

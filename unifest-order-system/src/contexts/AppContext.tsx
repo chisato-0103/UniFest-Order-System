@@ -10,6 +10,7 @@ import type {
   SystemState,
   Notification,
 } from "../types";
+import { audioNotificationService } from "../utils/audioNotification";
 
 // State型定義
 interface AppState {
@@ -72,6 +73,14 @@ const initialState: AppState = {
     緊急停止状態: false,
     営業状況: "営業中",
     手動運用モード: false,
+    音声通知設定: {
+      有効: true,
+      音量: 0.7,
+      新規注文通知: true,
+      調理完了通知: true,
+      遅延アラート: true,
+      緊急通知: true,
+    },
   },
   notifications: [],
   currentUser: undefined,
@@ -287,6 +296,13 @@ export const AppContext = createContext<{
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
+  // 音声通知サービスの初期化
+  useEffect(() => {
+    const { 音声通知設定 } = state.systemState;
+    audioNotificationService.setEnabled(音声通知設定.有効);
+    audioNotificationService.setVolume(音声通知設定.音量);
+  }, [state.systemState]);
+
   // リアルタイム機能のシミュレーション
   useEffect(() => {
     // 初期データの設定
@@ -338,6 +354,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
           dispatch({ type: "UPDATE_ORDER", payload: updatedOrder });
           dispatch({ type: "UPDATE_LAST_UPDATED" });
+
+          // 調理完了時の音声通知
+          if (
+            updatedOrder.status === "調理完了" &&
+            state.systemState.音声通知設定.調理完了通知
+          ) {
+            audioNotificationService.playOrderReady(updatedOrder.order_number);
+          }
 
           // 通知を追加
           const notification: Notification = {
@@ -394,6 +418,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         dispatch({ type: "ADD_ORDER", payload: newOrder });
         dispatch({ type: "UPDATE_LAST_UPDATED" });
 
+        // 新規注文の音声通知
+        if (state.systemState.音声通知設定.新規注文通知) {
+          audioNotificationService.playNewOrder();
+        }
+
         // 新規注文通知
         const notification: Notification = {
           notification_id: Date.now() + 1,
@@ -433,7 +462,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => {
       clearInterval(updateInterval);
     };
-  }, [state.connectionStatus, state.orders]); // 接続状態と注文リストが変更されたときに再実行
+  }, [state.connectionStatus, state.orders, state.systemState]); // 接続状態と注文リスト、システム状態が変更されたときに再実行
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>

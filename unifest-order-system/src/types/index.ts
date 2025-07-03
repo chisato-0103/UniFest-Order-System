@@ -122,6 +122,14 @@ export interface SystemState {
   緊急停止状態: boolean;
   営業状況: "営業中" | "準備中" | "終了";
   手動運用モード: boolean;
+  音声通知設定: {
+    有効: boolean;
+    音量: number; // 0.0 - 1.0
+    新規注文通知: boolean;
+    調理完了通知: boolean;
+    遅延アラート: boolean;
+    緊急通知: boolean;
+  };
 }
 
 // 調理進捗状態

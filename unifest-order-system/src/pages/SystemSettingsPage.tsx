@@ -55,10 +55,14 @@ interface SystemSetting {
 function SystemSettingsPage() {
   const [settings, setSettings] = useState<SystemSetting[]>([]);
   const [editingSettingId, setEditingSettingId] = useState<string | null>(null);
-  const [editingValue, setEditingValue] = useState<string | number | boolean>("");
+  const [editingValue, setEditingValue] = useState<string | number | boolean>(
+    ""
+  );
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error" | "warning">("success");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<
+    "success" | "error" | "warning"
+  >("success");
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
 
@@ -223,11 +227,11 @@ function SystemSettingsPage() {
   };
 
   const handleEditSave = (settingId: string) => {
-    setSettings(prev => prev.map(setting => 
-      setting.id === settingId 
-        ? { ...setting, value: editingValue }
-        : setting
-    ));
+    setSettings((prev) =>
+      prev.map((setting) =>
+        setting.id === settingId ? { ...setting, value: editingValue } : setting
+      )
+    );
     setEditingSettingId(null);
     setEditingValue("");
     setSnackbarMessage("設定を保存しました");
@@ -266,10 +270,11 @@ function SystemSettingsPage() {
       return (
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Typography variant="body1">
-            {setting.type === "boolean" 
-              ? (setting.value ? "有効" : "無効")
-              : setting.value.toString()
-            }
+            {setting.type === "boolean"
+              ? setting.value
+                ? "有効"
+                : "無効"
+              : setting.value.toString()}
           </Typography>
           <Tooltip title="編集">
             <IconButton size="small" onClick={() => handleEditStart(setting)}>
@@ -438,7 +443,7 @@ function SystemSettingsPage() {
                 {category}
               </Typography>
             </Box>
-            
+
             <TableContainer>
               <Table>
                 <TableHead>
@@ -456,9 +461,7 @@ function SystemSettingsPage() {
                           {setting.name}
                         </Typography>
                       </TableCell>
-                      <TableCell>
-                        {renderEditField(setting)}
-                      </TableCell>
+                      <TableCell>{renderEditField(setting)}</TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
                           {setting.description}
@@ -482,17 +485,25 @@ function SystemSettingsPage() {
           </Box>
           <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
             <Chip
-              label={`営業状態: ${settings.find(s => s.name === "営業状態")?.value || "不明"}`}
+              label={`営業状態: ${
+                settings.find((s) => s.name === "営業状態")?.value || "不明"
+              }`}
               color="primary"
               variant="filled"
             />
             <Chip
-              label={`営業時間: ${settings.find(s => s.name === "営業時間（開始）")?.value} - ${settings.find(s => s.name === "営業時間（終了）")?.value}`}
+              label={`営業時間: ${
+                settings.find((s) => s.name === "営業時間（開始）")?.value
+              } - ${
+                settings.find((s) => s.name === "営業時間（終了）")?.value
+              }`}
               color="secondary"
               variant="outlined"
             />
             <Chip
-              label={`同時調理数: ${settings.find(s => s.name === "同時調理可能数")?.value}件`}
+              label={`同時調理数: ${
+                settings.find((s) => s.name === "同時調理可能数")?.value
+              }件`}
               color="success"
               variant="outlined"
             />
@@ -501,12 +512,13 @@ function SystemSettingsPage() {
       </Card>
 
       {/* 確認ダイアログ */}
-      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+      >
         <DialogTitle>操作の確認</DialogTitle>
         <DialogContent>
-          <Typography>
-            この操作を実行してもよろしいですか？
-          </Typography>
+          <Typography>この操作を実行してもよろしいですか？</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmDialogOpen(false)}>
@@ -524,7 +536,10 @@ function SystemSettingsPage() {
         autoHideDuration={3000}
         onClose={() => setSnackbarOpen(false)}
       >
-        <Alert severity={snackbarSeverity} onClose={() => setSnackbarOpen(false)}>
+        <Alert
+          severity={snackbarSeverity}
+          onClose={() => setSnackbarOpen(false)}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>

@@ -85,11 +85,16 @@ function ProductManagementPage() {
   const [toppings, setToppings] = useState<SimplifiedTopping[]>([]);
   const [openProductDialog, setOpenProductDialog] = useState(false);
   const [openToppingDialog, setOpenToppingDialog] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<ProductWithStock | null>(null);
-  const [editingTopping, setEditingTopping] = useState<SimplifiedTopping | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductWithStock | null>(
+    null
+  );
+  const [editingTopping, setEditingTopping] =
+    useState<SimplifiedTopping | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
+    "success"
+  );
 
   // ダミーデータ
   useEffect(() => {
@@ -159,9 +164,11 @@ function ProductManagementPage() {
 
   const handleProductSave = (productData: ProductFormData) => {
     if (editingProduct) {
-      setProducts(prev => prev.map(p => 
-        p.id === editingProduct.id ? { ...p, ...productData } : p
-      ));
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === editingProduct.id ? { ...p, ...productData } : p
+        )
+      );
       setSnackbarMessage("商品を更新しました");
     } else {
       const newProduct: ProductWithStock = {
@@ -172,7 +179,7 @@ function ProductManagementPage() {
         totalSold: 0,
         revenue: 0,
       };
-      setProducts(prev => [...prev, newProduct]);
+      setProducts((prev) => [...prev, newProduct]);
       setSnackbarMessage("商品を追加しました");
     }
     setSnackbarSeverity("success");
@@ -183,16 +190,18 @@ function ProductManagementPage() {
 
   const handleToppingSave = (toppingData: ToppingFormData) => {
     if (editingTopping) {
-      setToppings(prev => prev.map(t => 
-        t.id === editingTopping.id ? { ...t, ...toppingData } : t
-      ));
+      setToppings((prev) =>
+        prev.map((t) =>
+          t.id === editingTopping.id ? { ...t, ...toppingData } : t
+        )
+      );
       setSnackbarMessage("トッピングを更新しました");
     } else {
       const newTopping: SimplifiedTopping = {
         ...toppingData,
         id: Date.now().toString(),
       };
-      setToppings(prev => [...prev, newTopping]);
+      setToppings((prev) => [...prev, newTopping]);
       setSnackbarMessage("トッピングを追加しました");
     }
     setSnackbarSeverity("success");
@@ -202,32 +211,34 @@ function ProductManagementPage() {
   };
 
   const handleProductDelete = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
+    setProducts((prev) => prev.filter((p) => p.id !== id));
     setSnackbarMessage("商品を削除しました");
     setSnackbarSeverity("success");
     setSnackbarOpen(true);
   };
 
   const handleToppingDelete = (id: string) => {
-    setToppings(prev => prev.filter(t => t.id !== id));
+    setToppings((prev) => prev.filter((t) => t.id !== id));
     setSnackbarMessage("トッピングを削除しました");
     setSnackbarSeverity("success");
     setSnackbarOpen(true);
   };
 
   const toggleProductAvailability = (id: string) => {
-    setProducts(prev => prev.map(p => 
-      p.id === id ? { ...p, available: !p.available } : p
-    ));
+    setProducts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, available: !p.available } : p))
+    );
   };
 
   const toggleToppingAvailability = (id: string) => {
-    setToppings(prev => prev.map(t => 
-      t.id === id ? { ...t, available: !t.available } : t
-    ));
+    setToppings((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, available: !t.available } : t))
+    );
   };
 
-  const lowStockProducts = products.filter(p => p.stock <= p.lowStockThreshold);
+  const lowStockProducts = products.filter(
+    (p) => p.stock <= p.lowStockThreshold
+  );
   const totalRevenue = products.reduce((sum, p) => sum + p.revenue, 0);
   const totalSold = products.reduce((sum, p) => sum + p.totalSold, 0);
 
@@ -255,7 +266,7 @@ function ProductManagementPage() {
                 {products.length}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                販売中: {products.filter(p => p.available).length}
+                販売中: {products.filter((p) => p.available).length}
               </Typography>
             </CardContent>
           </Card>
@@ -293,13 +304,28 @@ function ProductManagementPage() {
           </Card>
         </Box>
         <Box sx={{ minWidth: 240, flex: 1 }}>
-          <Card sx={{ border: lowStockProducts.length > 0 ? "2px solid" : "none", borderColor: "warning.main" }}>
+          <Card
+            sx={{
+              border: lowStockProducts.length > 0 ? "2px solid" : "none",
+              borderColor: "warning.main",
+            }}
+          >
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <WarningIcon color={lowStockProducts.length > 0 ? "warning" : "disabled"} sx={{ mr: 1 }} />
+                <WarningIcon
+                  color={lowStockProducts.length > 0 ? "warning" : "disabled"}
+                  sx={{ mr: 1 }}
+                />
                 <Typography variant="h6">在庫警告</Typography>
               </Box>
-              <Typography variant="h4" color={lowStockProducts.length > 0 ? "warning.main" : "text.secondary"}>
+              <Typography
+                variant="h4"
+                color={
+                  lowStockProducts.length > 0
+                    ? "warning.main"
+                    : "text.secondary"
+                }
+              >
                 {lowStockProducts.length}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -317,14 +343,21 @@ function ProductManagementPage() {
             在庫不足の商品があります
           </Typography>
           <Typography variant="body2">
-            {lowStockProducts.map(p => p.name).join(", ")}
+            {lowStockProducts.map((p) => p.name).join(", ")}
           </Typography>
         </Alert>
       )}
 
       {/* 商品管理セクション */}
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
           <Typography variant="h5" component="h2">
             商品一覧
           </Typography>
@@ -363,13 +396,25 @@ function ProductManagementPage() {
                   <TableCell>
                     <Box sx={{ display: "flex", alignItems: "center" }}>
                       <Typography
-                        color={product.stock <= product.lowStockThreshold ? "error" : "text.primary"}
-                        sx={{ fontWeight: product.stock <= product.lowStockThreshold ? "bold" : "normal" }}
+                        color={
+                          product.stock <= product.lowStockThreshold
+                            ? "error"
+                            : "text.primary"
+                        }
+                        sx={{
+                          fontWeight:
+                            product.stock <= product.lowStockThreshold
+                              ? "bold"
+                              : "normal",
+                        }}
                       >
                         {product.stock}
                       </Typography>
                       {product.stock <= product.lowStockThreshold && (
-                        <WarningIcon color="warning" sx={{ ml: 1, fontSize: 16 }} />
+                        <WarningIcon
+                          color="warning"
+                          sx={{ ml: 1, fontSize: 16 }}
+                        />
                       )}
                     </Box>
                   </TableCell>
@@ -383,12 +428,18 @@ function ProductManagementPage() {
                     />
                   </TableCell>
                   <TableCell>
-                    <Tooltip title={product.available ? "販売停止" : "販売開始"}>
+                    <Tooltip
+                      title={product.available ? "販売停止" : "販売開始"}
+                    >
                       <IconButton
                         onClick={() => toggleProductAvailability(product.id)}
                         color={product.available ? "warning" : "success"}
                       >
-                        {product.available ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        {product.available ? (
+                          <VisibilityOffIcon />
+                        ) : (
+                          <VisibilityIcon />
+                        )}
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="編集">
@@ -422,7 +473,14 @@ function ProductManagementPage() {
 
       {/* トッピング管理セクション */}
       <Box>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
           <Typography variant="h5" component="h2">
             トッピング一覧
           </Typography>
@@ -463,12 +521,18 @@ function ProductManagementPage() {
                     />
                   </TableCell>
                   <TableCell>
-                    <Tooltip title={topping.available ? "利用停止" : "利用開始"}>
+                    <Tooltip
+                      title={topping.available ? "利用停止" : "利用開始"}
+                    >
                       <IconButton
                         onClick={() => toggleToppingAvailability(topping.id)}
                         color={topping.available ? "warning" : "success"}
                       >
-                        {topping.available ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        {topping.available ? (
+                          <VisibilityOffIcon />
+                        ) : (
+                          <VisibilityIcon />
+                        )}
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="編集">
@@ -526,7 +590,10 @@ function ProductManagementPage() {
         autoHideDuration={3000}
         onClose={() => setSnackbarOpen(false)}
       >
-        <Alert severity={snackbarSeverity} onClose={() => setSnackbarOpen(false)}>
+        <Alert
+          severity={snackbarSeverity}
+          onClose={() => setSnackbarOpen(false)}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>
@@ -592,9 +659,7 @@ function ProductDialog({ open, onClose, onSave, product }: ProductDialogProps) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        {product ? "商品編集" : "商品追加"}
-      </DialogTitle>
+      <DialogTitle>{product ? "商品編集" : "商品追加"}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
           <TextField
@@ -608,7 +673,9 @@ function ProductDialog({ open, onClose, onSave, product }: ProductDialogProps) {
             label="価格"
             type="number"
             value={formData.price}
-            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, price: e.target.value })
+            }
             fullWidth
             required
           />
@@ -617,7 +684,9 @@ function ProductDialog({ open, onClose, onSave, product }: ProductDialogProps) {
             <Select
               value={formData.category}
               label="カテゴリ"
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
             >
               <MenuItem value="メイン">メイン</MenuItem>
               <MenuItem value="特製">特製</MenuItem>
@@ -629,7 +698,9 @@ function ProductDialog({ open, onClose, onSave, product }: ProductDialogProps) {
           <TextField
             label="説明"
             value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
             fullWidth
             multiline
             rows={2}
@@ -638,7 +709,9 @@ function ProductDialog({ open, onClose, onSave, product }: ProductDialogProps) {
             label="在庫数"
             type="number"
             value={formData.stock}
-            onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, stock: e.target.value })
+            }
             fullWidth
             required
           />
@@ -646,7 +719,9 @@ function ProductDialog({ open, onClose, onSave, product }: ProductDialogProps) {
             label="在庫警告しきい値"
             type="number"
             value={formData.lowStockThreshold}
-            onChange={(e) => setFormData({ ...formData, lowStockThreshold: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, lowStockThreshold: e.target.value })
+            }
             fullWidth
             required
           />
@@ -654,7 +729,9 @@ function ProductDialog({ open, onClose, onSave, product }: ProductDialogProps) {
             control={
               <Switch
                 checked={formData.available}
-                onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
+                onChange={(e) =>
+                  setFormData({ ...formData, available: e.target.checked })
+                }
               />
             }
             label="販売中"
@@ -713,9 +790,7 @@ function ToppingDialog({ open, onClose, onSave, topping }: ToppingDialogProps) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        {topping ? "トッピング編集" : "トッピング追加"}
-      </DialogTitle>
+      <DialogTitle>{topping ? "トッピング編集" : "トッピング追加"}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
           <TextField
@@ -729,7 +804,9 @@ function ToppingDialog({ open, onClose, onSave, topping }: ToppingDialogProps) {
             label="追加料金"
             type="number"
             value={formData.price}
-            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, price: e.target.value })
+            }
             fullWidth
             required
             helperText="0円の場合は無料トッピング"
@@ -738,7 +815,9 @@ function ToppingDialog({ open, onClose, onSave, topping }: ToppingDialogProps) {
             control={
               <Switch
                 checked={formData.available}
-                onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
+                onChange={(e) =>
+                  setFormData({ ...formData, available: e.target.checked })
+                }
               />
             }
             label="利用可能"

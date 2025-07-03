@@ -90,11 +90,13 @@ function NavigationBar() {
   const location = useLocation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  
+
   const { state } = useAppContext();
   const { systemState, connectionStatus, notifications } = state;
-  
-  const unreadNotifications = notifications.filter(n => !n.is_confirmed).length;
+
+  const unreadNotifications = notifications.filter(
+    (n) => !n.is_confirmed
+  ).length;
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -179,40 +181,45 @@ function NavigationBar() {
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {/* 営業状況 */}
-          <Chip 
-            label={systemState.営業状況} 
-            color={getOperatingStatusColor()} 
-            variant="filled" 
+          <Chip
+            label={systemState.営業状況}
+            color={getOperatingStatusColor()}
+            variant="filled"
             size="small"
           />
-          
+
           {/* 待ち件数 */}
           {systemState.待ち件数 > 0 && (
-            <Chip 
-              label={`待ち${systemState.待ち件数}件`} 
-              color={systemState.待ち件数 > 10 ? "error" : "info"} 
-              variant="outlined" 
+            <Chip
+              label={`待ち${systemState.待ち件数}件`}
+              color={systemState.待ち件数 > 10 ? "error" : "info"}
+              variant="outlined"
               size="small"
             />
           )}
-          
+
           {/* 混雑状況 */}
-          <Chip 
-            label={systemState.混雑状況} 
+          <Chip
+            label={systemState.混雑状況}
             color={
-              systemState.混雑状況 === "混雑" ? "error" :
-              systemState.混雑状況 === "普通" ? "warning" : "success"
-            } 
-            variant="outlined" 
+              systemState.混雑状況 === "混雑"
+                ? "error"
+                : systemState.混雑状況 === "普通"
+                ? "warning"
+                : "success"
+            }
+            variant="outlined"
             size="small"
           />
 
           {/* 接続状況 */}
-          <Chip 
-            icon={connectionStatus === "connected" ? <WifiIcon /> : <WifiOffIcon />}
-            label={getConnectionStatusText()} 
-            color={getConnectionStatusColor()} 
-            variant="outlined" 
+          <Chip
+            icon={
+              connectionStatus === "connected" ? <WifiIcon /> : <WifiOffIcon />
+            }
+            label={getConnectionStatusText()}
+            color={getConnectionStatusColor()}
+            variant="outlined"
             size="small"
           />
 

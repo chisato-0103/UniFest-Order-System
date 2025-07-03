@@ -201,7 +201,7 @@ const dummyHistoryOrders: Order[] = [
 ];
 
 function HistoryPage() {
-  const [orders, setOrders] = useState<Order[]>(dummyHistoryOrders);
+  const [orders] = useState<Order[]>(dummyHistoryOrders);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -505,7 +505,7 @@ function HistoryPage() {
                       <TableCell>
                         <Chip
                           label={order.status}
-                          color={getStatusColor(order.status) as any}
+                          color={getStatusColor(order.status) as "success" | "warning" | "error" | "info" | "primary"}
                           size="small"
                         />
                       </TableCell>
@@ -595,7 +595,7 @@ function HistoryPage() {
                       </Typography>
                       <Chip
                         label={selectedOrder.status}
-                        color={getStatusColor(selectedOrder.status) as any}
+                        color={getStatusColor(selectedOrder.status) as "success" | "warning" | "error" | "info" | "primary"}
                         size="small"
                       />
                     </Box>

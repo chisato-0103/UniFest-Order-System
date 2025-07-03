@@ -31,7 +31,6 @@ import {
   TableRow,
   Paper,
   InputAdornment,
-  LinearProgress,
 } from "@mui/material";
 import {
   LocalShipping as DeliveryIcon,
@@ -41,7 +40,6 @@ import {
   CheckCircle as CheckCircleIcon,
   AccessTime as TimeIcon,
   Refresh as RefreshIcon,
-  QrCodeScanner as QrIcon,
   Thermostat as TempIcon,
   Done as DoneIcon,
 } from "@mui/icons-material";
@@ -447,10 +445,10 @@ function DeliveryPage() {
                               gap: 1,
                             }}
                           >
-                            <TempIcon color={tempStatus.color as any} />
+                            <TempIcon color={tempStatus.color as "success" | "warning" | "error"} />
                             <Chip
                               label={tempStatus.label}
-                              color={tempStatus.color as any}
+                              color={tempStatus.color as "success" | "warning" | "error"}
                               size="small"
                             />
                           </Box>

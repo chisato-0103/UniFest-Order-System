@@ -1,5 +1,5 @@
 services:
-  # Backend API Server
+  # Backend API Server (Node.js + Express + Socket.io)
   - type: web
     name: unifest-backend
     runtime: node
@@ -21,8 +21,12 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         value: https://unifest-frontend.onrender.com
+      - key: CORS_ORIGIN
+        value: https://unifest-frontend.onrender.com
+    # 無料枠の制限内で運用
+    autoDeploy: true
 
-  # Frontend Static Site
+  # Frontend Static Site (React + TypeScript + MUI)
   - type: web
     name: unifest-frontend
     runtime: static
@@ -33,8 +37,13 @@ services:
     envVars:
       - key: VITE_API_URL
         value: https://unifest-backend.onrender.com
+      - key: VITE_SOCKET_URL
+        value: https://unifest-backend.onrender.com
+    # 自動デプロイを有効化
+    autoDeploy: true
 
 databases:
+  # PostgreSQL Database (1GB無料枠)
   - name: unifest-database
     plan: free
     databaseName: unifest_order_db

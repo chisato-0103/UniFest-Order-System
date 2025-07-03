@@ -250,3 +250,80 @@ docker-compose ps
 - **ポート競合**: 他のサービスが同じポートを使用している場合は、docker-compose.yml でポート番号を変更
 - **データベース接続エラー**: PostgreSQL コンテナの起動完了を待つか、ヘルスチェックを確認
 - **Socket.io 接続エラー**: CORS 設定とフロントエンドの API URL を確認
+
+## 🚀 Render デプロイ手順（設計書準拠）
+
+### 前提条件
+
+- GitHub アカウント
+- コードが GitHub にプッシュ済み
+- render.yaml 設定済み
+
+### ステップ 1: Render アカウント作成
+
+1. [Render.com](https://render.com) にアクセス
+2. **「Get Started for Free」** をクリック
+3. **GitHub アカウント** でサインアップ
+
+### ステップ 2: リポジトリ接続
+
+1. Render ダッシュボードで **「New +」** → **「Blueprint」**
+2. **「Connect GitHub」** をクリック
+3. リポジトリ選択: `chisato-0103/UniFest-Order-System`
+4. **「Connect」** をクリック
+
+### ステップ 3: render.yaml 自動認識
+
+1. render.yaml が自動検出される
+2. 以下の 3 つのサービスが作成される：
+   - `unifest-backend` (Node.js API)
+   - `unifest-frontend` (React Static Site)
+   - `unifest-database` (PostgreSQL)
+
+### ステップ 4: 環境変数の確認
+
+自動設定される環境変数：
+
+```bash
+# Backend
+NODE_ENV=production
+PORT=10000
+DATABASE_URL=<自動生成>
+JWT_SECRET=<自動生成>
+FRONTEND_URL=https://unifest-frontend.onrender.com
+
+# Frontend
+VITE_API_URL=https://unifest-backend.onrender.com
+VITE_SOCKET_URL=https://unifest-backend.onrender.com
+```
+
+### ステップ 5: デプロイ実行
+
+1. **「Apply」** をクリック
+2. 自動的にビルド・デプロイ開始
+3. 進捗は各サービスのログで確認可能
+
+### ステップ 6: データベース初期化
+
+1. バックエンドデプロイ完了後
+2. PostgreSQL に自動接続
+3. 初期テーブル作成は自動実行
+
+### ステップ 7: 動作確認
+
+- **フロントエンド**: https://unifest-frontend.onrender.com
+- **バックエンド API**: https://unifest-backend.onrender.com/health
+- **ヘルスチェック**: 緑色のステータス確認
+
+### 無料枠の制限
+
+- **フロントエンド**: 制限なし
+- **バックエンド**: 750 時間/月（十分）
+- **データベース**: 1GB、90 日間
+- **帯域幅**: 100GB/月
+
+### トラブルシューティング
+
+1. **ビルドエラー**: ログで詳細確認
+2. **環境変数エラー**: 設定の再確認
+3. **データベース接続エラー**: DATABASE_URL の確認

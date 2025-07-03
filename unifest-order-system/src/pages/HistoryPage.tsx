@@ -1,9 +1,9 @@
-import { Container, Typography, Box } from '@mui/material';
+import { Container, Typography, Box } from "@mui/material";
 
 function HistoryPage() {
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
-      <Box sx={{ textAlign: 'center' }}>
+      <Box sx={{ textAlign: "center" }}>
         <Typography variant="h4" component="h1" gutterBottom color="primary">
           オーダー履歴
         </Typography>

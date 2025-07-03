@@ -5,7 +5,7 @@ export interface Product {
   product_name: string;
   price: number;
   category_id: number;
-  status: '有効' | '無効' | '売り切れ';
+  status: "有効" | "無効" | "売り切れ";
   image_url?: string;
   description?: string;
   allergy_info?: string;
@@ -58,9 +58,15 @@ export interface Order {
   order_number: string;
   items: OrderItem[];
   total_amount: number;
-  status: '注文受付' | '調理待ち' | '調理中' | '調理完了' | '受け取り済み' | 'キャンセル';
-  payment_status: '未払い' | '支払済み';
-  payment_method: '現金' | 'クレジットカード' | 'PayPay' | 'その他';
+  status:
+    | "注文受付"
+    | "調理待ち"
+    | "調理中"
+    | "調理完了"
+    | "受け取り済み"
+    | "キャンセル";
+  payment_status: "未払い" | "支払済み";
+  payment_method: "現金" | "クレジットカード" | "PayPay" | "その他";
   estimated_pickup_time: string;
   actual_pickup_time?: string | null;
   special_instructions?: string;
@@ -68,7 +74,13 @@ export interface Order {
   updated_at: string;
 }
 
-export type OrderStatus = '注文受付' | '調理待ち' | '調理中' | '調理完了' | '受け取り済み' | 'キャンセル';
+export type OrderStatus =
+  | "注文受付"
+  | "調理待ち"
+  | "調理中"
+  | "調理完了"
+  | "受け取り済み"
+  | "キャンセル";
 
 export interface Notification {
   notification_id: number;
@@ -76,7 +88,7 @@ export interface Notification {
   target_order_number?: string;
   notification_time: string;
   content: string;
-  priority: '緊急' | '通常' | '情報';
+  priority: "緊急" | "通常" | "情報";
   is_confirmed: boolean;
   created_at: string;
 }
@@ -85,7 +97,7 @@ export interface SystemSetting {
   setting_id: number;
   setting_name: string;
   setting_value: string;
-  data_type: 'string' | 'number' | 'boolean';
+  data_type: "string" | "number" | "boolean";
   description?: string;
   updated_at: string;
   updated_by?: string;
@@ -105,15 +117,19 @@ export interface Cart {
 
 // システム状態
 export interface SystemState {
-  混雑状況: '空いている' | '普通' | '混雑';
+  混雑状況: "空いている" | "普通" | "混雑";
   待ち件数: number;
   緊急停止状態: boolean;
-  営業状況: '営業中' | '準備中' | '終了';
+  営業状況: "営業中" | "準備中" | "終了";
   手動運用モード: boolean;
 }
 
 // 調理進捗状態
-export type CookingStatus = '準備中' | '焼き開始' | '焼き上がり' | '盛り付け完了';
+export type CookingStatus =
+  | "準備中"
+  | "焼き開始"
+  | "焼き上がり"
+  | "盛り付け完了";
 
 // APIレスポンス型
 export interface ApiResponse<T> {

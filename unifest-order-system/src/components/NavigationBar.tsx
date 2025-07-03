@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -9,7 +9,7 @@ import {
   MenuItem,
   Box,
   Chip,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Menu as MenuIcon,
   Store as StoreIcon,
@@ -21,18 +21,63 @@ import {
   ShoppingCart as ShoppingCartIcon,
   MonitorHeart as MonitorIcon,
   Inventory as InventoryIcon,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 
 const navigationItems = [
-  { path: '/', label: '注文画面', icon: <ShoppingCartIcon />, color: 'primary' },
-  { path: '/customer-status', label: '注文状況', icon: <MonitorIcon />, color: 'info' },
-  { path: '/store-monitor', label: '店舗モニター', icon: <StoreIcon />, color: 'secondary' },
-  { path: '/kitchen', label: '厨房画面', icon: <KitchenIcon />, color: 'warning' },
-  { path: '/payment', label: '支払い画面', icon: <PaymentIcon />, color: 'success' },
-  { path: '/delivery', label: '受け渡し画面', icon: <DeliveryIcon />, color: 'info' },
-  { path: '/history', label: '注文履歴', icon: <HistoryIcon />, color: 'default' },
-  { path: '/product-management', label: '商品管理', icon: <InventoryIcon />, color: 'secondary' },
-  { path: '/system-settings', label: 'システム設定', icon: <SettingsIcon />, color: 'default' },
+  {
+    path: "/",
+    label: "注文画面",
+    icon: <ShoppingCartIcon />,
+    color: "primary",
+  },
+  {
+    path: "/customer-status",
+    label: "注文状況",
+    icon: <MonitorIcon />,
+    color: "info",
+  },
+  {
+    path: "/store-monitor",
+    label: "店舗モニター",
+    icon: <StoreIcon />,
+    color: "secondary",
+  },
+  {
+    path: "/kitchen",
+    label: "厨房画面",
+    icon: <KitchenIcon />,
+    color: "warning",
+  },
+  {
+    path: "/payment",
+    label: "支払い画面",
+    icon: <PaymentIcon />,
+    color: "success",
+  },
+  {
+    path: "/delivery",
+    label: "受け渡し画面",
+    icon: <DeliveryIcon />,
+    color: "info",
+  },
+  {
+    path: "/history",
+    label: "注文履歴",
+    icon: <HistoryIcon />,
+    color: "default",
+  },
+  {
+    path: "/product-management",
+    label: "商品管理",
+    icon: <InventoryIcon />,
+    color: "secondary",
+  },
+  {
+    path: "/system-settings",
+    label: "システム設定",
+    icon: <SettingsIcon />,
+    color: "default",
+  },
 ];
 
 function NavigationBar() {
@@ -55,7 +100,10 @@ function NavigationBar() {
   };
 
   const getCurrentPageInfo = () => {
-    return navigationItems.find(item => item.path === location.pathname) || navigationItems[0];
+    return (
+      navigationItems.find((item) => item.path === location.pathname) ||
+      navigationItems[0]
+    );
   };
 
   const currentPage = getCurrentPageInfo();
@@ -72,20 +120,15 @@ function NavigationBar() {
         >
           <MenuIcon />
         </IconButton>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+
+        <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
           {currentPage.icon}
           <Typography variant="h6" component="div" sx={{ ml: 1 }}>
             UniFest Order System - {currentPage.label}
           </Typography>
         </Box>
 
-        <Chip 
-          label="営業中" 
-          color="success" 
-          variant="filled" 
-          sx={{ mr: 2 }}
-        />
+        <Chip label="営業中" color="success" variant="filled" sx={{ mr: 2 }} />
 
         <Menu
           id="navigation-menu"
@@ -93,17 +136,17 @@ function NavigationBar() {
           open={open}
           onClose={handleClose}
           MenuListProps={{
-            'aria-labelledby': 'navigation-button',
+            "aria-labelledby": "navigation-button",
           }}
         >
           {navigationItems.map((item) => (
-            <MenuItem 
+            <MenuItem
               key={item.path}
               onClick={() => handleNavigate(item.path)}
               selected={location.pathname === item.path}
               sx={{
-                display: 'flex',
-                alignItems: 'center',
+                display: "flex",
+                alignItems: "center",
                 gap: 1,
                 minWidth: 200,
               }}

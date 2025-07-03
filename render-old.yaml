@@ -2,7 +2,7 @@ services:
   # Backend API Server (Node.js + Express + Socket.io)
   - type: web
     name: unifest-backend
-    env: node
+    runtime: node
     plan: free
     region: oregon
     buildCommand: cd backend && npm install && npm run build
@@ -23,11 +23,13 @@ services:
         value: https://unifest-frontend.onrender.com
       - key: CORS_ORIGIN
         value: https://unifest-frontend.onrender.com
+    # 無料枠の制限内で運用
+    autoDeploy: true
 
   # Frontend Static Site (React + TypeScript + MUI)
   - type: web
     name: unifest-frontend
-    env: static
+    runtime: static
     plan: free
     buildCommand: cd unifest-order-system && npm install && npm run build
     staticPublishPath: unifest-order-system/dist
@@ -36,10 +38,13 @@ services:
         value: https://unifest-backend.onrender.com
       - key: VITE_SOCKET_URL
         value: https://unifest-backend.onrender.com
+    # 自動デプロイを有効化
+    autoDeploy: true
 
 databases:
   # PostgreSQL Database (1GB無料枠)
   - name: unifest-database
+    plan: free
     databaseName: unifest_order_db
     user: unifest_user
     region: oregon

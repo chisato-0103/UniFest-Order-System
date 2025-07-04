@@ -8,6 +8,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
 import { testConnection } from "./database/connection";
+import { initializeDatabase, checkTableCounts } from "./database/init";
 import { SocketHandlers } from "./socket/socketHandlers";
 import { startStatsPolling } from "./controllers/statsController";
 
@@ -165,6 +166,21 @@ const startServer = async () => {
     if (!dbConnected) {
       console.error("❌ Database connection failed. Server will not start.");
       process.exit(1);
+    }
+
+    // データベーススキーマの初期化
+    console.log("🔄 データベーススキーマを初期化中...");
+    const dbInitialized = await initializeDatabase();
+    if (!dbInitialized) {
+      console.error(
+        "❌ Database initialization failed. Server will not start."
+      );
+      process.exit(1);
+    }
+
+    // テーブル行数の確認（本番環境では省略可能）
+    if (process.env.NODE_ENV !== "production") {
+      await checkTableCounts();
     }
 
     server.listen(PORT, () => {

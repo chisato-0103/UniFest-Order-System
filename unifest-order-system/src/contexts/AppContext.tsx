@@ -138,7 +138,37 @@ const initialState: AppState = {
       緊急通知: true,
     },
   },
-  notifications: [],
+  notifications: [
+    {
+      notification_id: 1,
+      notification_type: "new_order",
+      target_order_number: "A001",
+      notification_time: new Date().toISOString(),
+      content: "新しい注文が入りました",
+      priority: "通常",
+      is_confirmed: false,
+      created_at: new Date().toISOString(),
+    },
+    {
+      notification_id: 2,
+      notification_type: "low_stock",
+      notification_time: new Date(Date.now() - 300000).toISOString(), // 5分前
+      content: "たこ焼きの材料が残り少なくなっています",
+      priority: "緊急",
+      is_confirmed: false,
+      created_at: new Date(Date.now() - 300000).toISOString(),
+    },
+    {
+      notification_id: 3,
+      notification_type: "order_status_update",
+      target_order_number: "A002",
+      notification_time: new Date(Date.now() - 600000).toISOString(), // 10分前
+      content: "注文が完了しました",
+      priority: "通常",
+      is_confirmed: true,
+      created_at: new Date(Date.now() - 600000).toISOString(),
+    },
+  ],
   stockInfo: [],
   stockHistory: [],
   stockAlerts: [],

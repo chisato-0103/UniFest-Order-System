@@ -4,7 +4,6 @@ import {
   Box,
   Card,
   CardContent,
-  CardMedia,
   Button,
   Badge,
   IconButton,
@@ -23,11 +22,6 @@ import {
   FormControlLabel,
   Checkbox,
   Divider,
-  Grid,
-  Avatar,
-  Slide,
-  CardActions,
-  useTheme,
 } from "@mui/material";
 import {
   Add as AddIcon,

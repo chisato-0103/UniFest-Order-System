@@ -269,7 +269,7 @@ function OrderPage() {
     systemState.営業状況 === "営業中" && !systemState.緊急停止状態;
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
+    <Container maxWidth="xl" sx={{ py: 3, px: { xs: 2, sm: 3 } }}>
       {/* ヘッダー */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom color="primary">
@@ -324,25 +324,37 @@ function OrderPage() {
       </Box>
 
       {/* 商品一覧 */}
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr", // スマホ: 1列
+            sm: "repeat(2, 1fr)", // タブレット: 2列
+            md: "repeat(3, 1fr)", // PC: 3列
+            lg: "repeat(4, 1fr)", // 大画面: 4列
+          },
+          gap: 3,
+          mb: 8,
+        }}
+      >
         {dummyProducts.map((product) => (
           <Card
             key={product.id}
             sx={{
-              minWidth: 280,
-              maxWidth: 320,
-              flex: "1 1 280px",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
               opacity: !product.available || !isOrderingAvailable ? 0.6 : 1,
               cursor:
                 product.available && isOrderingAvailable
                   ? "pointer"
                   : "default",
+              transition: "all 0.2s ease-in-out",
               "&:hover":
                 product.available && isOrderingAvailable
                   ? {
                       boxShadow: 4,
                       transform: "translateY(-2px)",
-                      transition: "all 0.2s ease-in-out",
                     }
                   : {},
             }}
@@ -352,7 +364,14 @@ function OrderPage() {
               handleProductClick(product)
             }
           >
-            <CardContent>
+            <CardContent
+              sx={{
+                flexGrow: 1,
+                display: "flex",
+                flexDirection: "column",
+                p: 2,
+              }}
+            >
               <Box
                 sx={{
                   display: "flex",
@@ -361,7 +380,16 @@ function OrderPage() {
                   mb: 1,
                 }}
               >
-                <Typography variant="h6" component="h2" color="primary">
+                <Typography
+                  variant="h6"
+                  component="h2"
+                  color="primary"
+                  sx={{
+                    fontSize: { xs: "1rem", sm: "1.1rem" },
+                    fontWeight: "bold",
+                    lineHeight: 1.3,
+                  }}
+                >
                   {product.name}
                 </Typography>
                 <Chip
@@ -369,10 +397,19 @@ function OrderPage() {
                   size="small"
                   color="secondary"
                   variant="outlined"
+                  sx={{ ml: 1, flexShrink: 0 }}
                 />
               </Box>
 
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  mb: 2,
+                  flexGrow: 1,
+                  fontSize: { xs: "0.8rem", sm: "0.875rem" },
+                }}
+              >
                 {product.description}
               </Typography>
 
@@ -381,28 +418,41 @@ function OrderPage() {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  mt: "auto",
                 }}
               >
                 <Typography
                   variant="h5"
                   color="primary"
-                  sx={{ fontWeight: "bold" }}
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: { xs: "1.2rem", sm: "1.5rem" },
+                  }}
                 >
                   ¥{product.price.toLocaleString()}
                 </Typography>
 
-                {!product.available && (
-                  <Chip
-                    label="売り切れ"
-                    color="error"
-                    size="small"
-                    icon={<WarningIcon />}
-                  />
-                )}
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    gap: 0.5,
+                  }}
+                >
+                  {!product.available && (
+                    <Chip
+                      label="売り切れ"
+                      color="error"
+                      size="small"
+                      icon={<WarningIcon />}
+                    />
+                  )}
 
-                {product.available && !isOrderingAvailable && (
-                  <Chip label="注文停止中" color="warning" size="small" />
-                )}
+                  {product.available && !isOrderingAvailable && (
+                    <Chip label="注文停止中" color="warning" size="small" />
+                  )}
+                </Box>
               </Box>
             </CardContent>
           </Card>

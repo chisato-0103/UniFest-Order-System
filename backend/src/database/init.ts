@@ -93,24 +93,37 @@ export const initializeDatabase = async (): Promise<boolean> => {
       for (const statement of orderedStatements) {
         if (statement.trim()) {
           try {
+            console.log(`🔄 実行中: ${statement.substring(0, 80)}...`);
             await client.query(statement);
             successCount++;
+            console.log(`✅ 成功`);
           } catch (error: any) {
             // 既に存在するテーブルやインデックスのエラーは無視
             if (
-              error.code === "42P07" ||
-              error.code === "42P06" ||
-              error.code === "42P16" ||
-              error.code === "42710"
+              error.code === "42P07" || // relation already exists
+              error.code === "42P06" || // schema already exists
+              error.code === "42P16" || // invalid table definition
+              error.code === "42710" || // duplicate object
+              error.code === "42723" // duplicate function
             ) {
               skipCount++;
-              console.log(`⚠️  スキップ: ${error.message.split("\n")[0]}`);
+              console.log(
+                `⚠️  スキップ (${error.code}): ${error.message.split("\n")[0]}`
+              );
             } else {
               console.error(
                 `❌ SQL実行エラー: ${statement.substring(0, 100)}...`
               );
-              console.error(error.message);
-              throw error;
+              console.error(`❌ エラーコード: ${error.code}`);
+              console.error(`❌ エラーメッセージ: ${error.message}`);
+
+              // テーブル作成関連のエラーの場合は処理を続行
+              if (statement.toUpperCase().includes("CREATE TABLE")) {
+                console.log(`⚠️  テーブル作成エラーをスキップして続行`);
+                skipCount++;
+              } else {
+                throw error;
+              }
             }
           }
         }

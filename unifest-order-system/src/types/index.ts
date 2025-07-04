@@ -49,18 +49,18 @@ export interface OrderItem {
   product_name: string;
   quantity: number;
   unit_price: number;
-  subtotal: number;
+  total_price: number; // データベースに合わせて統一
   toppings?: OrderTopping[];
-  cooking_status: CookingStatus;
-  cooking_start_time?: string;
-  cooking_completion_time?: string;
+  cooking_time: number;
+  cooking_instruction?: string;
   created_at: string;
   updated_at: string;
 
-  // CustomerStatusPageで使用される追加プロパティ
-  total_price: number; // subtotalのエイリアス
-  cooking_time: number;
-  cooking_instruction: string;
+  // 下位互換性のためのエイリアス
+  subtotal?: number; // total_priceのエイリアス
+  cooking_status?: CookingStatus; // 調理状況（フロントエンド用）
+  cooking_start_time?: string; // 調理開始時刻
+  cooking_completion_time?: string; // 調理完了時刻
 }
 
 export interface OrderTopping {
@@ -82,26 +82,27 @@ export interface Order {
   order_id: number;
   order_number: string;
   customer_id?: number;
-  order_status: OrderStatus;
+  total_amount: number; // データベースに合わせて統一
+  status: OrderStatus; // データベースに合わせて統一
   payment_status: PaymentStatus;
-  total_price: number;
-  order_items: OrderItem[];
-  estimated_completion_time?: string;
-  actual_completion_time?: string;
-  pickup_time?: string;
-  special_requests?: string;
+  payment_method?: string;
+  estimated_pickup_time?: string;
+  actual_pickup_time?: string;
+  special_instructions?: string;
+  cooking_start_time?: string;
+  cooking_completion_time?: string;
+  cancel_reason?: string;
   qr_code?: string;
   created_at: string;
   updated_at: string;
 
-  // CustomerStatusPageで使用される追加プロパティ
-  items: OrderItem[]; // order_itemsのエイリアス
-  total_amount: number; // total_priceのエイリアス
-  status: OrderStatus; // order_statusのエイリアス
-  payment_method: string;
-  estimated_pickup_time: string;
-  actual_pickup_time?: string;
-  special_instructions?: string;
+  // 関連データ
+  order_items?: OrderItem[];
+
+  // 下位互換性のためのエイリアス
+  items?: OrderItem[]; // order_itemsのエイリアス
+  total_price?: number; // total_amountのエイリアス
+  order_status?: OrderStatus; // statusのエイリアス
 }
 
 // 待ち時間管理関連

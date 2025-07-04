@@ -49,11 +49,18 @@ export async function ensureOrdersTable(pool: Pool): Promise<boolean> {
         product_name VARCHAR(100) NOT NULL,
         price DECIMAL(10,2) NOT NULL,
         category_id INTEGER REFERENCES categories(category_id),
-        status VARCHAR(20) NOT NULL DEFAULT '有効',
+        status VARCHAR(20) NOT NULL DEFAULT '有効' CHECK (status IN ('有効', '無効', '売り切れ')),
         image_url VARCHAR(255),
         description TEXT,
+        allergy_info TEXT,
         cooking_time INTEGER DEFAULT 10,
+        max_simultaneous_cooking INTEGER DEFAULT 5,
+        display_order INTEGER DEFAULT 0,
+        deleted_flag BOOLEAN DEFAULT FALSE,
         stock_quantity INTEGER DEFAULT 0,
+        initial_stock INTEGER DEFAULT 0,
+        low_stock_threshold INTEGER DEFAULT 10,
+        auto_disable_on_zero BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );`,
@@ -101,18 +108,70 @@ export async function ensureOrdersTable(pool: Pool): Promise<boolean> {
       `CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);`,
       `CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);`,
       `CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);`,
+      `CREATE INDEX IF NOT EXISTS idx_products_category_id ON products(category_id);`,
+      `CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);`,
 
-      // 基本データ
+      // 設計書準拠の追加テーブル
+      `CREATE TABLE IF NOT EXISTS toppings (
+        topping_id SERIAL PRIMARY KEY,
+        topping_name VARCHAR(50) NOT NULL,
+        price DECIMAL(10,2) NOT NULL DEFAULT 0,
+        is_active BOOLEAN DEFAULT TRUE,
+        target_product_ids INTEGER[],
+        display_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );`,
+
+      `CREATE TABLE IF NOT EXISTS notifications (
+        notification_id SERIAL PRIMARY KEY,
+        notification_type VARCHAR(30) NOT NULL,
+        target_order_number VARCHAR(4),
+        notification_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        content TEXT NOT NULL,
+        priority VARCHAR(10) DEFAULT '通常' CHECK (priority IN ('緊急', '通常', '情報')),
+        is_confirmed BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );`,
+
+      `CREATE TABLE IF NOT EXISTS system_settings (
+        setting_id SERIAL PRIMARY KEY,
+        setting_name VARCHAR(100) NOT NULL UNIQUE,
+        setting_value TEXT NOT NULL,
+        data_type VARCHAR(20) NOT NULL CHECK (data_type IN ('string', 'number', 'boolean', 'json')),
+        description TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_by VARCHAR(50)
+      );`,
+
+      // 基本データの投入
       `INSERT INTO categories (category_name, display_order)
        VALUES ('たこ焼き', 1), ('ドリンク', 2), ('サイドメニュー', 3)
-       ON CONFLICT DO NOTHING;`,
+       ON CONFLICT (category_name) DO NOTHING;`,
 
-      `INSERT INTO products (product_name, price, category_id, cooking_time, stock_quantity)
+      `INSERT INTO products (product_name, price, category_id, cooking_time, stock_quantity, initial_stock)
        VALUES
-         ('たこ焼き 8個入り', 600, 1, 8, 100),
-         ('たこ焼き 12個入り', 850, 1, 10, 80),
-         ('たこ焼き 16個入り', 1100, 1, 12, 60)
-       ON CONFLICT DO NOTHING;`,
+         ('たこ焼き 8個入り', 600, 1, 8, 100, 100),
+         ('たこ焼き 12個入り', 850, 1, 10, 80, 80),
+         ('たこ焼き 16個入り', 1100, 1, 12, 60, 60)
+       ON CONFLICT (product_name) DO NOTHING;`,
+
+      `INSERT INTO toppings (topping_name, price, is_active, target_product_ids, display_order)
+       VALUES
+         ('ソース', 0, true, ARRAY[1,2,3], 1),
+         ('マヨネーズ', 0, true, ARRAY[1,2,3], 2),
+         ('青のり', 0, true, ARRAY[1,2,3], 3),
+         ('かつお節', 0, true, ARRAY[1,2,3], 4)
+       ON CONFLICT (topping_name) DO NOTHING;`,
+
+      `INSERT INTO system_settings (setting_name, setting_value, data_type, description)
+       VALUES
+         ('store_name', 'UniFest たこ焼き店', 'string', '店舗名'),
+         ('max_orders_per_batch', '10', 'number', '一度に処理できる最大注文数'),
+         ('auto_order_timeout', '1800', 'number', '注文自動キャンセル時間（秒）'),
+         ('enable_notifications', 'true', 'boolean', '通知機能の有効/無効'),
+         ('congestion_threshold', '5', 'number', '混雑判定の閾値（待機注文数）')
+       ON CONFLICT (setting_name) DO NOTHING;`,
     ];
 
     // 各ステートメントを実行

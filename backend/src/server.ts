@@ -161,26 +161,41 @@ const PORT = process.env.PORT || 3001;
 
 const startServer = async () => {
   try {
+    console.log("🚀 サーバーを起動中...");
+
     // データベース接続テスト
+    console.log("🔄 データベース接続をテスト中...");
     const dbConnected = await testConnection();
     if (!dbConnected) {
       console.error("❌ Database connection failed. Server will not start.");
       process.exit(1);
     }
 
-    // データベーススキーマの初期化
+    // データベーススキーマの初期化（失敗してもサーバーは起動）
     console.log("🔄 データベーススキーマを初期化中...");
-    const dbInitialized = await initializeDatabase();
-    if (!dbInitialized) {
+    try {
+      const dbInitialized = await initializeDatabase();
+      if (dbInitialized) {
+        console.log("✅ データベース初期化完了");
+      } else {
+        console.log(
+          "⚠️  データベース初期化に問題がありますが、サーバーを継続起動します"
+        );
+      }
+    } catch (initError) {
       console.error(
-        "❌ Database initialization failed. Server will not start."
+        "⚠️  データベース初期化エラー（サーバーは継続起動）:",
+        initError
       );
-      process.exit(1);
     }
 
     // テーブル行数の確認（本番環境では省略可能）
     if (process.env.NODE_ENV !== "production") {
-      await checkTableCounts();
+      try {
+        await checkTableCounts();
+      } catch (countError) {
+        console.log("⚠️  テーブル行数確認をスキップ:", countError);
+      }
     }
 
     server.listen(PORT, () => {
@@ -194,9 +209,10 @@ const startServer = async () => {
         }`
       );
 
-      // 統計ポーリングを開始（30秒間隔）
+      // 統計ポーリングを開始（30秒間隔）- エラーハンドリング強化済み
+      console.log("📈 統計ポーリングを開始中...");
       startStatsPolling(30000);
-      console.log("📈 Stats polling started");
+      console.log("✅ サーバー起動完了");
     });
   } catch (error) {
     console.error("❌ Server startup failed:", error);

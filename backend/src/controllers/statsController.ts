@@ -31,6 +31,45 @@ export const getRealtimeStats = async (
   res: Response
 ): Promise<void> => {
   try {
+    // まずordersテーブルの存在を確認
+    const tableExistsQuery = `
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name = 'orders'
+      );
+    `;
+
+    const tableExists = await db.query(tableExistsQuery);
+
+    if (!tableExists.rows[0].exists) {
+      console.log(
+        "⚠️  ordersテーブルが存在しません。デフォルト統計を返します。"
+      );
+      res.json({
+        success: true,
+        data: {
+          orderStats: {
+            total_orders: 0,
+            pending_orders: 0,
+            completed_orders: 0,
+            cancelled_orders: 0,
+            total_revenue: 0,
+            average_order_value: 0,
+          },
+          productStats: [],
+          stockAlerts: {
+            out_of_stock: 0,
+            low_stock: 0,
+            normal_stock: 0,
+          },
+          hourlyStats: [],
+          message: "データベースの初期化が必要です",
+        },
+      });
+      return;
+    }
+
     // 本日の注文統計
     const orderStatsQuery = `
       SELECT
@@ -410,6 +449,24 @@ export const getCookingPerformance = async (
 // 統計データを定期的にブロードキャスト
 export const broadcastStats = async () => {
   try {
+    // まずordersテーブルの存在を確認
+    const tableExistsQuery = `
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name = 'orders'
+      );
+    `;
+
+    const tableExists = await db.query(tableExistsQuery);
+
+    if (!tableExists.rows[0].exists) {
+      console.log(
+        "⚠️  ordersテーブルが存在しません。統計の送信をスキップします。"
+      );
+      return;
+    }
+
     // リアルタイム統計を取得
     const orderStatsQuery = `
       SELECT
@@ -429,8 +486,34 @@ export const broadcastStats = async () => {
       ...stats,
       timestamp: new Date().toISOString(),
     });
+
+    // 正常な統計送信をログ出力（デバッグ用）
+    console.log("📊 統計データを送信:", {
+      total_orders: stats.total_orders,
+      pending_orders: stats.pending_orders,
+      completed_orders: stats.completed_orders,
+      total_revenue: stats.total_revenue,
+    });
   } catch (error) {
-    console.error("統計ブロードキャストエラー:", error);
+    console.error(
+      "統計ブロードキャストエラー:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
+
+    // エラーが発生してもサーバーを停止させない
+    // 空の統計データを送信して継続運用
+    try {
+      emitSocketNotification("stats-broadcast", {
+        total_orders: 0,
+        pending_orders: 0,
+        completed_orders: 0,
+        total_revenue: 0,
+        error: "統計データの取得に失敗しました",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (fallbackError) {
+      console.error("統計フォールバック送信エラー:", fallbackError);
+    }
   }
 };
 

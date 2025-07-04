@@ -9,7 +9,10 @@
     "dev": "nodemon src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "init-db": "node scripts/init-db.js",
-    "init-db:prod": "NODE_ENV=production node scripts/init-db.js"
+    "init-db:improved": "node scripts/init-db-improved.js",
+    "init-db:prod": "NODE_ENV=production node scripts/init-db-improved.js",
+    "test-render-db": "node scripts/test-render-db.js",
+    "check-env": "node scripts/check-env.js"
   },
   "keywords": [
     "order-management",

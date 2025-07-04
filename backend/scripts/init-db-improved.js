@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * データベース初期化スクリプト
+ * データベース初期化スクリプト (改良版)
  * RenderのPostgreSQLデータベースにテーブルを作成します
  */
 
@@ -16,6 +16,7 @@ const pool = new Pool({
     process.env.NODE_ENV === "production"
       ? { rejectUnauthorized: false }
       : false,
+  connectionTimeoutMillis: 10000,
 });
 
 async function initializeDatabase() {
@@ -77,7 +78,7 @@ async function initializeDatabase() {
     }
 
     const schemaSql = fs.readFileSync(schemaPath, "utf8");
-    console.log(`📄 スキーマファイル読み込み: ${schemaPath}`);
+    console.log(`\n📄 スキーマファイル読み込み: ${schemaPath}`);
     console.log(`📊 スキーマサイズ: ${schemaSql.length} 文字`);
 
     console.log("\n🔄 データベーススキーマを作成中...");
@@ -157,23 +158,38 @@ async function initializeDatabase() {
       console.log(`  - ${row.table_name}`);
     });
 
-    // ordersテーブルの存在確認
-    const ordersCheck = await client.query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables
-        WHERE table_schema = 'public'
-        AND table_name = 'orders'
-      );
-    `);
+    // 重要なテーブルの存在確認
+    const importantTables = [
+      "orders",
+      "order_items",
+      "products",
+      "categories",
+      "toppings",
+    ];
+    const missingTables = [];
 
-    if (ordersCheck.rows[0].exists) {
-      console.log("✅ ordersテーブルが正常に作成されました");
+    for (const tableName of importantTables) {
+      const tableExists = tablesResult.rows.some(
+        (row) => row.table_name === tableName
+      );
+      if (tableExists) {
+        console.log(`✅ ${tableName}テーブルが存在します`);
+      } else {
+        missingTables.push(tableName);
+        console.log(`❌ ${tableName}テーブルが見つかりません`);
+      }
+    }
+
+    if (missingTables.length === 0) {
+      console.log("\n🎉 すべての重要なテーブルが正常に作成されました");
+      return true;
     } else {
-      console.log("❌ ordersテーブルの作成に失敗しました");
+      console.log(`\n⚠️  不足しているテーブル: ${missingTables.join(", ")}`);
+      return false;
     }
   } catch (error) {
     console.error("❌ データベース初期化エラー:", error);
-    process.exit(1);
+    return false;
   } finally {
     if (client) {
       client.release();
@@ -185,9 +201,14 @@ async function initializeDatabase() {
 // スクリプト実行
 if (require.main === module) {
   initializeDatabase()
-    .then(() => {
-      console.log("🎉 データベース初期化が完了しました");
-      process.exit(0);
+    .then((success) => {
+      if (success) {
+        console.log("🎉 データベース初期化が完了しました");
+        process.exit(0);
+      } else {
+        console.log("💥 データベース初期化に失敗しました");
+        process.exit(1);
+      }
     })
     .catch((error) => {
       console.error("💥 初期化失敗:", error);

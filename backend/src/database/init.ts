@@ -43,16 +43,54 @@ export const initializeDatabase = async (): Promise<boolean> => {
       const schemaPath = path.join(__dirname, "schema.sql");
       const schemaSql = fs.readFileSync(schemaPath, "utf8");
 
-      // スキーマを実行（複数のステートメントを分割して実行）
+      // SQLを安全に分割して実行順序を制御
       const statements = schemaSql
         .split(";")
         .map((stmt) => stmt.trim())
         .filter((stmt) => stmt.length > 0 && !stmt.startsWith("--"));
 
+      // 実行順序を制御：テーブル作成→インデックス→その他の順序で実行
+      const tableStatements = statements.filter(
+        (stmt) =>
+          stmt.toUpperCase().includes("CREATE TABLE") ||
+          stmt.toUpperCase().includes("CREATE EXTENSION")
+      );
+
+      const indexStatements = statements.filter((stmt) =>
+        stmt.toUpperCase().includes("CREATE INDEX")
+      );
+
+      const functionAndTriggerStatements = statements.filter(
+        (stmt) =>
+          stmt.toUpperCase().includes("CREATE OR REPLACE FUNCTION") ||
+          stmt.toUpperCase().includes("CREATE TRIGGER")
+      );
+
+      const insertStatements = statements.filter((stmt) =>
+        stmt.toUpperCase().includes("INSERT INTO")
+      );
+
+      const otherStatements = statements.filter(
+        (stmt) =>
+          !tableStatements.includes(stmt) &&
+          !indexStatements.includes(stmt) &&
+          !functionAndTriggerStatements.includes(stmt) &&
+          !insertStatements.includes(stmt)
+      );
+
       let successCount = 0;
       let skipCount = 0;
 
-      for (const statement of statements) {
+      // 順序立てて実行
+      const orderedStatements = [
+        ...tableStatements,
+        ...indexStatements,
+        ...functionAndTriggerStatements,
+        ...insertStatements,
+        ...otherStatements,
+      ];
+
+      for (const statement of orderedStatements) {
         if (statement.trim()) {
           try {
             await client.query(statement);

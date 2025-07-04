@@ -161,7 +161,10 @@ function NavigationBar() {
   };
 
   return (
-    <AppBar position="static" sx={{ mb: 0 }}>
+    <AppBar
+      position="fixed"
+      sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+    >
       <Toolbar>
         <IconButton
           edge="start"

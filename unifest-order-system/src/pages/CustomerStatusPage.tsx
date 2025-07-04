@@ -42,6 +42,7 @@ import type {
   CookingStatus,
 } from "../types";
 import WaitTimeDisplay from "../components/WaitTimeDisplay";
+import PageLayout from "../components/PageLayout";
 
 // ダミーデータ（後でAPIから取得）
 const dummyOrder: Order = {
@@ -321,7 +322,7 @@ function CustomerStatusPage() {
   if (!order) return null;
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <PageLayout maxWidth="lg">
       <Box sx={{ textAlign: "center", mb: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom color="primary">
           注文状況確認
@@ -515,7 +516,7 @@ function CustomerStatusPage() {
           </Typography>
         </Alert>
       )}
-    </Container>
+    </PageLayout>
   );
 }
 

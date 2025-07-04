@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Container,
   Typography,
   Box,
   Card,
@@ -32,6 +31,7 @@ import {
 } from "@mui/icons-material";
 import { useAppContext } from "../hooks/useAppContext";
 import OrderCompletionDialog from "../components/OrderCompletionDialog";
+import PageLayout from "../components/PageLayout";
 import type {
   Order,
   OrderStatus,
@@ -269,7 +269,7 @@ function OrderPage() {
     systemState.営業状況 === "営業中" && !systemState.緊急停止状態;
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3, px: { xs: 2, sm: 3 } }}>
+    <PageLayout maxWidth="xl">
       {/* ヘッダー */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom color="primary">
@@ -662,7 +662,7 @@ function OrderPage() {
         order={completedOrder}
         estimatedTime={estimatedTime}
       />
-    </Container>
+    </PageLayout>
   );
 }
 

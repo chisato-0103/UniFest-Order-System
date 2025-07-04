@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { Box } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
 import { AppProvider } from "./contexts/AppContext";
 
@@ -54,25 +55,33 @@ function App() {
       <AppProvider>
         <Router>
           <NavigationBar />
-          <Routes>
-            {/* お客様向け画面 */}
-            <Route path="/" element={<OrderPage />} />
-            <Route path="/customer-status" element={<CustomerStatusPage />} />
+          <Box
+            component="main"
+            sx={{
+              minHeight: "100vh",
+              backgroundColor: "background.default",
+            }}
+          >
+            <Routes>
+              {/* お客様向け画面 */}
+              <Route path="/" element={<OrderPage />} />
+              <Route path="/customer-status" element={<CustomerStatusPage />} />
 
-            {/* スタッフ向け画面 */}
-            <Route path="/store-monitor" element={<StoreMonitorPage />} />
-            <Route path="/kitchen" element={<KitchenPage />} />
-            <Route path="/payment" element={<PaymentPage />} />
-            <Route path="/delivery" element={<DeliveryPage />} />
-            <Route path="/history" element={<HistoryPage />} />
+              {/* スタッフ向け画面 */}
+              <Route path="/store-monitor" element={<StoreMonitorPage />} />
+              <Route path="/kitchen" element={<KitchenPage />} />
+              <Route path="/payment" element={<PaymentPage />} />
+              <Route path="/delivery" element={<DeliveryPage />} />
+              <Route path="/history" element={<HistoryPage />} />
 
-            {/* 管理者向け画面 */}
-            <Route
-              path="/product-management"
-              element={<ProductManagementPage />}
-            />
-            <Route path="/system-settings" element={<SystemSettingsPage />} />
-          </Routes>
+              {/* 管理者向け画面 */}
+              <Route
+                path="/product-management"
+                element={<ProductManagementPage />}
+              />
+              <Route path="/system-settings" element={<SystemSettingsPage />} />
+            </Routes>
+          </Box>
         </Router>
       </AppProvider>
     </ThemeProvider>

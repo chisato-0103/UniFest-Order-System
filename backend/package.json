@@ -4,7 +4,7 @@
   "description": "大学祭たこ焼き店舗向けオーダー管理システム - バックエンドAPI",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc && cpx \"src/database/**/*.sql\" dist/database",
+    "build": "tsc && node scripts/copy-sql.js",
     "start": "node dist/server.js",
     "dev": "nodemon src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -48,7 +48,6 @@
     "@types/node": "^24.0.10",
     "@types/pg": "^8.15.4",
     "@types/qrcode": "^1.5.5",
-    "cpx": "^1.5.0",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"

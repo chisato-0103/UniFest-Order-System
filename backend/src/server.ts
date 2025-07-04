@@ -9,7 +9,6 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 import { testConnection } from "./database/connection";
 import { initializeDatabase, checkTableCounts } from "./database/init";
-// @ts-ignore
 import { ensureOrdersTable } from "./database/ensure-orders";
 import { pool } from "./database/connection";
 import { SocketHandlers } from "./socket/socketHandlers";
@@ -192,22 +191,86 @@ const startServer = async () => {
       );
     }
 
-    // ordersテーブル強制作成（Shell制限対応）
+    // ordersテーブル強制作成（Shell制限対応）- 改善版
     console.log("🔄 ordersテーブル存在確認・作成中...");
     try {
-      const ordersEnsured = await ensureOrdersTable(pool);
-      if (ordersEnsured) {
-        console.log("✅ ordersテーブル利用可能");
-      } else {
-        console.log(
-          "⚠️  ordersテーブル作成に問題がありますが、サーバーを継続起動します"
+      // 最初に直接確認
+      const client = await pool.connect();
+      const checkResult = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables
+          WHERE table_schema = 'public'
+          AND table_name = 'orders'
         );
+      `);
+
+      if (!checkResult.rows[0].exists) {
+        console.log("❌ ordersテーブルが存在しません。緊急作成を実行します...");
+
+        // 緊急作成SQL - 最小限のordersテーブル
+        const createOrdersSql = `
+          CREATE TABLE IF NOT EXISTS orders (
+            order_id SERIAL PRIMARY KEY,
+            customer_id INTEGER,
+            order_number VARCHAR(4) NOT NULL UNIQUE,
+            total_amount DECIMAL(10,2) NOT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT '注文受付'
+              CHECK (status IN ('注文受付', '調理待ち', '調理中', '調理完了', '受け取り済み', 'キャンセル')),
+            payment_status VARCHAR(20) NOT NULL DEFAULT '未払い'
+              CHECK (payment_status IN ('未払い', '支払済み')),
+            payment_method VARCHAR(20) DEFAULT '現金'
+              CHECK (payment_method IN ('現金', 'クレジットカード', 'PayPay', 'その他')),
+            estimated_pickup_time TIMESTAMP,
+            actual_pickup_time TIMESTAMP,
+            special_instructions TEXT,
+            cooking_start_time TIMESTAMP,
+            cooking_completion_time TIMESTAMP,
+            cancel_reason TEXT,
+            qr_code TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+        `;
+
+        await client.query(createOrdersSql);
+        console.log("✅ 緊急ordersテーブル作成完了！");
+
+        // 再確認
+        const recheckResult = await client.query(`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables
+            WHERE table_schema = 'public'
+            AND table_name = 'orders'
+          );
+        `);
+
+        if (recheckResult.rows[0].exists) {
+          console.log("🎉 ordersテーブルが正常に作成されました");
+        } else {
+          console.log("❌ ordersテーブル作成に失敗しました");
+        }
+      } else {
+        console.log("✅ ordersテーブルは既に存在します");
       }
+
+      client.release();
     } catch (ordersError) {
       console.error(
-        "⚠️  ordersテーブル作成エラー（サーバーは継続起動）:",
+        "❌ ordersテーブル緊急作成エラー（サーバーは継続起動）:",
         ordersError
       );
+
+      // 元のensureOrdersTable関数も試行
+      try {
+        const ordersEnsured = await ensureOrdersTable(pool);
+        if (ordersEnsured) {
+          console.log("✅ ensureOrdersTable関数でordersテーブル作成完了");
+        } else {
+          console.log("⚠️  ensureOrdersTable関数でもordersテーブル作成に失敗");
+        }
+      } catch (fallbackError) {
+        console.error("❌ ensureOrdersTable関数もエラー:", fallbackError);
+      }
     }
 
     // テーブル行数の確認（本番環境では省略可能）

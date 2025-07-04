@@ -9,6 +9,9 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 import { testConnection } from "./database/connection";
 import { initializeDatabase, checkTableCounts } from "./database/init";
+// @ts-ignore
+import { ensureOrdersTable } from "./database/ensure-orders";
+import { pool } from "./database/connection";
 import { SocketHandlers } from "./socket/socketHandlers";
 import { startStatsPolling } from "./controllers/statsController";
 
@@ -186,6 +189,24 @@ const startServer = async () => {
       console.error(
         "⚠️  データベース初期化エラー（サーバーは継続起動）:",
         initError
+      );
+    }
+
+    // ordersテーブル強制作成（Shell制限対応）
+    console.log("🔄 ordersテーブル存在確認・作成中...");
+    try {
+      const ordersEnsured = await ensureOrdersTable(pool);
+      if (ordersEnsured) {
+        console.log("✅ ordersテーブル利用可能");
+      } else {
+        console.log(
+          "⚠️  ordersテーブル作成に問題がありますが、サーバーを継続起動します"
+        );
+      }
+    } catch (ordersError) {
+      console.error(
+        "⚠️  ordersテーブル作成エラー（サーバーは継続起動）:",
+        ordersError
       );
     }
 

@@ -348,11 +348,16 @@ function appReducer(state: AppState, action: AppAction): AppState {
         const historyEntry: StockHistory = {
           history_id: Date.now(),
           product_id,
+          action_type: quantity > 0 ? "入荷" : "消費",
           change_type: quantity > 0 ? "増加" : "減少",
           change_amount: Math.abs(quantity),
+          quantity_change: quantity,
           previous_stock: stockInfo.current_stock,
+          before_quantity: stockInfo.current_stock,
           new_stock: Math.max(0, stockInfo.current_stock + quantity),
+          after_quantity: Math.max(0, stockInfo.current_stock + quantity),
           reason,
+          performed_by: "system",
           created_by: "system",
           created_at: new Date().toISOString(),
         };
@@ -433,7 +438,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         temperatureManagement: state.temperatureManagement.map((temp) =>
-          temp.order_id === action.payload.order_id ? action.payload : temp
+          temp.cooker_id === action.payload.cooker_id ? action.payload : temp
         ),
       };
 
@@ -446,9 +451,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
       const newLog: EmergencyLog = {
         log_id: state.emergencyLogs.length + 1,
         emergency_type: action.payload.type || "その他",
-        action: "開始",
+        action: "緊急停止",
         message: action.payload.message,
-        user_name: action.payload.user,
+        performed_by: action.payload.user,
         timestamp: now,
       };
 
@@ -470,22 +475,14 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
     case "DEACTIVATE_EMERGENCY": {
       const now = new Date().toISOString();
-      const duration = state.emergencyState.activated_at
-        ? Math.round(
-            (new Date(now).getTime() -
-              new Date(state.emergencyState.activated_at).getTime()) /
-              60000
-          )
-        : undefined;
 
       const newLog: EmergencyLog = {
         log_id: state.emergencyLogs.length + 1,
         emergency_type: state.emergencyState.emergency_type || "その他",
-        action: "終了",
+        action: "復旧",
         message: "緊急事態が終了されました",
-        user_name: action.payload.user,
+        performed_by: action.payload.user,
         timestamp: now,
-        duration_minutes: duration,
       };
 
       return {
@@ -511,7 +508,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         emergency_type: state.emergencyState.emergency_type || "その他",
         action: "メッセージ更新",
         message: action.payload.message,
-        user_name: action.payload.user,
+        performed_by: action.payload.user,
         timestamp: now,
       };
 
@@ -587,6 +584,24 @@ const generateDummyOrders = (): Order[] => {
     order_id: i + 1,
     customer_id: i + 1,
     order_number: `T${String(i + 1).padStart(3, "0")}`,
+    order_items: [
+      {
+        order_item_id: i * 10 + 1,
+        order_id: i + 1,
+        product_id: 1,
+        product_name: "たこ焼き（6個）",
+        quantity: 1,
+        unit_price: 500,
+        total_price: 500,
+        subtotal: 500,
+        toppings: [],
+        cooking_status: "waiting",
+        cooking_time: 8,
+        cooking_instruction: "",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ],
     items: [
       {
         order_item_id: i * 10 + 1,
@@ -596,15 +611,20 @@ const generateDummyOrders = (): Order[] => {
         quantity: 1,
         unit_price: 500,
         total_price: 500,
+        subtotal: 500,
         toppings: [],
+        cooking_status: "waiting",
         cooking_time: 8,
+        cooking_instruction: "",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
     ],
+    total_price: 500,
     total_amount: 500,
+    order_status: statuses[Math.floor(Math.random() * statuses.length)],
     status: statuses[Math.floor(Math.random() * statuses.length)],
-    payment_status: Math.random() > 0.3 ? "支払済み" : "未払い",
+    payment_status: Math.random() > 0.3 ? "支払い済み" : "未払い",
     payment_method:
       paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
     estimated_pickup_time: new Date(
@@ -628,28 +648,46 @@ const generateDummyTakoyakiCookers = (): TakoyakiCooker[] => {
       current_order_id: 1,
       cooking_start_time: new Date(Date.now() - 5 * 60000).toISOString(),
       estimated_completion_time: new Date(Date.now() + 3 * 60000).toISOString(),
+      capacity: 48,
       max_capacity: 48,
       current_load: 24,
+      temperature: 180,
+      optimal_temperature_range: { min: 170, max: 190 },
+      last_maintenance: new Date(Date.now() - 24 * 60 * 60000).toISOString(),
       last_used_at: new Date().toISOString(),
       maintenance_required: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     },
     {
       cooker_id: 2,
       cooker_name: "たこ焼き器2",
       status: "空き",
+      capacity: 48,
       max_capacity: 48,
       current_load: 0,
+      temperature: 170,
+      optimal_temperature_range: { min: 170, max: 190 },
+      last_maintenance: new Date(Date.now() - 12 * 60 * 60000).toISOString(),
       last_used_at: new Date(Date.now() - 15 * 60000).toISOString(),
       maintenance_required: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     },
     {
       cooker_id: 3,
       cooker_name: "たこ焼き器3",
       status: "清掃中",
+      capacity: 48,
       max_capacity: 48,
       current_load: 0,
+      temperature: 160,
+      optimal_temperature_range: { min: 170, max: 190 },
+      last_maintenance: new Date(Date.now() - 6 * 60 * 60000).toISOString(),
       last_used_at: new Date(Date.now() - 30 * 60000).toISOString(),
       maintenance_required: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     },
   ];
 };
@@ -665,9 +703,11 @@ const generateDummyWaitTimeInfo = (): WaitTimeInfo[] => {
       ).toISOString(),
       estimated_wait_minutes: 3,
       current_status: "調理中",
+      priority_level: "normal",
       cooking_start_time: new Date(
         baseTime.getTime() - 5 * 60000
       ).toISOString(),
+      last_updated: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
     {
@@ -677,6 +717,8 @@ const generateDummyWaitTimeInfo = (): WaitTimeInfo[] => {
       ).toISOString(),
       estimated_wait_minutes: 8,
       current_status: "待機中",
+      priority_level: "normal",
+      last_updated: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
     {
@@ -686,6 +728,8 @@ const generateDummyWaitTimeInfo = (): WaitTimeInfo[] => {
       ).toISOString(),
       estimated_wait_minutes: 15,
       current_status: "待機中",
+      priority_level: "high",
+      last_updated: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
   ];
@@ -811,15 +855,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
               quantity: 1,
               unit_price: 500,
               total_price: 500,
+              subtotal: 500,
               toppings: [],
+              cooking_status: "waiting",
               cooking_time: 8,
+              cooking_instruction: "",
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             },
           ],
+          order_items: [
+            {
+              order_item_id: Date.now(),
+              order_id: Date.now(),
+              product_id: 1,
+              product_name: "たこ焼き（6個）",
+              quantity: 1,
+              unit_price: 500,
+              total_price: 500,
+              subtotal: 500,
+              toppings: [],
+              cooking_status: "waiting",
+              cooking_time: 8,
+              cooking_instruction: "",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ],
+          total_price: 500,
           total_amount: 500,
+          order_status: "注文受付",
           status: "注文受付",
-          payment_status: "支払済み",
+          payment_status: "支払い済み",
           payment_method: "PayPay",
           estimated_pickup_time: new Date(
             Date.now() + 15 * 60000

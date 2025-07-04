@@ -42,7 +42,12 @@ import {
   Refresh as RefreshIcon,
   Print as PrintIcon,
 } from "@mui/icons-material";
-import type { Order } from "../types";
+import type {
+  Order,
+  PaymentStatus,
+  CookingStatus,
+  OrderStatus,
+} from "../types";
 
 // ダミーの未払い注文データ
 const dummyUnpaidOrders: Order[] = [
@@ -50,7 +55,10 @@ const dummyUnpaidOrders: Order[] = [
     order_id: 1,
     customer_id: 1,
     order_number: "A001",
-    items: [
+    order_status: "completed" as OrderStatus,
+    payment_status: "unpaid" as PaymentStatus,
+    total_price: 1300,
+    order_items: [
       {
         order_item_id: 1,
         order_id: 1,
@@ -58,9 +66,13 @@ const dummyUnpaidOrders: Order[] = [
         product_name: "たこ焼き 8個入り",
         quantity: 2,
         unit_price: 600,
+        subtotal: 1200,
         total_price: 1200,
+        cooking_status: "completed" as CookingStatus,
         toppings: [
           {
+            order_topping_id: 1,
+            order_item_id: 1,
             topping_id: 1,
             topping_name: "青のり",
             price: 50,
@@ -77,9 +89,9 @@ const dummyUnpaidOrders: Order[] = [
         updated_at: "2024-01-01T10:00:00Z",
       },
     ],
+    items: [], // エイリアス（後で設定）
     total_amount: 1300,
-    status: "調理完了",
-    payment_status: "未払い",
+    status: "completed" as OrderStatus,
     payment_method: "現金",
     estimated_pickup_time: "2024-01-01T10:15:00Z",
     actual_pickup_time: null,
@@ -91,7 +103,10 @@ const dummyUnpaidOrders: Order[] = [
     order_id: 2,
     customer_id: 2,
     order_number: "A002",
-    items: [
+    order_status: "cooking" as OrderStatus,
+    payment_status: "unpaid" as PaymentStatus,
+    total_price: 850,
+    order_items: [
       {
         order_item_id: 2,
         order_id: 2,
@@ -99,7 +114,9 @@ const dummyUnpaidOrders: Order[] = [
         product_name: "たこ焼き 12個入り",
         quantity: 1,
         unit_price: 850,
+        subtotal: 850,
         total_price: 850,
+        cooking_status: "cooking" as CookingStatus,
         toppings: [],
         cooking_time: 12,
         cooking_instruction: "",
@@ -107,9 +124,9 @@ const dummyUnpaidOrders: Order[] = [
         updated_at: "2024-01-01T10:02:00Z",
       },
     ],
+    items: [], // エイリアス（後で設定）
     total_amount: 850,
-    status: "調理中",
-    payment_status: "未払い",
+    status: "cooking" as OrderStatus,
     payment_method: "現金",
     estimated_pickup_time: "2024-01-01T10:17:00Z",
     actual_pickup_time: null,
@@ -121,7 +138,10 @@ const dummyUnpaidOrders: Order[] = [
     order_id: 3,
     customer_id: 3,
     order_number: "A003",
-    items: [
+    order_status: "completed" as OrderStatus,
+    payment_status: "unpaid" as PaymentStatus,
+    total_price: 1130,
+    order_items: [
       {
         order_item_id: 3,
         order_id: 3,
@@ -129,9 +149,13 @@ const dummyUnpaidOrders: Order[] = [
         product_name: "たこ焼き 16個入り",
         quantity: 1,
         unit_price: 1100,
+        subtotal: 1100,
         total_price: 1100,
+        cooking_status: "completed" as CookingStatus,
         toppings: [
           {
+            order_topping_id: 3,
+            order_item_id: 3,
             topping_id: 3,
             topping_name: "マヨネーズ",
             price: 30,
@@ -148,9 +172,9 @@ const dummyUnpaidOrders: Order[] = [
         updated_at: "2024-01-01T10:01:00Z",
       },
     ],
+    items: [], // エイリアス（後で設定）
     total_amount: 1130,
-    status: "調理完了",
-    payment_status: "未払い",
+    status: "completed" as OrderStatus,
     payment_method: "現金",
     estimated_pickup_time: "2024-01-01T10:20:00Z",
     actual_pickup_time: null,
@@ -159,6 +183,11 @@ const dummyUnpaidOrders: Order[] = [
     updated_at: "2024-01-01T10:06:00Z",
   },
 ];
+
+// エイリアスを設定
+dummyUnpaidOrders.forEach((order) => {
+  order.items = order.order_items;
+});
 
 function PaymentPage() {
   const [orders, setOrders] = useState<Order[]>(dummyUnpaidOrders);
@@ -211,7 +240,7 @@ function PaymentPage() {
           order.order_id === selectedOrder.order_id
             ? {
                 ...order,
-                payment_status: "支払済み",
+                payment_status: "paid" as PaymentStatus,
                 updated_at: new Date().toISOString(),
               }
             : order
@@ -248,7 +277,7 @@ function PaymentPage() {
       return "success";
     } else if (order.status === "調理中") {
       return "info";
-    } else if (order.payment_status === "支払済み") {
+    } else if (order.payment_status === "paid") {
       return "default";
     }
     return "warning";
@@ -436,7 +465,7 @@ function PaymentPage() {
                         <Chip
                           label={order.payment_status}
                           color={
-                            order.payment_status === "支払済み"
+                            order.payment_status === "paid"
                               ? "success"
                               : "warning"
                           }
@@ -476,7 +505,7 @@ function PaymentPage() {
                                 : "調理待ち"}
                             </Button>
                           )}
-                          {order.payment_status === "支払済み" && (
+                          {order.payment_status === "paid" && (
                             <Button
                               variant="outlined"
                               size="small"

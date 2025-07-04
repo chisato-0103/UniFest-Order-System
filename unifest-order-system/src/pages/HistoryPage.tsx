@@ -52,7 +52,12 @@ import {
   CheckCircle as CheckCircleIcon,
   ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
-import type { Order } from "../types";
+import type {
+  Order,
+  OrderStatus,
+  PaymentStatus,
+  CookingStatus,
+} from "../types";
 
 // ダミーの注文履歴データ
 const dummyHistoryOrders: Order[] = [
@@ -60,7 +65,10 @@ const dummyHistoryOrders: Order[] = [
     order_id: 1,
     customer_id: 1,
     order_number: "A001",
-    items: [
+    order_status: "picked_up" as OrderStatus,
+    payment_status: "paid" as PaymentStatus,
+    total_price: 1300,
+    order_items: [
       {
         order_item_id: 1,
         order_id: 1,
@@ -68,9 +76,13 @@ const dummyHistoryOrders: Order[] = [
         product_name: "たこ焼き 8個入り",
         quantity: 2,
         unit_price: 600,
+        subtotal: 1200,
         total_price: 1200,
+        cooking_status: "completed" as CookingStatus,
         toppings: [
           {
+            order_topping_id: 1,
+            order_item_id: 1,
             topping_id: 1,
             topping_name: "青のり",
             price: 50,
@@ -87,9 +99,9 @@ const dummyHistoryOrders: Order[] = [
         updated_at: "2024-01-01T09:00:00Z",
       },
     ],
+    items: [], // エイリアス（後で設定）
     total_amount: 1300,
-    status: "受け取り済み",
-    payment_status: "支払済み",
+    status: "picked_up" as OrderStatus,
     payment_method: "現金",
     estimated_pickup_time: "2024-01-01T09:15:00Z",
     actual_pickup_time: "2024-01-01T09:12:00Z",
@@ -101,7 +113,10 @@ const dummyHistoryOrders: Order[] = [
     order_id: 2,
     customer_id: 2,
     order_number: "A002",
-    items: [
+    order_status: "picked_up" as OrderStatus,
+    payment_status: "paid" as PaymentStatus,
+    total_price: 850,
+    order_items: [
       {
         order_item_id: 2,
         order_id: 2,
@@ -109,7 +124,9 @@ const dummyHistoryOrders: Order[] = [
         product_name: "たこ焼き 12個入り",
         quantity: 1,
         unit_price: 850,
+        subtotal: 850,
         total_price: 850,
+        cooking_status: "completed" as CookingStatus,
         toppings: [],
         cooking_time: 12,
         cooking_instruction: "",
@@ -117,9 +134,9 @@ const dummyHistoryOrders: Order[] = [
         updated_at: "2024-01-01T09:30:00Z",
       },
     ],
+    items: [], // エイリアス（後で設定）
     total_amount: 850,
-    status: "受け取り済み",
-    payment_status: "支払済み",
+    status: "picked_up" as OrderStatus,
     payment_method: "現金",
     estimated_pickup_time: "2024-01-01T09:45:00Z",
     actual_pickup_time: "2024-01-01T09:43:00Z",
@@ -131,7 +148,10 @@ const dummyHistoryOrders: Order[] = [
     order_id: 3,
     customer_id: 3,
     order_number: "A003",
-    items: [
+    order_status: "cancelled" as OrderStatus,
+    payment_status: "unpaid" as PaymentStatus,
+    total_price: 1130,
+    order_items: [
       {
         order_item_id: 3,
         order_id: 3,
@@ -139,9 +159,13 @@ const dummyHistoryOrders: Order[] = [
         product_name: "たこ焼き 16個入り",
         quantity: 1,
         unit_price: 1100,
+        subtotal: 1100,
         total_price: 1100,
+        cooking_status: "waiting" as CookingStatus,
         toppings: [
           {
+            order_topping_id: 3,
+            order_item_id: 3,
             topping_id: 3,
             topping_name: "マヨネーズ",
             price: 30,
@@ -158,9 +182,9 @@ const dummyHistoryOrders: Order[] = [
         updated_at: "2024-01-01T10:00:00Z",
       },
     ],
+    items: [], // エイリアス（後で設定）
     total_amount: 1130,
-    status: "キャンセル",
-    payment_status: "未払い",
+    status: "cancelled" as OrderStatus,
     payment_method: "現金",
     estimated_pickup_time: "2024-01-01T10:20:00Z",
     actual_pickup_time: null,
@@ -172,7 +196,10 @@ const dummyHistoryOrders: Order[] = [
     order_id: 4,
     customer_id: 4,
     order_number: "A004",
-    items: [
+    order_status: "picked_up" as OrderStatus,
+    payment_status: "paid" as PaymentStatus,
+    total_price: 1800,
+    order_items: [
       {
         order_item_id: 4,
         order_id: 4,
@@ -180,7 +207,9 @@ const dummyHistoryOrders: Order[] = [
         product_name: "たこ焼き 8個入り",
         quantity: 3,
         unit_price: 600,
+        subtotal: 1800,
         total_price: 1800,
+        cooking_status: "completed" as CookingStatus,
         toppings: [],
         cooking_time: 10,
         cooking_instruction: "",
@@ -188,9 +217,9 @@ const dummyHistoryOrders: Order[] = [
         updated_at: "2024-01-01T11:00:00Z",
       },
     ],
+    items: [], // エイリアス（後で設定）
     total_amount: 1800,
-    status: "受け取り済み",
-    payment_status: "支払済み",
+    status: "picked_up" as OrderStatus,
     payment_method: "現金",
     estimated_pickup_time: "2024-01-01T11:15:00Z",
     actual_pickup_time: "2024-01-01T11:13:00Z",
@@ -199,6 +228,11 @@ const dummyHistoryOrders: Order[] = [
     updated_at: "2024-01-01T11:13:00Z",
   },
 ];
+
+// エイリアスを設定
+dummyHistoryOrders.forEach((order) => {
+  order.items = order.order_items;
+});
 
 function HistoryPage() {
   const [orders] = useState<Order[]>(dummyHistoryOrders);
@@ -244,7 +278,7 @@ function HistoryPage() {
       (o) => o.status === "キャンセル"
     ).length;
     const totalSales = filteredOrders
-      .filter((o) => o.payment_status === "支払済み")
+      .filter((o) => o.payment_status === "支払い済み")
       .reduce((sum, o) => sum + o.total_amount, 0);
     const averageOrderValue =
       completedOrders > 0 ? totalSales / completedOrders : 0;
@@ -520,7 +554,7 @@ function HistoryPage() {
                         <Chip
                           label={order.payment_status}
                           color={
-                            order.payment_status === "支払済み"
+                            order.payment_status === "支払い済み"
                               ? "success"
                               : "warning"
                           }
@@ -622,7 +656,7 @@ function HistoryPage() {
                       <Chip
                         label={selectedOrder.payment_status}
                         color={
-                          selectedOrder.payment_status === "支払済み"
+                          selectedOrder.payment_status === "支払い済み"
                             ? "success"
                             : "warning"
                         }

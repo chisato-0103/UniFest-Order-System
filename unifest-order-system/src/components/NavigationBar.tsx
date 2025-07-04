@@ -153,7 +153,7 @@ function NavigationBar() {
         return "success";
       case "準備中":
         return "warning";
-      case "終了":
+      case "営業終了":
         return "error";
       default:
         return "default";

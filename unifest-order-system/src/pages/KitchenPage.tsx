@@ -29,7 +29,7 @@ import {
   Refresh as RefreshIcon,
   LocalFireDepartment as FireIcon,
 } from "@mui/icons-material";
-import type { Order, OrderStatus } from "../types";
+import type { Order, OrderStatus, CookingStatus } from "../types";
 import WaitTimeDisplay from "../components/WaitTimeDisplay";
 
 interface TabPanelProps {
@@ -60,7 +60,10 @@ const dummyOrders: Order[] = [
     order_id: 1,
     customer_id: 1,
     order_number: "A001",
-    items: [
+    order_status: "waiting" as OrderStatus,
+    payment_status: "unpaid" as const,
+    total_price: 1300,
+    order_items: [
       {
         order_item_id: 1,
         order_id: 1,
@@ -68,9 +71,13 @@ const dummyOrders: Order[] = [
         product_name: "たこ焼き 8個入り",
         quantity: 2,
         unit_price: 600,
+        subtotal: 1200,
         total_price: 1200,
+        cooking_status: "waiting" as CookingStatus,
         toppings: [
           {
+            order_topping_id: 1,
+            order_item_id: 1,
             topping_id: 1,
             topping_name: "青のり",
             price: 50,
@@ -81,6 +88,8 @@ const dummyOrders: Order[] = [
             updated_at: "2024-01-01T00:00:00Z",
           },
           {
+            order_topping_id: 2,
+            order_item_id: 1,
             topping_id: 2,
             topping_name: "かつお節",
             price: 50,
@@ -97,9 +106,9 @@ const dummyOrders: Order[] = [
         updated_at: "2024-01-01T10:00:00Z",
       },
     ],
+    items: [], // エイリアス（後で設定）
     total_amount: 1300,
-    status: "調理待ち",
-    payment_status: "未払い",
+    status: "waiting" as OrderStatus,
     payment_method: "現金",
     estimated_pickup_time: "2024-01-01T10:15:00Z",
     actual_pickup_time: null,
@@ -111,7 +120,10 @@ const dummyOrders: Order[] = [
     order_id: 2,
     customer_id: 2,
     order_number: "A002",
-    items: [
+    order_status: "cooking" as OrderStatus,
+    payment_status: "unpaid" as const,
+    total_price: 880,
+    order_items: [
       {
         order_item_id: 2,
         order_id: 2,
@@ -119,9 +131,13 @@ const dummyOrders: Order[] = [
         product_name: "たこ焼き 12個入り",
         quantity: 1,
         unit_price: 850,
+        subtotal: 850,
         total_price: 850,
+        cooking_status: "cooking" as CookingStatus,
         toppings: [
           {
+            order_topping_id: 3,
+            order_item_id: 2,
             topping_id: 3,
             topping_name: "マヨネーズ",
             price: 30,
@@ -138,9 +154,9 @@ const dummyOrders: Order[] = [
         updated_at: "2024-01-01T10:02:00Z",
       },
     ],
+    items: [], // エイリアス（後で設定）
     total_amount: 880,
-    status: "調理中",
-    payment_status: "未払い",
+    status: "cooking" as OrderStatus,
     payment_method: "現金",
     estimated_pickup_time: "2024-01-01T10:17:00Z",
     actual_pickup_time: null,
@@ -152,7 +168,10 @@ const dummyOrders: Order[] = [
     order_id: 3,
     customer_id: 3,
     order_number: "A003",
-    items: [
+    order_status: "completed" as OrderStatus,
+    payment_status: "unpaid" as const,
+    total_price: 1100,
+    order_items: [
       {
         order_item_id: 3,
         order_id: 3,
@@ -160,7 +179,9 @@ const dummyOrders: Order[] = [
         product_name: "たこ焼き 16個入り",
         quantity: 1,
         unit_price: 1100,
+        subtotal: 1100,
         total_price: 1100,
+        cooking_status: "completed" as CookingStatus,
         toppings: [],
         cooking_time: 15,
         cooking_instruction: "",
@@ -168,9 +189,9 @@ const dummyOrders: Order[] = [
         updated_at: "2024-01-01T10:01:00Z",
       },
     ],
+    items: [], // エイリアス（後で設定）
     total_amount: 1100,
-    status: "調理完了",
-    payment_status: "未払い",
+    status: "completed" as OrderStatus,
     payment_method: "現金",
     estimated_pickup_time: "2024-01-01T10:20:00Z",
     actual_pickup_time: null,
@@ -180,6 +201,11 @@ const dummyOrders: Order[] = [
   },
 ];
 
+// エイリアスを設定
+dummyOrders.forEach((order) => {
+  order.items = order.order_items;
+});
+
 function KitchenPage() {
   const [orders, setOrders] = useState<Order[]>(dummyOrders);
   const [selectedTab, setSelectedTab] = useState(0);
@@ -188,9 +214,11 @@ function KitchenPage() {
   );
 
   // 調理状況によってフィルタリング
-  const waitingOrders = orders.filter((order) => order.status === "調理待ち");
-  const cookingOrders = orders.filter((order) => order.status === "調理中");
-  const completedOrders = orders.filter((order) => order.status === "調理完了");
+  const waitingOrders = orders.filter((order) => order.status === "waiting");
+  const cookingOrders = orders.filter((order) => order.status === "cooking");
+  const completedOrders = orders.filter(
+    (order) => order.status === "completed"
+  );
 
   // タイマー管理
   useEffect(() => {
@@ -224,7 +252,7 @@ function KitchenPage() {
     );
 
     // 調理開始時にタイマーを設定
-    if (newStatus === "調理中") {
+    if (newStatus === "cooking") {
       const order = orders.find((o) => o.order_id === orderId);
       if (order) {
         const totalCookingTime = Math.max(
@@ -299,11 +327,11 @@ function KitchenPage() {
               <Chip
                 label={order.status}
                 color={
-                  order.status === "調理待ち"
+                  order.status === "waiting"
                     ? "warning"
-                    : order.status === "調理中"
+                    : order.status === "cooking"
                     ? "info"
-                    : order.status === "調理完了"
+                    : order.status === "completed"
                     ? "success"
                     : "default"
                 }
@@ -316,7 +344,7 @@ function KitchenPage() {
           </Box>
 
           {/* 調理タイマー */}
-          {order.status === "調理中" && cookingTimer !== undefined && (
+          {order.status === "cooking" && cookingTimer !== undefined && (
             <Box sx={{ mb: 2 }}>
               <Box
                 sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
@@ -381,31 +409,31 @@ function KitchenPage() {
           {/* アクション */}
           {showActions && (
             <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-              {order.status === "調理待ち" && (
+              {order.status === "waiting" && (
                 <Button
                   variant="contained"
                   startIcon={<PlayArrowIcon />}
-                  onClick={() => updateOrderStatus(order.order_id, "調理中")}
+                  onClick={() => updateOrderStatus(order.order_id, "cooking")}
                   sx={{ bgcolor: "info.main" }}
                 >
                   調理開始
                 </Button>
               )}
-              {order.status === "調理中" && (
+              {order.status === "cooking" && (
                 <Button
                   variant="contained"
                   startIcon={<CheckCircleIcon />}
-                  onClick={() => updateOrderStatus(order.order_id, "調理完了")}
+                  onClick={() => updateOrderStatus(order.order_id, "completed")}
                   color="success"
                 >
                   調理完了
                 </Button>
               )}
-              {order.status === "調理完了" && (
+              {order.status === "completed" && (
                 <Button
                   variant="outlined"
                   startIcon={<RefreshIcon />}
-                  onClick={() => updateOrderStatus(order.order_id, "調理中")}
+                  onClick={() => updateOrderStatus(order.order_id, "cooking")}
                   color="warning"
                 >
                   調理に戻す

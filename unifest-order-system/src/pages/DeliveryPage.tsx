@@ -43,7 +43,12 @@ import {
   Thermostat as TempIcon,
   Done as DoneIcon,
 } from "@mui/icons-material";
-import type { Order } from "../types";
+import type {
+  Order,
+  OrderStatus,
+  PaymentStatus,
+  CookingStatus,
+} from "../types";
 
 // ダミーの受け渡し待ち注文データ
 const dummyReadyOrders: Order[] = [
@@ -51,7 +56,10 @@ const dummyReadyOrders: Order[] = [
     order_id: 1,
     customer_id: 1,
     order_number: "A001",
-    items: [
+    order_status: "completed" as OrderStatus,
+    payment_status: "paid" as PaymentStatus,
+    total_price: 1300,
+    order_items: [
       {
         order_item_id: 1,
         order_id: 1,
@@ -59,9 +67,13 @@ const dummyReadyOrders: Order[] = [
         product_name: "たこ焼き 8個入り",
         quantity: 2,
         unit_price: 600,
+        subtotal: 1200,
         total_price: 1200,
+        cooking_status: "completed" as CookingStatus,
         toppings: [
           {
+            order_topping_id: 1,
+            order_item_id: 1,
             topping_id: 1,
             topping_name: "青のり",
             price: 50,
@@ -78,9 +90,9 @@ const dummyReadyOrders: Order[] = [
         updated_at: "2024-01-01T10:00:00Z",
       },
     ],
+    items: [], // エイリアス（後で設定）
     total_amount: 1300,
-    status: "調理完了",
-    payment_status: "支払済み",
+    status: "completed" as OrderStatus,
     payment_method: "現金",
     estimated_pickup_time: "2024-01-01T10:15:00Z",
     actual_pickup_time: null,
@@ -92,7 +104,10 @@ const dummyReadyOrders: Order[] = [
     order_id: 2,
     customer_id: 2,
     order_number: "A002",
-    items: [
+    order_status: "completed" as OrderStatus,
+    payment_status: "paid" as PaymentStatus,
+    total_price: 850,
+    order_items: [
       {
         order_item_id: 2,
         order_id: 2,
@@ -100,7 +115,9 @@ const dummyReadyOrders: Order[] = [
         product_name: "たこ焼き 12個入り",
         quantity: 1,
         unit_price: 850,
+        subtotal: 850,
         total_price: 850,
+        cooking_status: "completed" as CookingStatus,
         toppings: [],
         cooking_time: 12,
         cooking_instruction: "",
@@ -108,9 +125,9 @@ const dummyReadyOrders: Order[] = [
         updated_at: "2024-01-01T10:05:00Z",
       },
     ],
+    items: [], // エイリアス（後で設定）
     total_amount: 850,
-    status: "調理完了",
-    payment_status: "支払済み",
+    status: "completed" as OrderStatus,
     payment_method: "現金",
     estimated_pickup_time: "2024-01-01T10:20:00Z",
     actual_pickup_time: null,
@@ -122,7 +139,10 @@ const dummyReadyOrders: Order[] = [
     order_id: 3,
     customer_id: 3,
     order_number: "A003",
-    items: [
+    order_status: "completed" as OrderStatus,
+    payment_status: "paid" as PaymentStatus,
+    total_price: 1130,
+    order_items: [
       {
         order_item_id: 3,
         order_id: 3,
@@ -130,9 +150,13 @@ const dummyReadyOrders: Order[] = [
         product_name: "たこ焼き 16個入り",
         quantity: 1,
         unit_price: 1100,
+        subtotal: 1100,
         total_price: 1100,
+        cooking_status: "completed" as CookingStatus,
         toppings: [
           {
+            order_topping_id: 3,
+            order_item_id: 3,
             topping_id: 3,
             topping_name: "マヨネーズ",
             price: 30,
@@ -149,9 +173,9 @@ const dummyReadyOrders: Order[] = [
         updated_at: "2024-01-01T10:03:00Z",
       },
     ],
+    items: [], // エイリアス（後で設定）
     total_amount: 1130,
-    status: "調理完了",
-    payment_status: "支払済み",
+    status: "completed" as OrderStatus,
     payment_method: "現金",
     estimated_pickup_time: "2024-01-01T10:25:00Z",
     actual_pickup_time: null,
@@ -160,6 +184,11 @@ const dummyReadyOrders: Order[] = [
     updated_at: "2024-01-01T10:20:00Z",
   },
 ];
+
+// エイリアスを設定
+dummyReadyOrders.forEach((order) => {
+  order.items = order.order_items;
+});
 
 function DeliveryPage() {
   const [orders, setOrders] = useState<Order[]>(dummyReadyOrders);
@@ -180,7 +209,7 @@ function DeliveryPage() {
   const filteredOrders = orders.filter(
     (order) =>
       order.status === "調理完了" &&
-      order.payment_status === "支払済み" &&
+      order.payment_status === "paid" &&
       order.actual_pickup_time === null &&
       (order.order_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
         order.items.some((item) =>
@@ -193,13 +222,13 @@ function DeliveryPage() {
     readyForDelivery: orders.filter(
       (o) =>
         o.status === "調理完了" &&
-        o.payment_status === "支払済み" &&
+        o.payment_status === "paid" &&
         o.actual_pickup_time === null
     ).length,
     urgentDeliveries: orders.filter(
       (o) =>
         o.status === "調理完了" &&
-        o.payment_status === "支払済み" &&
+        o.payment_status === "paid" &&
         o.actual_pickup_time === null &&
         getElapsedTime(o.updated_at) > 10
     ).length,

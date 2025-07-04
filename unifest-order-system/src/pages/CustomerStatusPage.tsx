@@ -33,7 +33,14 @@ import {
   Refresh as RefreshIcon,
   Search as SearchIcon,
 } from "@mui/icons-material";
-import type { Order, OrderStatus, OrderItem, OrderTopping } from "../types";
+import type {
+  Order,
+  OrderStatus,
+  OrderItem,
+  OrderTopping,
+  PaymentStatus,
+  CookingStatus,
+} from "../types";
 import WaitTimeDisplay from "../components/WaitTimeDisplay";
 
 // ダミーデータ（後でAPIから取得）
@@ -41,7 +48,10 @@ const dummyOrder: Order = {
   order_id: 1,
   customer_id: 1,
   order_number: "A001",
-  items: [
+  order_status: "cooking" as OrderStatus,
+  payment_status: "unpaid" as PaymentStatus,
+  total_price: 2250,
+  order_items: [
     {
       order_item_id: 1,
       order_id: 1,
@@ -49,9 +59,15 @@ const dummyOrder: Order = {
       product_name: "たこ焼き 8個入り",
       quantity: 2,
       unit_price: 600,
+      subtotal: 1200,
       total_price: 1200,
+      cooking_status: "cooking" as CookingStatus,
+      cooking_time: 10,
+      cooking_instruction: "",
       toppings: [
         {
+          order_topping_id: 1,
+          order_item_id: 1,
           topping_id: 1,
           topping_name: "青のり",
           price: 50,
@@ -62,6 +78,8 @@ const dummyOrder: Order = {
           updated_at: "2024-01-01T00:00:00Z",
         },
         {
+          order_topping_id: 2,
+          order_item_id: 1,
           topping_id: 2,
           topping_name: "かつお節",
           price: 50,
@@ -72,8 +90,6 @@ const dummyOrder: Order = {
           updated_at: "2024-01-01T00:00:00Z",
         },
       ],
-      cooking_time: 10,
-      cooking_instruction: "",
       created_at: "2024-01-01T10:00:00Z",
       updated_at: "2024-01-01T10:00:00Z",
     },
@@ -84,9 +100,15 @@ const dummyOrder: Order = {
       product_name: "たこ焼き 12個入り",
       quantity: 1,
       unit_price: 850,
+      subtotal: 850,
       total_price: 850,
+      cooking_status: "cooking" as CookingStatus,
+      cooking_time: 12,
+      cooking_instruction: "",
       toppings: [
         {
+          order_topping_id: 3,
+          order_item_id: 2,
           topping_id: 3,
           topping_name: "マヨネーズ",
           price: 30,
@@ -97,15 +119,13 @@ const dummyOrder: Order = {
           updated_at: "2024-01-01T00:00:00Z",
         },
       ],
-      cooking_time: 12,
-      cooking_instruction: "",
       created_at: "2024-01-01T10:00:00Z",
       updated_at: "2024-01-01T10:00:00Z",
     },
   ],
-  total_amount: 2250,
-  status: "調理中",
-  payment_status: "未払い",
+  items: [], // order_itemsのエイリアス（後で設定）
+  total_amount: 2250, // total_priceのエイリアス
+  status: "cooking" as OrderStatus, // order_statusのエイリアス
   payment_method: "現金",
   estimated_pickup_time: "2024-01-01T10:15:00Z",
   actual_pickup_time: null,
@@ -113,6 +133,9 @@ const dummyOrder: Order = {
   created_at: "2024-01-01T10:00:00Z",
   updated_at: "2024-01-01T10:05:00Z",
 };
+
+// エイリアスを設定
+dummyOrder.items = dummyOrder.order_items;
 
 const orderSteps = [
   { label: "注文受付", status: "完了" },
@@ -248,13 +271,13 @@ function CustomerStatusPage() {
             fullWidth
             label="注文番号"
             value={searchOrderNumber}
-            onChange={(e: unknown) =>
-              setSearchOrderNumber((e as any).target.value)
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setSearchOrderNumber(e.target.value)
             }
             placeholder="例：A001"
             sx={{ mb: 3 }}
-            onKeyPress={(e: unknown) => {
-              if ((e as any).key === "Enter") {
+            onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === "Enter") {
                 handleSearch();
               }
             }}

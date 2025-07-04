@@ -31,13 +31,6 @@ import {
   Warning as WarningIcon,
 } from "@mui/icons-material";
 import { useAppContext } from "../hooks/useAppContext";
-import OrderCompletionDialog from "../components/OrderCompletionDialog";
-import type {
-  Order,
-  OrderStatus,
-  PaymentStatus,
-  CookingStatus,
-} from "../types";
 
 interface SimpleProduct {
   id: string;
@@ -106,7 +99,8 @@ const dummyToppings: SimpleTopping[] = [
 ];
 
 function OrderPage() {
-  const { state } = useAppContext();
+  const context = useAppContext();
+  const { state } = context;
   const { systemState, connectionStatus } = state;
 
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -116,9 +110,6 @@ function OrderPage() {
   const [selectedToppings, setSelectedToppings] = useState<SimpleTopping[]>([]);
   const [cartDialogOpen, setCartDialogOpen] = useState(false);
   const [productDialogOpen, setProductDialogOpen] = useState(false);
-  const [orderCompletionOpen, setOrderCompletionOpen] = useState(false);
-  const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
-  const [estimatedTime, setEstimatedTime] = useState(10);
 
   const handleProductClick = (product: SimpleProduct) => {
     if (!product.available) return;
@@ -186,80 +177,10 @@ function OrderPage() {
   };
 
   const handleOrder = () => {
-    // 注文データを生成
-    const orderNumber = `A${String(Date.now()).slice(-3).padStart(3, "0")}`;
-    const totalAmount = calculateCartTotal();
-
-    // 調理時間を計算（商品の種類と数量に基づく）
-    const estimatedCookingTime = cart.reduce((maxTime, item) => {
-      // たこ焼きの調理時間を商品タイプに基づいて計算
-      let cookingTime = 8; // 基本調理時間
-      if (item.product.name.includes("12個")) cookingTime = 10;
-      if (item.product.name.includes("16個")) cookingTime = 12;
-      return Math.max(maxTime, cookingTime);
-    }, 8);
-
-    // 注文オブジェクトを作成
-    const newOrder: Order = {
-      order_id: Date.now(),
-      customer_id: 1,
-      order_number: orderNumber,
-      order_status: "pending" as OrderStatus,
-      payment_status: "unpaid" as PaymentStatus,
-      total_price: totalAmount,
-      order_items: cart.map((item, index) => ({
-        order_item_id: index + 1,
-        order_id: Date.now(),
-        product_id: parseInt(item.product.id),
-        product_name: item.product.name,
-        quantity: item.quantity,
-        unit_price: item.product.price,
-        subtotal:
-          calculateItemPrice(item.product, item.selectedToppings) *
-          item.quantity,
-        total_price:
-          calculateItemPrice(item.product, item.selectedToppings) *
-          item.quantity,
-        cooking_status: "waiting" as CookingStatus,
-        toppings: item.selectedToppings.map((topping, toppingIndex) => ({
-          order_topping_id: Date.now() + index * 1000 + toppingIndex,
-          order_item_id: index + 1,
-          topping_id: parseInt(topping.id),
-          topping_name: topping.name,
-          price: topping.price,
-          is_active: true,
-          target_product_ids: [],
-          display_order: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })),
-        cooking_time: estimatedCookingTime,
-        cooking_instruction: "",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })),
-      items: [], // エイリアス（後で設定）
-      total_amount: totalAmount,
-      status: "pending" as OrderStatus,
-      payment_method: "現金" as const,
-      estimated_pickup_time: new Date(
-        Date.now() + estimatedCookingTime * 60 * 1000
-      ).toISOString(),
-      actual_pickup_time: null,
-      special_instructions: "",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    // エイリアスを設定
-    newOrder.items = newOrder.order_items;
-
-    // 注文完了ダイアログの設定
-    setCompletedOrder(newOrder);
-    setEstimatedTime(estimatedCookingTime);
-    setOrderCompletionOpen(true);
-
-    // カートをクリア
+    // ここで実際の注文処理を行う
+    alert(
+      `注文を受け付けました！\n合計: ¥${calculateCartTotal().toLocaleString()}`
+    );
     setCart([]);
     setCartDialogOpen(false);
   };
@@ -269,7 +190,7 @@ function OrderPage() {
     systemState.営業状況 === "営業中" && !systemState.緊急停止状態;
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
+    <Container maxWidth="lg" sx={{ py: 3 }}>
       {/* ヘッダー */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom color="primary">
@@ -604,14 +525,6 @@ function OrderPage() {
           )}
         </DialogActions>
       </Dialog>
-
-      {/* 注文完了ダイアログ */}
-      <OrderCompletionDialog
-        open={orderCompletionOpen}
-        onClose={() => setOrderCompletionOpen(false)}
-        order={completedOrder}
-        estimatedTime={estimatedTime}
-      />
     </Container>
   );
 }

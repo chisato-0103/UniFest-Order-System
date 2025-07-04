@@ -15,7 +15,10 @@
 4. 以下のコマンドを実行:
 
 ```bash
-# データベース強制初期化スクリプトを実行
+# 最も簡単な方法：ordersテーブルのみ作成
+npm run create-orders-table
+
+# または、完全なスキーマ初期化
 npm run force-init-render
 ```
 

@@ -12,6 +12,7 @@
     "init-db:improved": "node scripts/init-db-improved.js",
     "init-db:prod": "NODE_ENV=production node scripts/init-db-improved.js",
     "force-init-render": "node scripts/force-init-render.js",
+    "create-orders-table": "node scripts/create-orders-table.js",
     "test-render-db": "node scripts/test-render-db.js",
     "check-env": "node scripts/check-env.js"
   },

@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { Container } from "@mui/material";
+import { Container, Typography } from "@mui/material";
 
 interface PageLayoutProps {
   children: ReactNode;
+  title?: string;
   maxWidth?: "xs" | "sm" | "md" | "lg" | "xl";
   sx?: object;
 }
@@ -13,6 +14,7 @@ interface PageLayoutProps {
  */
 const PageLayout: React.FC<PageLayoutProps> = ({
   children,
+  title,
   maxWidth = "xl",
   sx = {},
 }) => {
@@ -26,6 +28,11 @@ const PageLayout: React.FC<PageLayoutProps> = ({
         ...sx,
       }}
     >
+      {title && (
+        <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
+          {title}
+        </Typography>
+      )}
       {children}
     </Container>
   );

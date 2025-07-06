@@ -19,6 +19,9 @@ const router = Router();
 // 注文一覧取得（管理者向け）
 router.get("/admin", getAllOrders);
 
+// 全注文取得（基本エンドポイント）
+router.get("/", getAllOrders);
+
 // 売上統計取得（管理者向け）
 router.get("/admin/stats", getSalesStats);
 

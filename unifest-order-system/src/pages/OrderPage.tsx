@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Typography,
   Box,
@@ -109,6 +109,12 @@ function OrderPage() {
   const { state } = useAppContext();
   const { systemState, connectionStatus } = state;
 
+  // 商品データの状態管理
+  const [products, setProducts] = useState<SimpleProduct[]>([]);
+  const [toppings, setToppings] = useState<SimpleTopping[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<SimpleProduct | null>(
     null
@@ -119,6 +125,127 @@ function OrderPage() {
   const [orderCompletionOpen, setOrderCompletionOpen] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [estimatedTime, setEstimatedTime] = useState(10);
+
+  // 商品データを取得（エラーハンドリング強化版）
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        if (!navigator.onLine) {
+          throw new Error("インターネット接続がありません");
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        // 商品データを取得
+        const productsResponse = await fetch(
+          "http://localhost:3001/api/products",
+          {
+            signal: controller.signal,
+            headers: {
+              "Cache-Control": "no-cache",
+            },
+          }
+        );
+
+        clearTimeout(timeoutId);
+
+        if (!productsResponse.ok) {
+          if (productsResponse.status === 503) {
+            throw new Error("サーバーがメンテナンス中です");
+          } else if (productsResponse.status >= 500) {
+            throw new Error("サーバーエラーが発生しました");
+          } else if (productsResponse.status === 404) {
+            throw new Error("商品データが見つかりません");
+          }
+          throw new Error("商品データの取得に失敗しました");
+        }
+
+        const productsData = await productsResponse.json();
+
+        if (!productsData.success || !Array.isArray(productsData.data)) {
+          throw new Error("商品データの形式が正しくありません");
+        }
+
+        // APIデータをSimpleProduct形式に変換
+        const formattedProducts: SimpleProduct[] = productsData.data.map(
+          (product: {
+            product_id: number;
+            product_name: string;
+            price: string;
+            category_name?: string;
+            description?: string;
+            status: string;
+            stock_quantity: number;
+            available_toppings?: Array<{
+              topping_id: number;
+              topping_name: string;
+              price: number;
+            }>;
+          }) => ({
+            id: product.product_id.toString(),
+            name: product.product_name,
+            price: parseFloat(product.price),
+            category: product.category_name || "メイン",
+            description: product.description || `${product.product_name}です`,
+            available: product.status === "有効" && product.stock_quantity > 0,
+          })
+        );
+
+        setProducts(formattedProducts);
+
+        // トッピングデータを取得（最初の商品から）
+        if (
+          productsData.data.length > 0 &&
+          productsData.data[0].available_toppings
+        ) {
+          const formattedToppings: SimpleTopping[] =
+            productsData.data[0].available_toppings.map(
+              (topping: {
+                topping_id: number;
+                topping_name: string;
+                price: number;
+              }) => ({
+                id: topping.topping_id.toString(),
+                name: topping.topping_name,
+                price: topping.price,
+                available: true,
+              })
+            );
+          setToppings(formattedToppings);
+        } else {
+          // フォールバック: ダミートッピング
+          setToppings(dummyToppings);
+        }
+      } catch (err: unknown) {
+        console.error("API取得エラー:", err);
+
+        let errorMessage = "商品データの取得に失敗しました";
+        if (err instanceof Error) {
+          if (err.name === "AbortError") {
+            errorMessage = "通信がタイムアウトしました";
+          } else if (err.message.includes("Failed to fetch")) {
+            errorMessage = "サーバーに接続できません";
+          } else if (err.message) {
+            errorMessage = err.message;
+          }
+        }
+
+        setError(errorMessage);
+
+        // フォールバック: ダミーデータを使用
+        setProducts(dummyProducts);
+        setToppings(dummyToppings);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleProductClick = (product: SimpleProduct) => {
     if (!product.available) return;
@@ -185,83 +312,86 @@ function OrderPage() {
     }, 0);
   };
 
-  const handleOrder = () => {
-    // 注文データを生成
-    const orderNumber = `A${String(Date.now()).slice(-3).padStart(3, "0")}`;
-    const totalAmount = calculateCartTotal();
+  const handleOrder = async () => {
+    try {
+      // 調理時間を計算（商品の種類と数量に基づく）
+      const estimatedCookingTime = cart.reduce((maxTime, item) => {
+        // たこ焼きの調理時間を商品タイプに基づいて計算
+        let cookingTime = 8; // 基本調理時間
+        if (item.product.name.includes("12個")) cookingTime = 10;
+        if (item.product.name.includes("16個")) cookingTime = 12;
+        return Math.max(maxTime, cookingTime);
+      }, 8);
 
-    // 調理時間を計算（商品の種類と数量に基づく）
-    const estimatedCookingTime = cart.reduce((maxTime, item) => {
-      // たこ焼きの調理時間を商品タイプに基づいて計算
-      let cookingTime = 8; // 基本調理時間
-      if (item.product.name.includes("12個")) cookingTime = 10;
-      if (item.product.name.includes("16個")) cookingTime = 12;
-      return Math.max(maxTime, cookingTime);
-    }, 8);
-
-    // 注文オブジェクトを作成
-    const newOrder: Order = {
-      order_id: Date.now(),
-      customer_id: 1,
-      order_number: orderNumber,
-      order_status: "pending" as OrderStatus,
-      payment_status: "unpaid" as PaymentStatus,
-      total_price: totalAmount,
-      order_items: cart.map((item, index) => ({
-        order_item_id: index + 1,
-        order_id: Date.now(),
-        product_id: parseInt(item.product.id),
-        product_name: item.product.name,
-        quantity: item.quantity,
-        unit_price: item.product.price,
-        subtotal:
-          calculateItemPrice(item.product, item.selectedToppings) *
-          item.quantity,
-        total_price:
-          calculateItemPrice(item.product, item.selectedToppings) *
-          item.quantity,
-        cooking_status: "waiting" as CookingStatus,
-        toppings: item.selectedToppings.map((topping, toppingIndex) => ({
-          order_topping_id: Date.now() + index * 1000 + toppingIndex,
-          order_item_id: index + 1,
-          topping_id: parseInt(topping.id),
-          topping_name: topping.name,
-          price: topping.price,
-          is_active: true,
-          target_product_ids: [],
-          display_order: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+      // API用の注文データを作成
+      const orderData = {
+        customer_id: null, // 匿名注文
+        items: cart.map((item) => ({
+          product_id: parseInt(item.product.id),
+          quantity: item.quantity,
+          toppings: item.selectedToppings.map((topping) => ({
+            topping_id: parseInt(topping.id),
+            price: topping.price,
+          })),
+          cooking_instruction: null,
         })),
-        cooking_time: estimatedCookingTime,
-        cooking_instruction: "",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })),
-      items: [], // エイリアス（後で設定）
-      total_amount: totalAmount,
-      status: "pending" as OrderStatus,
-      payment_method: "現金" as const,
-      estimated_pickup_time: new Date(
-        Date.now() + estimatedCookingTime * 60 * 1000
-      ).toISOString(),
-      actual_pickup_time: null,
-      special_instructions: "",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+        payment_method: "現金",
+        special_instructions: "",
+      };
 
-    // エイリアスを設定
-    newOrder.items = newOrder.order_items;
+      // APIに注文を送信
+      const response = await fetch("http://localhost:3001/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData),
+      });
 
-    // 注文完了ダイアログの設定
-    setCompletedOrder(newOrder);
-    setEstimatedTime(estimatedCookingTime);
-    setOrderCompletionOpen(true);
+      if (response.ok) {
+        const result = await response.json();
+        const createdOrder = result.data;
 
-    // カートをクリア
-    setCart([]);
-    setCartDialogOpen(false);
+        // 注文完了ダイアログ用のOrder形式に変換
+        const newOrder: Order = {
+          order_id: createdOrder.order_id,
+          customer_id: createdOrder.customer_id || 1,
+          order_number: createdOrder.order_number,
+          order_status: createdOrder.status as OrderStatus,
+          payment_status: createdOrder.payment_status as PaymentStatus,
+          total_price: parseFloat(createdOrder.total_amount),
+          order_items: createdOrder.order_items || [],
+          items: createdOrder.order_items || [],
+          total_amount: parseFloat(createdOrder.total_amount),
+          status: createdOrder.status as OrderStatus,
+          payment_method: createdOrder.payment_method,
+          estimated_pickup_time: createdOrder.estimated_pickup_time,
+          actual_pickup_time: createdOrder.actual_pickup_time,
+          special_instructions: createdOrder.special_instructions || "",
+          created_at: createdOrder.created_at,
+          updated_at: createdOrder.updated_at,
+        };
+
+        // 注文完了ダイアログの設定
+        setCompletedOrder(newOrder);
+        setEstimatedTime(estimatedCookingTime);
+        setOrderCompletionOpen(true);
+
+        // カートをクリア
+        setCart([]);
+        setCartDialogOpen(false);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("注文の送信に失敗しました:", errorData);
+        alert(
+          errorData.message ||
+            "注文の送信に失敗しました。しばらく後でもう一度お試しください。"
+        );
+      }
+    } catch (error) {
+      console.error("注文処理エラー:", error);
+      alert("ネットワークエラーが発生しました。接続を確認してください。");
+    }
   };
 
   // 営業状況に応じた表示制御
@@ -323,141 +453,157 @@ function OrderPage() {
         )}
       </Box>
 
+      {/* エラー表示 */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* ローディング表示 */}
+      {loading && (
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+          <Typography>商品を読み込み中...</Typography>
+        </Box>
+      )}
+
       {/* 商品一覧 */}
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr", // スマホ: 1列
-            sm: "repeat(2, 1fr)", // タブレット: 2列
-            md: "repeat(3, 1fr)", // PC: 3列
-            lg: "repeat(4, 1fr)", // 大画面: 4列
-          },
-          gap: 3,
-          mb: 8,
-        }}
-      >
-        {dummyProducts.map((product) => (
-          <Card
-            key={product.id}
-            sx={{
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              opacity: !product.available || !isOrderingAvailable ? 0.6 : 1,
-              cursor:
-                product.available && isOrderingAvailable
-                  ? "pointer"
-                  : "default",
-              transition: "all 0.2s ease-in-out",
-              "&:hover":
-                product.available && isOrderingAvailable
-                  ? {
-                      boxShadow: 4,
-                      transform: "translateY(-2px)",
-                    }
-                  : {},
-            }}
-            onClick={() =>
-              product.available &&
-              isOrderingAvailable &&
-              handleProductClick(product)
-            }
-          >
-            <CardContent
+      {!loading && (
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr", // スマホ: 1列
+              sm: "repeat(2, 1fr)", // タブレット: 2列
+              md: "repeat(3, 1fr)", // PC: 3列
+              lg: "repeat(4, 1fr)", // 大画面: 4列
+            },
+            gap: 3,
+            mb: 8,
+          }}
+        >
+          {products.map((product) => (
+            <Card
+              key={product.id}
               sx={{
-                flexGrow: 1,
+                height: "100%",
                 display: "flex",
                 flexDirection: "column",
-                p: 2,
+                opacity: !product.available || !isOrderingAvailable ? 0.6 : 1,
+                cursor:
+                  product.available && isOrderingAvailable
+                    ? "pointer"
+                    : "default",
+                transition: "all 0.2s ease-in-out",
+                "&:hover":
+                  product.available && isOrderingAvailable
+                    ? {
+                        boxShadow: 4,
+                        transform: "translateY(-2px)",
+                      }
+                    : {},
               }}
+              onClick={() =>
+                product.available &&
+                isOrderingAvailable &&
+                handleProductClick(product)
+              }
             >
-              <Box
+              <CardContent
                 sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  mb: 1,
-                }}
-              >
-                <Typography
-                  variant="h6"
-                  component="h2"
-                  color="primary"
-                  sx={{
-                    fontSize: { xs: "1rem", sm: "1.1rem" },
-                    fontWeight: "bold",
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {product.name}
-                </Typography>
-                <Chip
-                  label={product.category}
-                  size="small"
-                  color="secondary"
-                  variant="outlined"
-                  sx={{ ml: 1, flexShrink: 0 }}
-                />
-              </Box>
-
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{
-                  mb: 2,
                   flexGrow: 1,
-                  fontSize: { xs: "0.8rem", sm: "0.875rem" },
-                }}
-              >
-                {product.description}
-              </Typography>
-
-              <Box
-                sx={{
                   display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mt: "auto",
+                  flexDirection: "column",
+                  p: 2,
                 }}
               >
-                <Typography
-                  variant="h5"
-                  color="primary"
+                <Box
                   sx={{
-                    fontWeight: "bold",
-                    fontSize: { xs: "1.2rem", sm: "1.5rem" },
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    mb: 1,
                   }}
                 >
-                  ¥{product.price.toLocaleString()}
+                  <Typography
+                    variant="h6"
+                    component="h2"
+                    color="primary"
+                    sx={{
+                      fontSize: { xs: "1rem", sm: "1.1rem" },
+                      fontWeight: "bold",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {product.name}
+                  </Typography>
+                  <Chip
+                    label={product.category}
+                    size="small"
+                    color="secondary"
+                    variant="outlined"
+                    sx={{ ml: 1, flexShrink: 0 }}
+                  />
+                </Box>
+
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    mb: 2,
+                    flexGrow: 1,
+                    fontSize: { xs: "0.8rem", sm: "0.875rem" },
+                  }}
+                >
+                  {product.description}
                 </Typography>
 
                 <Box
                   sx={{
                     display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-end",
-                    gap: 0.5,
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mt: "auto",
                   }}
                 >
-                  {!product.available && (
-                    <Chip
-                      label="売り切れ"
-                      color="error"
-                      size="small"
-                      icon={<WarningIcon />}
-                    />
-                  )}
+                  <Typography
+                    variant="h5"
+                    color="primary"
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: { xs: "1.2rem", sm: "1.5rem" },
+                    }}
+                  >
+                    ¥{product.price.toLocaleString()}
+                  </Typography>
 
-                  {product.available && !isOrderingAvailable && (
-                    <Chip label="注文停止中" color="warning" size="small" />
-                  )}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-end",
+                      gap: 0.5,
+                    }}
+                  >
+                    {!product.available && (
+                      <Chip
+                        label="売り切れ"
+                        color="error"
+                        size="small"
+                        icon={<WarningIcon />}
+                      />
+                    )}
+
+                    {product.available && !isOrderingAvailable && (
+                      <Chip label="注文停止中" color="warning" size="small" />
+                    )}
+                  </Box>
                 </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        ))}
-      </Box>
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+      )}
 
       {/* カート FAB */}
       {cart.length > 0 && (
@@ -504,7 +650,7 @@ function OrderPage() {
               </Typography>
 
               <FormGroup>
-                {dummyToppings
+                {toppings
                   .filter((t) => t.available)
                   .map((topping) => (
                     <FormControlLabel

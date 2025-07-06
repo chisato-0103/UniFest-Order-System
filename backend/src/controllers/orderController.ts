@@ -287,6 +287,7 @@ export const createOrder = async (
         }
 
         const product = productResult.rows[0];
+        const productPrice = parseFloat(product.price);
 
         // 在庫チェック
         if (product.stock_quantity < item.quantity) {
@@ -317,14 +318,14 @@ export const createOrder = async (
           }
         }
 
-        const itemTotal = (product.price + toppingTotal) * item.quantity;
+        const itemTotal = (productPrice + toppingTotal) * item.quantity;
         totalAmount += itemTotal;
 
         orderItems.push({
           product_id: product.product_id,
           product_name: product.product_name,
           quantity: item.quantity,
-          unit_price: product.price + toppingTotal,
+          unit_price: productPrice + toppingTotal,
           total_price: itemTotal,
           toppings: item.toppings || [],
           cooking_time: product.cooking_time,

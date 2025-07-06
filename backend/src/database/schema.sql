@@ -1,13 +1,27 @@
+
 -- UniFest Order System Database Schema
 -- 大学祭たこ焼き店舗向けオーダー管理システム
 
--- データベースの作成
--- CREATE DATABASE unifest_orders;
+-- 既存のテーブルを削除
+DROP TABLE IF EXISTS order_items CASCADE;
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
+DROP TABLE IF EXISTS toppings CASCADE;
+DROP TABLE IF EXISTS notifications CASCADE;
+DROP TABLE IF EXISTS system_settings CASCADE;
+DROP TABLE IF EXISTS stock_history CASCADE;
+DROP TABLE IF EXISTS stock_alerts CASCADE;
+DROP TABLE IF EXISTS product_change_history CASCADE;
+DROP TABLE IF EXISTS takoyaki_cookers CASCADE;
+DROP TABLE IF EXISTS emergency_states CASCADE;
+DROP TABLE IF EXISTS emergency_logs CASCADE;
+
 
 -- 拡張機能の有効化
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- カテゴリテーブル
+-- テーブル作成
 CREATE TABLE categories (
     category_id SERIAL PRIMARY KEY,
     category_name VARCHAR(50) NOT NULL,
@@ -17,7 +31,6 @@ CREATE TABLE categories (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 商品テーブル
 CREATE TABLE products (
     product_id SERIAL PRIMARY KEY,
     product_name VARCHAR(100) NOT NULL,
@@ -31,7 +44,6 @@ CREATE TABLE products (
     max_simultaneous_cooking INTEGER DEFAULT 5,
     display_order INTEGER DEFAULT 0,
     deleted_flag BOOLEAN DEFAULT FALSE,
-    -- 在庫管理
     stock_quantity INTEGER DEFAULT 0,
     initial_stock INTEGER DEFAULT 0,
     low_stock_threshold INTEGER DEFAULT 10,
@@ -40,7 +52,6 @@ CREATE TABLE products (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- トッピングテーブル
 CREATE TABLE toppings (
     topping_id SERIAL PRIMARY KEY,
     topping_name VARCHAR(50) NOT NULL,
@@ -52,7 +63,6 @@ CREATE TABLE toppings (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 注文テーブル
 CREATE TABLE orders (
     order_id SERIAL PRIMARY KEY,
     customer_id INTEGER,
@@ -75,7 +85,6 @@ CREATE TABLE orders (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 注文明細テーブル
 CREATE TABLE order_items (
     order_item_id SERIAL PRIMARY KEY,
     order_id INTEGER REFERENCES orders(order_id) ON DELETE CASCADE,
@@ -91,7 +100,6 @@ CREATE TABLE order_items (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 通知テーブル
 CREATE TABLE notifications (
     notification_id SERIAL PRIMARY KEY,
     notification_type VARCHAR(30) NOT NULL,
@@ -103,7 +111,6 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- システム設定テーブル
 CREATE TABLE system_settings (
     setting_id SERIAL PRIMARY KEY,
     setting_name VARCHAR(100) NOT NULL UNIQUE,
@@ -114,7 +121,6 @@ CREATE TABLE system_settings (
     updated_by VARCHAR(50)
 );
 
--- 在庫履歴テーブル
 CREATE TABLE stock_history (
     history_id SERIAL PRIMARY KEY,
     product_id INTEGER REFERENCES products(product_id),
@@ -127,7 +133,6 @@ CREATE TABLE stock_history (
     created_by VARCHAR(50)
 );
 
--- 在庫アラートテーブル
 CREATE TABLE stock_alerts (
     alert_id SERIAL PRIMARY KEY,
     product_id INTEGER REFERENCES products(product_id),
@@ -140,7 +145,6 @@ CREATE TABLE stock_alerts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 商品変更履歴テーブル
 CREATE TABLE product_change_history (
     history_id SERIAL PRIMARY KEY,
     product_id INTEGER REFERENCES products(product_id),
@@ -153,7 +157,6 @@ CREATE TABLE product_change_history (
     changed_by VARCHAR(50)
 );
 
--- たこ焼き器管理テーブル
 CREATE TABLE takoyaki_cookers (
     cooker_id SERIAL PRIMARY KEY,
     cooker_name VARCHAR(50) NOT NULL,
@@ -170,7 +173,6 @@ CREATE TABLE takoyaki_cookers (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 緊急時対応テーブル
 CREATE TABLE emergency_states (
     emergency_id SERIAL PRIMARY KEY,
     is_active BOOLEAN DEFAULT FALSE,
@@ -185,7 +187,6 @@ CREATE TABLE emergency_states (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 緊急時ログテーブル
 CREATE TABLE emergency_logs (
     log_id SERIAL PRIMARY KEY,
     emergency_type VARCHAR(20) NOT NULL,
@@ -197,15 +198,15 @@ CREATE TABLE emergency_logs (
 );
 
 -- インデックスの作成
-CREATE INDEX idx_orders_order_number ON orders(order_number);
-CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_orders_created_at ON orders(created_at);
-CREATE INDEX idx_order_items_order_id ON order_items(order_id);
-CREATE INDEX idx_products_status ON products(status);
-CREATE INDEX idx_products_category_id ON products(category_id);
-CREATE INDEX idx_notifications_confirmed ON notifications(is_confirmed);
-CREATE INDEX idx_stock_history_product_id ON stock_history(product_id);
-CREATE INDEX idx_stock_alerts_resolved ON stock_alerts(is_resolved);
+CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
+CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
+CREATE INDEX IF NOT EXISTS idx_products_category_id ON products(category_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_confirmed ON notifications(is_confirmed);
+CREATE INDEX IF NOT EXISTS idx_stock_history_product_id ON stock_history(product_id);
+CREATE INDEX IF NOT EXISTS idx_stock_alerts_resolved ON stock_alerts(is_resolved);
 
 -- 更新時刻の自動更新トリガー関数
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -215,74 +216,6 @@ BEGIN
     RETURN NEW;
 END;
 $$ language 'plpgsql';
-
--- 更新時刻トリガーの設定
-CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_toppings_updated_at BEFORE UPDATE ON toppings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_order_items_updated_at BEFORE UPDATE ON order_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_system_settings_updated_at BEFORE UPDATE ON system_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_takoyaki_cookers_updated_at BEFORE UPDATE ON takoyaki_cookers FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_emergency_states_updated_at BEFORE UPDATE ON emergency_states FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- 初期データの投入
-INSERT INTO categories (category_name, display_order) VALUES
-('たこ焼き', 1),
-('ドリンク', 2),
-('サイドメニュー', 3);
-
-INSERT INTO products (product_name, price, category_id, cooking_time, max_simultaneous_cooking, stock_quantity, initial_stock, display_order) VALUES
-('たこ焼き 8個入り', 600, 1, 8, 10, 100, 100, 1),
-('たこ焼き 12個入り', 850, 1, 10, 8, 80, 80, 2),
-('たこ焼き 16個入り', 1100, 1, 12, 6, 60, 60, 3);
-
-INSERT INTO toppings (topping_name, price, target_product_ids, display_order) VALUES
-('青のり', 50, '{1,2,3}', 1),
-('かつお節', 50, '{1,2,3}', 2),
-('マヨネーズ', 50, '{1,2,3}', 3),
-('特製ソース', 0, '{1,2,3}', 4);
-
-INSERT INTO system_settings (setting_name, setting_value, data_type, description) VALUES
-('store_name', 'たこ焼き太郎', 'string', '店舗名'),
-('operating_hours_start', '10:00', 'string', '営業開始時間'),
-('operating_hours_end', '18:00', 'string', '営業終了時間'),
-('max_simultaneous_orders', '20', 'number', '同時処理可能注文数'),
-('default_cooking_time', '10', 'number', 'デフォルト調理時間（分）'),
-('audio_notifications_enabled', 'true', 'boolean', '音声通知有効'),
-('notification_volume', '0.7', 'number', '通知音量'),
-('operating_status', '営業中', 'string', '営業状況'),
-('emergency_stop', 'false', 'boolean', '緊急停止状態');
-
-INSERT INTO takoyaki_cookers (cooker_name, max_capacity) VALUES
-('たこ焼き器1号', 20),
-('たこ焼き器2号', 20),
-('たこ焼き器3号', 20);
-
--- 注文番号生成関数
-CREATE OR REPLACE FUNCTION generate_order_number()
-RETURNS VARCHAR(4) AS $$
-DECLARE
-    new_number VARCHAR(4);
-    exists_check INTEGER;
-BEGIN
-    LOOP
-        -- T001〜T999の範囲でランダム生成
-        new_number := 'T' || LPAD((FLOOR(RANDOM() * 999) + 1)::TEXT, 3, '0');
-
-        -- 既存チェック
-        SELECT COUNT(*) INTO exists_check
-        FROM orders
-        WHERE order_number = new_number
-        AND DATE(created_at) = CURRENT_DATE;
-
-        -- 重複がなければ終了
-        EXIT WHEN exists_check = 0;
-    END LOOP;
-
-    RETURN new_number;
-END;
-$$ LANGUAGE plpgsql;
 
 -- 在庫自動減少トリガー関数
 CREATE OR REPLACE FUNCTION decrease_stock_on_order()
@@ -333,7 +266,75 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- 注文番号生成関数
+CREATE OR REPLACE FUNCTION generate_order_number()
+RETURNS VARCHAR(4) AS $$
+DECLARE
+    new_number VARCHAR(4);
+    exists_check INTEGER;
+BEGIN
+    LOOP
+        -- T001〜T999の範囲でランダム生成
+        new_number := 'T' || LPAD((FLOOR(RANDOM() * 999) + 1)::TEXT, 3, '0');
+
+        -- 既存チェック
+        SELECT COUNT(*) INTO exists_check
+        FROM orders
+        WHERE order_number = new_number
+        AND DATE(created_at) = CURRENT_DATE;
+
+        -- 重複がなければ終了
+        EXIT WHEN exists_check = 0;
+    END LOOP;
+
+    RETURN new_number;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 更新時刻トリガーの設定
+CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_toppings_updated_at BEFORE UPDATE ON toppings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_order_items_updated_at BEFORE UPDATE ON order_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_system_settings_updated_at BEFORE UPDATE ON system_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_takoyaki_cookers_updated_at BEFORE UPDATE ON takoyaki_cookers FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_emergency_states_updated_at BEFORE UPDATE ON emergency_states FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- 在庫減少トリガーの設定
 CREATE TRIGGER trigger_decrease_stock_on_order
     AFTER INSERT ON order_items
     FOR EACH ROW EXECUTE FUNCTION decrease_stock_on_order();
+
+-- 初期データの投入
+INSERT INTO categories (category_name, display_order) VALUES
+('たこ焼き', 1),
+('ドリンク', 2),
+('サイドメニュー', 3);
+
+INSERT INTO products (product_name, price, category_id, cooking_time, max_simultaneous_cooking, stock_quantity, initial_stock, display_order) VALUES
+('たこ焼き 8個入り', 600, 1, 8, 10, 100, 100, 1),
+('たこ焼き 12個入り', 850, 1, 10, 8, 80, 80, 2),
+('たこ焼き 16個入り', 1100, 1, 12, 6, 60, 60, 3);
+
+INSERT INTO toppings (topping_name, price, target_product_ids, display_order) VALUES
+('青のり', 50, '{1,2,3}', 1),
+('かつお節', 50, '{1,2,3}', 2),
+('マヨネーズ', 50, '{1,2,3}', 3),
+('特製ソース', 0, '{1,2,3}', 4);
+
+INSERT INTO system_settings (setting_name, setting_value, data_type, description) VALUES
+('store_name', 'たこ焼き太郎', 'string', '店舗名'),
+('operating_hours_start', '10:00', 'string', '営業開始時間'),
+('operating_hours_end', '18:00', 'string', '営業終了時間'),
+('max_simultaneous_orders', '20', 'number', '同時処理可能注文数'),
+('default_cooking_time', '10', 'number', 'デフォルト調理時間（分）'),
+('audio_notifications_enabled', 'true', 'boolean', '音声通知有効'),
+('notification_volume', '0.7', 'number', '通知音量'),
+('operating_status', '営業中', 'string', '営業状況'),
+('emergency_stop', 'false', 'boolean', '緊急停止状態');
+
+INSERT INTO takoyaki_cookers (cooker_name, max_capacity) VALUES
+('たこ焼き器1号', 20),
+('たこ焼き器2号', 20),
+('たこ焼き器3号', 20);

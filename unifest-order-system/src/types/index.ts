@@ -317,9 +317,11 @@ export type OrderStatus =
 export type PaymentStatus =
   | "unpaid" // 未払い
   | "paid" // 支払い済み
+  | "pending" // 保留中
   | "refunded" // 返金
   | "未払い"
   | "支払い済み"
+  | "保留中"
   | "返金";
 export type CookingStatus =
   | "waiting" // 待機中

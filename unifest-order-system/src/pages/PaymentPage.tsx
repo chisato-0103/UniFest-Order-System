@@ -7,11 +7,6 @@ import {
   CardContent,
   Button,
   Chip,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Avatar,
   Alert,
   Badge,
   TextField,
@@ -21,7 +16,6 @@ import {
   DialogActions,
   AppBar,
   Toolbar,
-  IconButton,
   Divider,
   Table,
   TableBody,
@@ -31,262 +25,202 @@ import {
   TableRow,
   Paper,
   InputAdornment,
+  LinearProgress,
 } from "@mui/material";
 import {
   Payment as PaymentIcon,
-  Receipt as ReceiptIcon,
   Search as SearchIcon,
-  Warning as WarningIcon,
-  CheckCircle as CheckCircleIcon,
   AttachMoney as MoneyIcon,
   Refresh as RefreshIcon,
-  Print as PrintIcon,
 } from "@mui/icons-material";
-import type {
-  Order,
-  PaymentStatus,
-  CookingStatus,
-  OrderStatus,
-} from "../types";
-
-// ダミーの未払い注文データ
-const dummyUnpaidOrders: Order[] = [
-  {
-    order_id: 1,
-    customer_id: 1,
-    order_number: "A001",
-    order_status: "completed" as OrderStatus,
-    payment_status: "unpaid" as PaymentStatus,
-    total_price: 1300,
-    order_items: [
-      {
-        order_item_id: 1,
-        order_id: 1,
-        product_id: 1,
-        product_name: "たこ焼き 8個入り",
-        quantity: 2,
-        unit_price: 600,
-        subtotal: 1200,
-        total_price: 1200,
-        cooking_status: "completed" as CookingStatus,
-        toppings: [
-          {
-            order_topping_id: 1,
-            order_item_id: 1,
-            topping_id: 1,
-            topping_name: "青のり",
-            price: 50,
-            is_active: true,
-            target_product_ids: [1],
-            display_order: 1,
-            created_at: "2024-01-01T00:00:00Z",
-            updated_at: "2024-01-01T00:00:00Z",
-          },
-        ],
-        cooking_time: 10,
-        cooking_instruction: "",
-        created_at: "2024-01-01T10:00:00Z",
-        updated_at: "2024-01-01T10:00:00Z",
-      },
-    ],
-    items: [], // エイリアス（後で設定）
-    total_amount: 1300,
-    status: "completed" as OrderStatus,
-    payment_method: "現金",
-    estimated_pickup_time: "2024-01-01T10:15:00Z",
-    actual_pickup_time: null,
-    special_instructions: "",
-    created_at: "2024-01-01T10:00:00Z",
-    updated_at: "2024-01-01T10:05:00Z",
-  },
-  {
-    order_id: 2,
-    customer_id: 2,
-    order_number: "A002",
-    order_status: "cooking" as OrderStatus,
-    payment_status: "unpaid" as PaymentStatus,
-    total_price: 850,
-    order_items: [
-      {
-        order_item_id: 2,
-        order_id: 2,
-        product_id: 2,
-        product_name: "たこ焼き 12個入り",
-        quantity: 1,
-        unit_price: 850,
-        subtotal: 850,
-        total_price: 850,
-        cooking_status: "cooking" as CookingStatus,
-        toppings: [],
-        cooking_time: 12,
-        cooking_instruction: "",
-        created_at: "2024-01-01T10:02:00Z",
-        updated_at: "2024-01-01T10:02:00Z",
-      },
-    ],
-    items: [], // エイリアス（後で設定）
-    total_amount: 850,
-    status: "cooking" as OrderStatus,
-    payment_method: "現金",
-    estimated_pickup_time: "2024-01-01T10:17:00Z",
-    actual_pickup_time: null,
-    special_instructions: "",
-    created_at: "2024-01-01T10:02:00Z",
-    updated_at: "2024-01-01T10:03:00Z",
-  },
-  {
-    order_id: 3,
-    customer_id: 3,
-    order_number: "A003",
-    order_status: "completed" as OrderStatus,
-    payment_status: "unpaid" as PaymentStatus,
-    total_price: 1130,
-    order_items: [
-      {
-        order_item_id: 3,
-        order_id: 3,
-        product_id: 3,
-        product_name: "たこ焼き 16個入り",
-        quantity: 1,
-        unit_price: 1100,
-        subtotal: 1100,
-        total_price: 1100,
-        cooking_status: "completed" as CookingStatus,
-        toppings: [
-          {
-            order_topping_id: 3,
-            order_item_id: 3,
-            topping_id: 3,
-            topping_name: "マヨネーズ",
-            price: 30,
-            is_active: true,
-            target_product_ids: [3],
-            display_order: 3,
-            created_at: "2024-01-01T00:00:00Z",
-            updated_at: "2024-01-01T00:00:00Z",
-          },
-        ],
-        cooking_time: 15,
-        cooking_instruction: "",
-        created_at: "2024-01-01T10:01:00Z",
-        updated_at: "2024-01-01T10:01:00Z",
-      },
-    ],
-    items: [], // エイリアス（後で設定）
-    total_amount: 1130,
-    status: "completed" as OrderStatus,
-    payment_method: "現金",
-    estimated_pickup_time: "2024-01-01T10:20:00Z",
-    actual_pickup_time: null,
-    special_instructions: "",
-    created_at: "2024-01-01T10:01:00Z",
-    updated_at: "2024-01-01T10:06:00Z",
-  },
-];
-
-// エイリアスを設定
-dummyUnpaidOrders.forEach((order) => {
-  order.items = order.order_items;
-});
+import type { Order, PaymentStatus, OrderStatus } from "../types";
 
 function PaymentPage() {
-  const [orders, setOrders] = useState<Order[]>(dummyUnpaidOrders);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [paymentDialog, setPaymentDialog] = useState(false);
-  const [receivedAmount, setReceivedAmount] = useState("");
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [change, setChange] = useState(0);
 
-  // 現在時刻を更新
+  // APIから注文データを取得
+  const fetchOrders = async () => {
+    try {
+      setError("");
+      const response = await fetch("http://localhost:3001/api/orders");
+
+      if (!response.ok) {
+        throw new Error("注文データの取得に失敗しました");
+      }
+
+      const result = await response.json();
+
+      if (!result.success || !Array.isArray(result.data)) {
+        throw new Error("データ形式が正しくありません");
+      }
+
+      // APIデータをOrder形式に変換
+      const formattedOrders: Order[] = result.data.map(
+        (order: {
+          order_id: number;
+          customer_id: number;
+          order_number: string;
+          status: string;
+          payment_status: string;
+          total_amount: string;
+          items: Array<{
+            product_name: string;
+            quantity: number;
+            total_price: number;
+          }>;
+          payment_method: string;
+          estimated_pickup_time: string;
+          actual_pickup_time: string | null;
+          special_instructions: string;
+          created_at: string;
+          updated_at: string;
+        }) => ({
+          order_id: order.order_id,
+          customer_id: order.customer_id,
+          order_number: order.order_number,
+          order_status: order.status as OrderStatus,
+          payment_status: order.payment_status as PaymentStatus,
+          total_price: parseFloat(order.total_amount),
+          order_items: order.items || [],
+          total_amount: parseFloat(order.total_amount),
+          status: order.status as OrderStatus,
+          payment_method: order.payment_method,
+          estimated_pickup_time: order.estimated_pickup_time,
+          actual_pickup_time: order.actual_pickup_time,
+          special_instructions: order.special_instructions || "",
+          created_at: order.created_at,
+          updated_at: order.updated_at,
+          items: order.items || [],
+        })
+      );
+
+      setOrders(formattedOrders);
+    } catch (err: unknown) {
+      console.error("支払いデータ取得エラー:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "データの取得に失敗しました";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 初期データ取得と定期更新
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
+    fetchOrders();
+
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  // フィルタリングされた注文
-  const filteredOrders = orders.filter(
-    (order) =>
-      order.order_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.items.some((item) =>
-        item.product_name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-  );
-
-  // 統計情報
-  const stats = {
-    unpaidOrders: orders.filter((o) => o.payment_status === "未払い").length,
-    unpaidAmount: orders
-      .filter((o) => o.payment_status === "未払い")
-      .reduce((sum, o) => sum + o.total_amount, 0),
-    readyForPayment: orders.filter(
-      (o) => o.status === "調理完了" && o.payment_status === "未払い"
-    ).length,
-  };
-
   // 支払い処理
-  const handlePayment = (order: Order) => {
-    setSelectedOrder(order);
-    setReceivedAmount(order.total_amount.toString());
-    setPaymentDialog(true);
-  };
+  const handlePayment = async () => {
+    if (!selectedOrder) return;
 
-  // 支払い完了処理
-  const completePayment = () => {
-    if (selectedOrder) {
+    try {
+      const response = await fetch(
+        `http://localhost:3001/api/orders/${selectedOrder.order_id}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            payment_status: "paid",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("支払い処理に失敗しました");
+      }
+
+      // ローカル状態を更新
       setOrders((prev) =>
         prev.map((order) =>
           order.order_id === selectedOrder.order_id
-            ? {
-                ...order,
-                payment_status: "paid" as PaymentStatus,
-                updated_at: new Date().toISOString(),
-              }
+            ? { ...order, payment_status: "paid" as PaymentStatus }
             : order
         )
       );
-      setPaymentDialog(false);
+
+      setPaymentDialogOpen(false);
       setSelectedOrder(null);
-      setReceivedAmount("");
+      setPaymentAmount("");
+      setChange(0);
+    } catch (err: unknown) {
+      console.error("支払い処理エラー:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "支払い処理に失敗しました";
+      setError(errorMessage);
     }
   };
 
-  // お釣り計算
-  const calculateChange = () => {
-    if (selectedOrder && receivedAmount) {
-      const change = parseFloat(receivedAmount) - selectedOrder.total_amount;
-      return change >= 0 ? change : 0;
-    }
-    return 0;
+  // 支払いダイアログを開く
+  const openPaymentDialog = (order: Order) => {
+    setSelectedOrder(order);
+    setPaymentAmount(order.total_amount.toString());
+    setPaymentDialogOpen(true);
   };
 
-  // 注文の経過時間を計算
-  const getElapsedTime = (createdAt: string) => {
-    const now = new Date();
-    const created = new Date(createdAt);
-    const diffMinutes = Math.floor(
-      (now.getTime() - created.getTime()) / (1000 * 60)
+  // おつりを計算
+  const calculateChange = (amount: string) => {
+    if (!selectedOrder || !amount) return 0;
+    return Math.max(0, parseFloat(amount) - selectedOrder.total_amount);
+  };
+
+  // 検索フィルター
+  const filteredOrders = orders.filter((order) => {
+    if (!searchTerm) return true;
+
+    return (
+      order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.items.some((item) =>
+        item.product_name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     );
-    return diffMinutes;
-  };
+  });
 
-  // 状態の色を取得
-  const getStatusColor = (order: Order) => {
-    if (order.status === "調理完了" && order.payment_status === "未払い") {
-      return "success";
-    } else if (order.status === "調理中") {
-      return "info";
-    } else if (order.payment_status === "paid") {
-      return "default";
+  // 未払い注文のみフィルター
+  const unpaidOrders = filteredOrders.filter(
+    (order) =>
+      order.payment_status === "unpaid" || order.payment_status === "pending"
+  );
+
+  const getStatusColor = (status: PaymentStatus) => {
+    switch (status) {
+      case "paid":
+        return "success";
+      case "unpaid":
+        return "error";
+      case "pending":
+        return "warning";
+      default:
+        return "default";
     }
-    return "warning";
   };
 
-  // データ更新
-  const refreshData = () => {
-    // TODO: APIから最新データを取得
-    console.log("支払いデータを更新中...");
+  const getStatusText = (status: PaymentStatus) => {
+    switch (status) {
+      case "paid":
+        return "支払い済み";
+      case "unpaid":
+        return "未払い";
+      case "pending":
+        return "保留中";
+      default:
+        return status;
+    }
   };
 
   return (
@@ -294,65 +228,58 @@ function PaymentPage() {
       <AppBar position="static" color="default" sx={{ mb: 3 }}>
         <Toolbar>
           <PaymentIcon sx={{ mr: 2 }} />
-          <Typography variant="h6" component="h1" sx={{ flexGrow: 1 }}>
-            支払い管理システム
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            支払い管理
           </Typography>
-          <Typography variant="body2" sx={{ mr: 2 }}>
-            {currentTime.toLocaleTimeString()}
-          </Typography>
-          <IconButton color="inherit" onClick={refreshData}>
-            <RefreshIcon />
-          </IconButton>
+          <Badge
+            badgeContent={unpaidOrders.length}
+            color="error"
+            sx={{ mr: 2 }}
+          >
+            <Chip label="未払い" />
+          </Badge>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={fetchOrders}
+            disabled={loading}
+            size="small"
+          >
+            更新
+          </Button>
         </Toolbar>
       </AppBar>
 
-      {/* 統計情報 */}
-      <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
-        <Card sx={{ minWidth: 200 }}>
-          <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <WarningIcon color="warning" />
-              <Typography variant="h6">未払い注文</Typography>
-            </Box>
-            <Typography variant="h4" color="warning.main">
-              {stats.unpaidOrders}
-            </Typography>
-          </CardContent>
-        </Card>
+      {/* エラー表示 */}
+      {error && (
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          action={
+            <Button color="inherit" size="small" onClick={fetchOrders}>
+              再試行
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+      )}
 
-        <Card sx={{ minWidth: 200 }}>
-          <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <MoneyIcon color="error" />
-              <Typography variant="h6">未払い金額</Typography>
-            </Box>
-            <Typography variant="h4" color="error.main">
-              ¥{stats.unpaidAmount.toLocaleString()}
-            </Typography>
-          </CardContent>
-        </Card>
+      {/* ローディング表示 */}
+      {loading && (
+        <Box sx={{ mb: 2 }}>
+          <LinearProgress />
+        </Box>
+      )}
 
-        <Card sx={{ minWidth: 200 }}>
-          <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <CheckCircleIcon color="success" />
-              <Typography variant="h6">支払い可能</Typography>
-            </Box>
-            <Typography variant="h4" color="success.main">
-              {stats.readyForPayment}
-            </Typography>
-          </CardContent>
-        </Card>
-      </Box>
-
-      {/* 検索バー */}
+      {/* 検索フィールド */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <TextField
             fullWidth
-            placeholder="注文番号または商品名で検索..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="注文番号や商品名で検索..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -364,243 +291,134 @@ function PaymentPage() {
         </CardContent>
       </Card>
 
-      {/* 支払い待ち注文一覧 */}
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            支払い待ち注文一覧
-          </Typography>
+      {/* 注文テーブル */}
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>注文番号</TableCell>
+              <TableCell>商品</TableCell>
+              <TableCell align="right">金額</TableCell>
+              <TableCell>支払い状況</TableCell>
+              <TableCell>注文時刻</TableCell>
+              <TableCell align="center">操作</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {unpaidOrders.map((order) => (
+              <TableRow key={order.order_id}>
+                <TableCell>
+                  <Typography variant="body2" fontWeight="bold">
+                    {order.order_number}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Box>
+                    {order.items.map((item, index) => (
+                      <Typography key={index} variant="body2">
+                        {item.product_name} × {item.quantity}
+                      </Typography>
+                    ))}
+                  </Box>
+                </TableCell>
+                <TableCell align="right">
+                  <Typography variant="h6" color="primary">
+                    ¥{order.total_amount.toLocaleString()}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={getStatusText(order.payment_status)}
+                    color={getStatusColor(order.payment_status)}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2">
+                    {new Date(order.created_at).toLocaleString()}
+                  </Typography>
+                </TableCell>
+                <TableCell align="center">
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<MoneyIcon />}
+                    onClick={() => openPaymentDialog(order)}
+                    disabled={order.payment_status === "paid"}
+                    size="small"
+                  >
+                    支払い
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+            {unpaidOrders.length === 0 && !loading && (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  <Typography
+                    variant="body1"
+                    color="text.secondary"
+                    sx={{ py: 4 }}
+                  >
+                    {searchTerm
+                      ? "検索条件に一致する未払い注文がありません"
+                      : "未払い注文がありません"}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-          {filteredOrders.length === 0 ? (
-            <Alert severity="info">
-              {searchQuery
-                ? "検索条件に該当する注文がありません"
-                : "支払い待ちの注文はありません"}
-            </Alert>
-          ) : (
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>注文番号</TableCell>
-                    <TableCell>商品</TableCell>
-                    <TableCell>金額</TableCell>
-                    <TableCell>状態</TableCell>
-                    <TableCell>支払い状況</TableCell>
-                    <TableCell>経過時間</TableCell>
-                    <TableCell>操作</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredOrders.map((order) => (
-                    <TableRow
-                      key={order.order_id}
-                      sx={{
-                        bgcolor:
-                          order.status === "調理完了" &&
-                          order.payment_status === "未払い"
-                            ? "success.light"
-                            : "inherit",
-                        "&:hover": { bgcolor: "action.hover" },
-                      }}
-                    >
-                      <TableCell>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <Typography variant="body1" fontWeight="bold">
-                            {order.order_number}
-                          </Typography>
-                          {order.status === "調理完了" &&
-                            order.payment_status === "未払い" && (
-                              <Badge
-                                badgeContent={<CheckCircleIcon />}
-                                color="success"
-                              >
-                                <ReceiptIcon />
-                              </Badge>
-                            )}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box>
-                          {order.items.map((item, index) => (
-                            <Typography key={index} variant="body2">
-                              {item.product_name} × {item.quantity}
-                              {item.toppings.length > 0 && (
-                                <Box
-                                  component="span"
-                                  sx={{ ml: 1, color: "text.secondary" }}
-                                >
-                                  (
-                                  {item.toppings
-                                    .map((t) => t.topping_name)
-                                    .join(", ")}
-                                  )
-                                </Box>
-                              )}
-                            </Typography>
-                          ))}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body1" fontWeight="bold">
-                          ¥{order.total_amount.toLocaleString()}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={order.status}
-                          color={
-                            getStatusColor(order) as
-                              | "success"
-                              | "info"
-                              | "warning"
-                              | "default"
-                          }
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={order.payment_status}
-                          color={
-                            order.payment_status === "paid"
-                              ? "success"
-                              : "warning"
-                          }
-                          size="small"
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Typography
-                          variant="body2"
-                          color={
-                            getElapsedTime(order.created_at) > 20
-                              ? "error"
-                              : "text.secondary"
-                          }
-                        >
-                          {getElapsedTime(order.created_at)}分
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: "flex", gap: 1 }}>
-                          {order.payment_status === "未払い" && (
-                            <Button
-                              variant="contained"
-                              size="small"
-                              startIcon={<PaymentIcon />}
-                              onClick={() => handlePayment(order)}
-                              disabled={order.status !== "調理完了"}
-                              color={
-                                order.status === "調理完了"
-                                  ? "success"
-                                  : "primary"
-                              }
-                            >
-                              {order.status === "調理完了"
-                                ? "支払い処理"
-                                : "調理待ち"}
-                            </Button>
-                          )}
-                          {order.payment_status === "paid" && (
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              startIcon={<PrintIcon />}
-                              onClick={() => console.log("レシート印刷")}
-                            >
-                              レシート
-                            </Button>
-                          )}
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* 支払い処理ダイアログ */}
+      {/* 支払いダイアログ */}
       <Dialog
-        open={paymentDialog}
-        onClose={() => setPaymentDialog(false)}
+        open={paymentDialogOpen}
+        onClose={() => setPaymentDialogOpen(false)}
         maxWidth="sm"
         fullWidth
       >
         <DialogTitle>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <PaymentIcon />
-            支払い処理 - 注文番号: {selectedOrder?.order_number}
+          <Box display="flex" alignItems="center">
+            <PaymentIcon sx={{ mr: 1 }} />
+            支払い処理
           </Box>
         </DialogTitle>
         <DialogContent>
           {selectedOrder && (
             <Box>
               <Typography variant="h6" gutterBottom>
-                注文内容
+                注文番号: {selectedOrder.order_number}
               </Typography>
-              <List>
-                {selectedOrder.items.map((item) => (
-                  <ListItem key={item.order_item_id} divider>
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: "orange.light" }}>
-                        <ReceiptIcon />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={`${item.product_name} × ${item.quantity}`}
-                      secondary={
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">
-                            ¥{item.total_price.toLocaleString()}
-                          </Typography>
-                          {item.toppings.length > 0 && (
-                            <Box sx={{ mt: 0.5 }}>
-                              {item.toppings.map((topping) => (
-                                <Chip
-                                  key={topping.topping_id}
-                                  label={topping.topping_name}
-                                  size="small"
-                                  sx={{ mr: 0.5, mb: 0.5 }}
-                                />
-                              ))}
-                            </Box>
-                          )}
-                        </Box>
-                      }
-                    />
-                  </ListItem>
-                ))}
-              </List>
 
               <Divider sx={{ my: 2 }} />
 
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 2,
-                }}
-              >
-                <Typography variant="h6">合計金額</Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  注文内容:
+                </Typography>
+                {selectedOrder.items.map((item, index) => (
+                  <Typography key={index} variant="body2">
+                    {item.product_name} × {item.quantity} = ¥{item.total_price}
+                  </Typography>
+                ))}
+              </Box>
+
+              <Box sx={{ mb: 2 }}>
                 <Typography variant="h6" color="primary">
-                  ¥{selectedOrder.total_amount.toLocaleString()}
+                  合計金額: ¥{selectedOrder.total_amount.toLocaleString()}
                 </Typography>
               </Box>
 
               <TextField
                 fullWidth
-                label="お預かり金額"
+                label="受取金額"
                 type="number"
-                value={receivedAmount}
-                onChange={(e) => setReceivedAmount(e.target.value)}
+                value={paymentAmount}
+                onChange={(e) => {
+                  setPaymentAmount(e.target.value);
+                  setChange(calculateChange(e.target.value));
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">¥</InputAdornment>
@@ -609,37 +427,25 @@ function PaymentPage() {
                 sx={{ mb: 2 }}
               />
 
-              {receivedAmount &&
-                parseFloat(receivedAmount) >= selectedOrder.total_amount && (
-                  <Alert severity="success" sx={{ mb: 2 }}>
-                    <Typography variant="h6">
-                      お釣り: ¥{calculateChange().toLocaleString()}
-                    </Typography>
-                  </Alert>
-                )}
-
-              {receivedAmount &&
-                parseFloat(receivedAmount) < selectedOrder.total_amount && (
-                  <Alert severity="error" sx={{ mb: 2 }}>
-                    <Typography variant="body1">
-                      金額が不足しています
-                    </Typography>
-                  </Alert>
-                )}
+              {change > 0 && (
+                <Typography variant="h6" color="success.main">
+                  おつり: ¥{change.toLocaleString()}
+                </Typography>
+              )}
             </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPaymentDialog(false)}>キャンセル</Button>
+          <Button onClick={() => setPaymentDialogOpen(false)}>
+            キャンセル
+          </Button>
           <Button
             variant="contained"
-            onClick={completePayment}
+            onClick={handlePayment}
             disabled={
-              !receivedAmount ||
-              !selectedOrder ||
-              parseFloat(receivedAmount) < selectedOrder.total_amount
+              !paymentAmount ||
+              parseFloat(paymentAmount) < (selectedOrder?.total_amount || 0)
             }
-            startIcon={<CheckCircleIcon />}
           >
             支払い完了
           </Button>

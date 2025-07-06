@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Container,
   Typography,
@@ -31,6 +31,7 @@ import {
 } from "@mui/icons-material";
 import type { Order, OrderStatus, CookingStatus } from "../types";
 import WaitTimeDisplay from "../components/WaitTimeDisplay";
+import { AudioNotificationService } from "../utils/audioNotification";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -207,18 +208,173 @@ dummyOrders.forEach((order) => {
 });
 
 function KitchenPage() {
-  const [orders, setOrders] = useState<Order[]>(dummyOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [selectedTab, setSelectedTab] = useState(0);
   const [cookingTimers, setCookingTimers] = useState<Record<number, number>>(
     {}
   );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
+  const [retryCount, setRetryCount] = useState(0);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // 音声通知サービス
+  const [audioService] = useState(() => new AudioNotificationService());
+
+  // APIからデータを取得（エラーハンドリング強化版）
+  const fetchOrders = useCallback(
+    async (showErrorAlert = true) => {
+      try {
+        setError("");
+        if (!navigator.onLine) {
+          throw new Error("インターネット接続がありません");
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒タイムアウト
+
+        const response = await fetch("http://localhost:3001/api/orders", {
+          signal: controller.signal,
+          headers: {
+            "Cache-Control": "no-cache",
+          },
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error("APIエンドポイントが見つかりません");
+          } else if (response.status === 500) {
+            throw new Error("サーバーエラーが発生しました");
+          } else if (response.status >= 400) {
+            throw new Error(`HTTPエラー: ${response.status}`);
+          }
+          throw new Error("データの取得に失敗しました");
+        }
+
+        const result = await response.json();
+
+        if (!result.success || !Array.isArray(result.data)) {
+          throw new Error("不正なデータ形式です");
+        }
+
+        interface ApiOrder {
+          order_id: number;
+          customer_id: number | null;
+          order_number: string;
+          status: string;
+          payment_status: string;
+          total_amount: string;
+          items: Array<{
+            product_name: string;
+            quantity: number;
+            total_price: number;
+          }>;
+          payment_method: string;
+          estimated_pickup_time: string;
+          actual_pickup_time: string | null;
+          special_instructions: string | null;
+          created_at: string;
+          updated_at: string;
+        }
+
+        // APIデータをOrder形式に変換
+        const formattedOrders: Order[] = result.data.map((order: ApiOrder) => ({
+          order_id: order.order_id,
+          customer_id: order.customer_id,
+          order_number: order.order_number,
+          order_status: order.status as OrderStatus,
+          payment_status: order.payment_status as "paid" | "unpaid" | "pending",
+          total_price: parseFloat(order.total_amount),
+          order_items: order.items || [],
+          total_amount: parseFloat(order.total_amount),
+          status: order.status as OrderStatus,
+          payment_method: order.payment_method,
+          estimated_pickup_time: order.estimated_pickup_time,
+          actual_pickup_time: order.actual_pickup_time,
+          special_instructions: order.special_instructions || "",
+          created_at: order.created_at,
+          updated_at: order.updated_at,
+          items: order.items || [],
+        }));
+
+        setOrders(formattedOrders);
+        setRetryCount(0);
+      } catch (err: unknown) {
+        console.error("注文データ取得エラー:", err);
+
+        let errorMessage = "注文データの取得に失敗しました";
+
+        if (err instanceof Error) {
+          if (err.name === "AbortError") {
+            errorMessage = "通信がタイムアウトしました";
+          } else if (err.message.includes("Failed to fetch")) {
+            errorMessage = "サーバーに接続できません";
+          } else if (err.message) {
+            errorMessage = err.message;
+          }
+        }
+
+        setError(errorMessage);
+
+        if (showErrorAlert) {
+          // 自動リトライ
+          if (retryCount < 3) {
+            setTimeout(() => {
+              setRetryCount((prev) => prev + 1);
+              fetchOrders(false);
+            }, 2000 + retryCount * 1000); // 指数バックオフ
+          }
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [retryCount]
+  );
+
+  // 初回データ取得とネットワーク状態監視
+  useEffect(() => {
+    setLoading(true);
+    fetchOrders();
+
+    // ネットワーク状態の監視
+    const handleOnline = () => {
+      setIsOnline(true);
+      fetchOrders(false);
+    };
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    // 定期的にデータを更新
+    const interval = setInterval(() => {
+      if (navigator.onLine) {
+        fetchOrders(false);
+      }
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [fetchOrders]);
+
+  // 手動更新
+  const handleRefresh = () => {
+    setLoading(true);
+    fetchOrders();
+  };
 
   // 調理状況によってフィルタリング
-  const waitingOrders = orders.filter((order) => order.status === "waiting");
-  const cookingOrders = orders.filter((order) => order.status === "cooking");
-  const completedOrders = orders.filter(
-    (order) => order.status === "completed"
+  const waitingOrders = orders.filter(
+    (order) => order.status === "注文受付" || order.status === "調理待ち"
   );
+  const cookingOrders = orders.filter((order) => order.status === "調理中");
+  const completedOrders = orders.filter((order) => order.status === "調理完了");
 
   // タイマー管理
   useEffect(() => {
@@ -238,31 +394,49 @@ function KitchenPage() {
   }, []);
 
   // 注文の状態を更新
-  const updateOrderStatus = (orderId: number, newStatus: OrderStatus) => {
-    setOrders((prev) =>
-      prev.map((order) =>
-        order.order_id === orderId
-          ? {
-              ...order,
-              status: newStatus,
-              updated_at: new Date().toISOString(),
-            }
-          : order
-      )
-    );
+  const updateOrderStatus = async (orderId: number, newStatus: OrderStatus) => {
+    try {
+      const response = await fetch(
+        `http://localhost:3001/api/orders/${orderId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
 
-    // 調理開始時にタイマーを設定
-    if (newStatus === "cooking") {
-      const order = orders.find((o) => o.order_id === orderId);
-      if (order) {
-        const totalCookingTime = Math.max(
-          ...order.items.map((item) => item.cooking_time)
+      if (response.ok) {
+        // 成功時にローカルステートを更新
+        setOrders((prev) =>
+          prev.map((order) =>
+            order.order_id === orderId
+              ? {
+                  ...order,
+                  status: newStatus,
+                  updated_at: new Date().toISOString(),
+                }
+              : order
+          )
         );
-        setCookingTimers((prev) => ({
-          ...prev,
-          [orderId]: totalCookingTime * 60,
-        }));
+
+        // 音声通知
+        if (newStatus === "調理完了") {
+          const order = orders.find((o) => o.order_id === orderId);
+          if (order) {
+            await audioService.playOrderReady(order.order_number);
+          }
+        } else if (newStatus === "調理中") {
+          await audioService.playNewOrder();
+        }
+      } else {
+        console.error("ステータス更新に失敗しました");
+        alert("ステータスの更新に失敗しました");
       }
+    } catch (error) {
+      console.error("ステータス更新エラー:", error);
+      alert("ネットワークエラーが発生しました");
     }
   };
 
@@ -327,11 +501,11 @@ function KitchenPage() {
               <Chip
                 label={order.status}
                 color={
-                  order.status === "waiting"
+                  order.status === "注文受付" || order.status === "調理待ち"
                     ? "warning"
-                    : order.status === "cooking"
+                    : order.status === "調理中"
                     ? "info"
-                    : order.status === "completed"
+                    : order.status === "調理完了"
                     ? "success"
                     : "default"
                 }
@@ -344,7 +518,7 @@ function KitchenPage() {
           </Box>
 
           {/* 調理タイマー */}
-          {order.status === "cooking" && cookingTimer !== undefined && (
+          {order.status === "調理中" && cookingTimer !== undefined && (
             <Box sx={{ mb: 2 }}>
               <Box
                 sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
@@ -409,27 +583,27 @@ function KitchenPage() {
           {/* アクション */}
           {showActions && (
             <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-              {order.status === "waiting" && (
+              {(order.status === "注文受付" || order.status === "調理待ち") && (
                 <Button
                   variant="contained"
                   startIcon={<PlayArrowIcon />}
-                  onClick={() => updateOrderStatus(order.order_id, "cooking")}
+                  onClick={() => updateOrderStatus(order.order_id, "調理中")}
                   sx={{ bgcolor: "info.main" }}
                 >
                   調理開始
                 </Button>
               )}
-              {order.status === "cooking" && (
+              {order.status === "調理中" && (
                 <Button
                   variant="contained"
                   startIcon={<CheckCircleIcon />}
-                  onClick={() => updateOrderStatus(order.order_id, "completed")}
+                  onClick={() => updateOrderStatus(order.order_id, "調理完了")}
                   color="success"
                 >
                   調理完了
                 </Button>
               )}
-              {order.status === "completed" && (
+              {order.status === "調理完了" && (
                 <Button
                   variant="outlined"
                   startIcon={<RefreshIcon />}
@@ -451,22 +625,60 @@ function KitchenPage() {
       <AppBar position="static" color="default" sx={{ mb: 3 }}>
         <Toolbar>
           <FireIcon sx={{ mr: 2 }} />
-          <Typography variant="h6" component="h1" sx={{ flexGrow: 1 }}>
-            厨房管理システム
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            厨房管理
           </Typography>
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-            <Badge badgeContent={waitingOrders.length} color="warning">
-              <Chip label="調理待ち" />
-            </Badge>
-            <Badge badgeContent={cookingOrders.length} color="info">
-              <Chip label="調理中" />
-            </Badge>
-            <Badge badgeContent={completedOrders.length} color="success">
-              <Chip label="調理完了" />
-            </Badge>
-          </Box>
+          {!isOnline && (
+            <Chip
+              icon={<WarningIcon />}
+              label="オフライン"
+              color="error"
+              variant="outlined"
+              size="small"
+              sx={{ mr: 2 }}
+            />
+          )}
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={handleRefresh}
+            disabled={loading}
+            size="small"
+          >
+            更新
+          </Button>
         </Toolbar>
       </AppBar>
+
+      {/* エラー表示 */}
+      {error && (
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          action={
+            <Button color="inherit" size="small" onClick={handleRefresh}>
+              再試行
+            </Button>
+          }
+        >
+          {error}
+          {retryCount > 0 && ` (再試行中: ${retryCount}/3)`}
+        </Alert>
+      )}
+
+      {/* ローディング表示 */}
+      {loading && !error && (
+        <Box sx={{ mb: 2 }}>
+          <LinearProgress />
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mt: 1, textAlign: "center" }}
+          >
+            注文データを読み込み中...
+          </Typography>
+        </Box>
+      )}
 
       <Box sx={{ width: "100%" }}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>

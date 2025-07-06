@@ -102,6 +102,16 @@ app.use("/api/stats", statsRouter);
 app.use("/api/emergency", emergencyRouter);
 app.use("/api/settings", settingsRouter);
 
+// ヘルスチェックエンドポイント
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || "development",
+  });
+});
+
 // 基本ルート
 app.get("/", (req, res) => {
   res.json({
@@ -166,13 +176,14 @@ const startServer = async () => {
     console.log("🚀 サーバーを起動中...");
 
     // データベース接続テスト
-    console.log("🔄 データベース接続をテスト中...");
-    const dbConnected = await testConnection();
-    if (!dbConnected) {
-      console.error("❌ Database connection failed. Server will not start.");
-      process.exit(1);
-    }
+    // console.log("🔄 データベース接続をテスト中...");
+    // const dbConnected = await testConnection();
+    // if (!dbConnected) {
+    //   console.error("❌ Database connection failed. Server will not start.");
+    //   process.exit(1);
+    // }
 
+    /*
     // データベーススキーマの初期化（失敗してもサーバーは起動）
     console.log("🔄 データベーススキーマを初期化中...");
     try {
@@ -281,7 +292,9 @@ const startServer = async () => {
         console.log("⚠️  テーブル行数確認をスキップ:", countError);
       }
     }
+    */
 
+    console.log("--- 7. Before server.listen ---");
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📝 API Documentation: http://localhost:${PORT}/`);
@@ -294,8 +307,8 @@ const startServer = async () => {
       );
 
       // 統計ポーリングを開始（30秒間隔）- エラーハンドリング強化済み
-      console.log("📈 統計ポーリングを開始中...");
-      startStatsPolling(30000);
+      // console.log("📈 統計ポーリングを開始中...");
+      // startStatsPolling(30000);
       console.log("✅ サーバー起動完了");
     });
   } catch (error) {

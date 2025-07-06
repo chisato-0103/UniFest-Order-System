@@ -191,11 +191,94 @@ dummyReadyOrders.forEach((order) => {
 });
 
 function DeliveryPage() {
-  const [orders, setOrders] = useState<Order[]>(dummyReadyOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [deliveryDialog, setDeliveryDialog] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // APIから完了済み注文データを取得
+  const fetchOrders = async () => {
+    try {
+      setError("");
+      const response = await fetch("http://localhost:3001/api/orders");
+
+      if (!response.ok) {
+        throw new Error("注文データの取得に失敗しました");
+      }
+
+      const result = await response.json();
+
+      if (!result.success || !Array.isArray(result.data)) {
+        throw new Error("データ形式が正しくありません");
+      }
+
+      // APIデータをOrder形式に変換
+      const formattedOrders: Order[] = result.data.map(
+        (order: {
+          order_id: number;
+          customer_id: number;
+          order_number: string;
+          status: string;
+          payment_status: string;
+          total_amount: string;
+          items: Array<{
+            product_name: string;
+            quantity: number;
+            total_price: number;
+          }>;
+          payment_method: string;
+          estimated_pickup_time: string;
+          actual_pickup_time: string | null;
+          special_instructions: string;
+          created_at: string;
+          updated_at: string;
+        }) => ({
+          order_id: order.order_id,
+          customer_id: order.customer_id,
+          order_number: order.order_number,
+          order_status: order.status as OrderStatus,
+          payment_status: order.payment_status as PaymentStatus,
+          total_price: parseFloat(order.total_amount),
+          order_items: order.items || [],
+          total_amount: parseFloat(order.total_amount),
+          status: order.status as OrderStatus,
+          payment_method: order.payment_method,
+          estimated_pickup_time: order.estimated_pickup_time,
+          actual_pickup_time: order.actual_pickup_time,
+          special_instructions: order.special_instructions || "",
+          created_at: order.created_at,
+          updated_at: order.updated_at,
+          items: order.items || [],
+        })
+      );
+
+      setOrders(formattedOrders);
+    } catch (err: unknown) {
+      console.error("配達データ取得エラー:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "データの取得に失敗しました";
+      setError(errorMessage);
+
+      // フォールバック: ダミーデータを使用
+      setOrders(dummyReadyOrders);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 初期データ取得と定期更新
+  useEffect(() => {
+    fetchOrders();
+
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // 現在時刻を更新
   useEffect(() => {
@@ -242,14 +325,34 @@ function DeliveryPage() {
   };
 
   // 受け渡し完了処理
-  const completeDelivery = () => {
-    if (selectedOrder) {
+  const completeDelivery = async () => {
+    if (!selectedOrder) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:3001/api/orders/${selectedOrder.order_id}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            status: "受け取り済み",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("受け渡し処理に失敗しました");
+      }
+
+      // ローカル状態を更新
       setOrders((prev) =>
         prev.map((order) =>
           order.order_id === selectedOrder.order_id
             ? {
                 ...order,
-                status: "受け取り済み",
+                status: "受け取り済み" as OrderStatus,
                 actual_pickup_time: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
               }
@@ -258,6 +361,11 @@ function DeliveryPage() {
       );
       setDeliveryDialog(false);
       setSelectedOrder(null);
+    } catch (err: unknown) {
+      console.error("受け渡し処理エラー:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "受け渡し処理に失敗しました";
+      setError(errorMessage);
     }
   };
 
@@ -282,8 +390,7 @@ function DeliveryPage() {
 
   // データ更新
   const refreshData = () => {
-    // TODO: APIから最新データを取得
-    console.log("受け渡しデータを更新中...");
+    fetchOrders();
   };
 
   return (
@@ -302,6 +409,28 @@ function DeliveryPage() {
           </IconButton>
         </Toolbar>
       </AppBar>
+
+      {/* エラー表示 */}
+      {error && (
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          action={
+            <Button color="inherit" size="small" onClick={fetchOrders}>
+              再試行
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+      )}
+
+      {/* ローディング表示 */}
+      {loading && (
+        <Box sx={{ mb: 2 }}>
+          <Typography>データを読み込み中...</Typography>
+        </Box>
+      )}
 
       {/* 統計情報 */}
       <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>

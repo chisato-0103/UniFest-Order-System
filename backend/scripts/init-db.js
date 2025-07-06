@@ -82,66 +82,11 @@ async function initializeDatabase() {
 
     console.log("\n🔄 データベーススキーマを作成中...");
 
-    // スキーマを実行（複数のステートメントを分割して実行）
-    const statements = schemaSql
-      .split(";")
-      .map((stmt) => stmt.trim())
-      .filter((stmt) => stmt.length > 0 && !stmt.startsWith("--"));
-
-    console.log(`📝 実行予定のSQL文: ${statements.length}個`);
-
-    let successCount = 0;
-    let skipCount = 0;
-    let errorCount = 0;
-
-    for (let i = 0; i < statements.length; i++) {
-      const statement = statements[i];
-      if (statement.trim()) {
-        try {
-          await client.query(statement);
-          successCount++;
-
-          // 進捗表示
-          if ((i + 1) % 10 === 0 || i === statements.length - 1) {
-            console.log(
-              `📊 進捗: ${i + 1}/${
-                statements.length
-              } (成功: ${successCount}, スキップ: ${skipCount}, エラー: ${errorCount})`
-            );
-          }
-        } catch (error) {
-          // 既に存在するテーブルやインデックスのエラーは無視
-          if (
-            error.code === "42P07" || // relation already exists
-            error.code === "42P06" || // schema already exists
-            error.code === "42P16" || // undefined object
-            error.code === "42710" // duplicate object
-          ) {
-            skipCount++;
-            console.log(
-              `⚠️  スキップ [${error.code}]: ${error.message.split("\n")[0]}`
-            );
-          } else {
-            errorCount++;
-            console.error(
-              `❌ SQL実行エラー [${error.code}]: ${statement.substring(
-                0,
-                100
-              )}...`
-            );
-            console.error(`   ${error.message}`);
-            // 重大なエラーの場合は停止
-            if (errorCount > 5) {
-              console.error("💥 エラーが多すぎます。処理を停止します。");
-              throw error;
-            }
-          }
-        }
-      }
-    }
+    // スキーマを実行
+    await client.query(schemaSql);
 
     console.log(
-      `\n✅ データベーススキーマ作成完了 (成功: ${successCount}, スキップ: ${skipCount}, エラー: ${errorCount})`
+      `\n✅ データベーススキーマ作成完了`
     );
 
     // テーブル一覧を確認

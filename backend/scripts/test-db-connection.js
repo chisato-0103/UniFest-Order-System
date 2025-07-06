@@ -17,7 +17,7 @@ async function testDatabaseConnection(url) {
 
   const pool = new Pool({
     connectionString: url,
-    ssl: { rejectUnauthorized: false },
+    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
     connectionTimeoutMillis: 5000,
   });
 

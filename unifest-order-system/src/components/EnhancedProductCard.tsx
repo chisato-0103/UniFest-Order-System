@@ -58,6 +58,7 @@ const EnhancedProductCard: React.FC<EnhancedProductCardProps> = ({
       <Card
         sx={{
           height: "100%",
+          width: "100%",
           cursor: "pointer",
           transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           "&:hover": {
@@ -71,6 +72,9 @@ const EnhancedProductCard: React.FC<EnhancedProductCardProps> = ({
             ? "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)"
             : "linear-gradient(135deg, #f5f5f5 0%, #e9ecef 100%)",
           opacity: product.available ? 1 : 0.6,
+          minHeight: 400,
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         {/* カテゴリバッジ */}
@@ -129,7 +133,14 @@ const EnhancedProductCard: React.FC<EnhancedProductCardProps> = ({
           </Box>
         )}
 
-        <CardContent sx={{ p: 3, height: "100%" }}>
+        <CardContent
+          sx={{
+            p: 3,
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <Box
             sx={{
               display: "flex",
@@ -214,6 +225,7 @@ const EnhancedProductCard: React.FC<EnhancedProductCardProps> = ({
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 1,
+                mt: "auto",
               }}
             >
               {product.available ? (

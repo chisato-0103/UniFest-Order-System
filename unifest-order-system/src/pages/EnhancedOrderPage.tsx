@@ -220,11 +220,27 @@ const EnhancedOrderPage: React.FC = () => {
   }, {} as { [key: string]: SimpleProduct[] });
 
   return (
-    <Box sx={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        backgroundColor: "#f8f9fa",
+        width: "100%",
+        margin: 0,
+        padding: 0,
+      }}
+    >
       {/* ヘッダー */}
       <EnhancedHeader />
 
-      <Container maxWidth="lg" sx={{ pb: 10 }}>
+      <Container
+        maxWidth="xl"
+        sx={{
+          pb: 10,
+          px: { xs: 2, sm: 3, md: 4 },
+          width: "100%",
+          maxWidth: "100%",
+        }}
+      >
         {/* エラー表示 */}
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
@@ -239,63 +255,86 @@ const EnhancedOrderPage: React.FC = () => {
             sx={{
               display: "grid",
               gridTemplateColumns: {
-                xs: "1fr",
+                xs: "repeat(1, 1fr)",
                 sm: "repeat(2, 1fr)",
                 md: "repeat(3, 1fr)",
+                lg: "repeat(4, 1fr)",
               },
               gap: 3,
+              justifyItems: "center",
+              width: "100%",
             }}
           >
-            {[...Array(6)].map((_, index) => (
+            {[...Array(8)].map((_, index) => (
               <Skeleton
                 key={index}
                 variant="rectangular"
+                width="100%"
                 height={400}
-                sx={{ borderRadius: 4 }}
+                sx={{
+                  borderRadius: 4,
+                  maxWidth: 300,
+                }}
               />
             ))}
           </Box>
         ) : (
-          Object.entries(productsByCategory).map(
-            ([category, categoryProducts]) => (
-              <Fade in={true} timeout={800} key={category}>
-                <Box sx={{ mb: 4 }}>
-                  <Typography
-                    variant="h4"
-                    sx={{
-                      fontWeight: 600,
-                      mb: 3,
-                      textAlign: "center",
-                      color: "#333",
-                    }}
-                  >
-                    {category}
-                  </Typography>
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: {
-                        xs: "1fr",
-                        sm: "repeat(2, 1fr)",
-                        md: "repeat(3, 1fr)",
-                      },
-                      gap: 3,
-                    }}
-                  >
-                    {categoryProducts.map((product) => (
-                      <EnhancedProductCard
-                        key={product.id}
-                        product={product}
-                        quantity={cart[product.id] || 0}
-                        onAddToCart={addToCart}
-                        onRemoveFromCart={removeFromCart}
-                      />
-                    ))}
+          <Box sx={{ width: "100%" }}>
+            {Object.entries(productsByCategory).map(
+              ([category, categoryProducts]) => (
+                <Fade in={true} timeout={800} key={category}>
+                  <Box sx={{ mb: 6, width: "100%" }}>
+                    <Typography
+                      variant="h4"
+                      sx={{
+                        fontWeight: 600,
+                        mb: 4,
+                        textAlign: "center",
+                        color: "#333",
+                      }}
+                    >
+                      {category}
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: {
+                          xs: "repeat(1, 1fr)",
+                          sm: "repeat(2, 1fr)",
+                          md: "repeat(3, 1fr)",
+                          lg: "repeat(4, 1fr)",
+                        },
+                        gap: 3,
+                        justifyContent: "center",
+                        alignItems: "start",
+                        width: "100%",
+                        mx: "auto",
+                        maxWidth: "1400px",
+                      }}
+                    >
+                      {categoryProducts.map((product) => (
+                        <Box
+                          key={product.id}
+                          sx={{
+                            width: "100%",
+                            maxWidth: 320,
+                            mx: "auto",
+                          }}
+                        >
+                          <EnhancedProductCard
+                            product={product}
+                            quantity={cart[product.id] || 0}
+                            onAddToCart={addToCart}
+                            onRemoveFromCart={removeFromCart}
+                          />
+                        </Box>
+                      ))}
+                    </Box>
                   </Box>
-                </Box>
-              </Fade>
-            )
-          )
+                </Fade>
+              )
+            )}
+          </Box>
         )}
       </Container>
 

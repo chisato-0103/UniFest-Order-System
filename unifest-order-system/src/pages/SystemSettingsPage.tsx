@@ -27,6 +27,7 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
+import AdminNavigationBar from "../components/AdminNavigationBar";
 import {
   Settings as SettingsIcon,
   Notifications as NotificationsIcon,
@@ -469,15 +470,17 @@ function SystemSettingsPage() {
   }, {} as Record<string, SystemSetting[]>);
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" component="h1" gutterBottom color="primary">
-          システム設定
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          システムの動作設定、営業設定、通知設定などを管理
-        </Typography>
-      </Box>
+    <Box>
+      <AdminNavigationBar currentPage="システム設定" />
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h4" component="h1" gutterBottom color="primary">
+            システム設定
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            システムの動作設定、営業設定、通知設定などを管理
+          </Typography>
+        </Box>
 
       {/* システム操作ボタン */}
       <Box sx={{ display: "flex", gap: 2, mb: 4, flexWrap: "wrap" }}>
@@ -671,6 +674,7 @@ function SystemSettingsPage() {
         </Alert>
       </Snackbar>
     </Container>
+    </Box>
   );
 }
 

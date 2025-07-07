@@ -30,7 +30,9 @@ const WaitTimeDisplay: React.FC<WaitTimeDisplayProps> = (props) => {
 
   // 特定の注文の待ち時間情報を取得
   const orderWaitInfo = orderId
-    ? waitTimeInfo.find((info: WaitTimeInfo) => info.order_id === orderId)
+    ? waitTimeInfo.find(
+        (info: WaitTimeInfo) => info.order_id === orderId.toString()
+      )
     : null;
 
   // 待ち時間の色とアイコンを取得
@@ -131,7 +133,9 @@ const WaitTimeDisplay: React.FC<WaitTimeDisplayProps> = (props) => {
       );
       const temperatureAlert = getTemperatureAlert(
         orderWaitInfo.current_status,
-        orderWaitInfo.cooking_completion_time
+        typeof orderWaitInfo.cooking_completion_time === "string"
+          ? orderWaitInfo.cooking_completion_time
+          : orderWaitInfo.cooking_completion_time.toISOString()
       );
 
       return (
@@ -237,7 +241,9 @@ const WaitTimeDisplay: React.FC<WaitTimeDisplayProps> = (props) => {
             {(() => {
               const alert = getTemperatureAlert(
                 orderWaitInfo.current_status,
-                orderWaitInfo.cooking_completion_time
+                typeof orderWaitInfo.cooking_completion_time === "string"
+                  ? orderWaitInfo.cooking_completion_time
+                  : orderWaitInfo.cooking_completion_time.toISOString()
               );
               return (
                 alert && (

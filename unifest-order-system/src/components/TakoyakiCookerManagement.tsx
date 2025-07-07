@@ -83,16 +83,20 @@ const TakoyakiCookerManagement: React.FC<TakoyakiCookerManagementProps> = ({
 
   // 利用率の計算
   const getUtilizationRate = (cooker: TakoyakiCooker) => {
-    if (cooker.max_capacity === 0) return 0;
-    return Math.round((cooker.current_load / cooker.max_capacity) * 100);
+    if (cooker.capacity === 0) return 0;
+    return Math.round((cooker.currentLoad / cooker.capacity) * 100);
   };
 
   // たこ焼き器の状態更新
   const updateCookerStatus = (
-    cookerId: number,
+    cookerId: string | number,
     newStatus: TakoyakiCooker["status"]
   ) => {
-    const cooker = takoyakiCookers.find((c) => c.cooker_id === cookerId);
+    const cooker = takoyakiCookers.find(
+      (c) =>
+        String(c.id) === String(cookerId) ||
+        String(c.cooker_id) === String(cookerId)
+    );
     if (cooker) {
       dispatch({
         type: "UPDATE_COOKER_STATUS",
@@ -102,8 +106,12 @@ const TakoyakiCookerManagement: React.FC<TakoyakiCookerManagementProps> = ({
   };
 
   // メンテナンス開始
-  const startMaintenance = (cookerId: number) => {
-    const cooker = takoyakiCookers.find((c) => c.cooker_id === cookerId);
+  const startMaintenance = (cookerId: string | number) => {
+    const cooker = takoyakiCookers.find(
+      (c) =>
+        String(c.id) === String(cookerId) ||
+        String(c.cooker_id) === String(cookerId)
+    );
     if (cooker) {
       dispatch({
         type: "UPDATE_COOKER_STATUS",
@@ -131,7 +139,7 @@ const TakoyakiCookerManagement: React.FC<TakoyakiCookerManagementProps> = ({
 
     return (
       <Card
-        key={cooker.cooker_id}
+        key={cooker.cooker_id || cooker.id}
         sx={{
           cursor: "pointer",
           "&:hover": { boxShadow: 3 },
@@ -148,7 +156,9 @@ const TakoyakiCookerManagement: React.FC<TakoyakiCookerManagementProps> = ({
               mb: 2,
             }}
           >
-            <Typography variant="h6">{cooker.cooker_name}</Typography>
+            <Typography variant="h6">
+              {cooker.cooker_name || cooker.name}
+            </Typography>
             <Chip
               icon={getCookerStatusIcon(cooker.status)}
               label={cooker.status}
@@ -173,7 +183,8 @@ const TakoyakiCookerManagement: React.FC<TakoyakiCookerManagementProps> = ({
           </Box>
 
           <Typography variant="body2" color="text.secondary">
-            負荷: {cooker.current_load}/{cooker.max_capacity}
+            負荷: {cooker.current_load || cooker.currentLoad}/
+            {cooker.max_capacity || cooker.capacity}
           </Typography>
 
           {cooker.current_order_id && (
@@ -215,7 +226,7 @@ const TakoyakiCookerManagement: React.FC<TakoyakiCookerManagementProps> = ({
                   startIcon={<RefreshIcon />}
                   onClick={(e) => {
                     e.stopPropagation();
-                    updateCookerStatus(cooker.cooker_id, "空き");
+                    updateCookerStatus(cooker.cooker_id || cooker.id, "空き");
                   }}
                   color="primary"
                 >
@@ -303,7 +314,9 @@ const TakoyakiCookerManagement: React.FC<TakoyakiCookerManagementProps> = ({
         }}
       >
         {takoyakiCookers.map((cooker) => (
-          <Box key={cooker.cooker_id}>{renderCookerCard(cooker)}</Box>
+          <Box key={cooker.cooker_id || cooker.id}>
+            {renderCookerCard(cooker)}
+          </Box>
         ))}
       </Box>
 
@@ -314,7 +327,9 @@ const TakoyakiCookerManagement: React.FC<TakoyakiCookerManagementProps> = ({
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>{selectedCooker?.cooker_name} - 詳細情報</DialogTitle>
+        <DialogTitle>
+          {selectedCooker?.cooker_name || selectedCooker?.name} - 詳細情報
+        </DialogTitle>
         <DialogContent>
           {selectedCooker && (
             <Box>
@@ -336,7 +351,12 @@ const TakoyakiCookerManagement: React.FC<TakoyakiCookerManagementProps> = ({
                       </ListItemIcon>
                       <ListItemText
                         primary="負荷"
-                        secondary={`${selectedCooker.current_load}/${selectedCooker.max_capacity}`}
+                        secondary={`${
+                          selectedCooker.current_load ||
+                          selectedCooker.currentLoad
+                        }/${
+                          selectedCooker.max_capacity || selectedCooker.capacity
+                        }`}
                       />
                     </ListItem>
                     {selectedCooker.last_used_at && (
@@ -375,12 +395,14 @@ const TakoyakiCookerManagement: React.FC<TakoyakiCookerManagementProps> = ({
                           />
                         </ListItem>
                       )}
-                      {selectedCooker.estimated_completion_time && (
+                      {(selectedCooker.estimated_completion_time ||
+                        selectedCooker.estimatedCompletionTime) && (
                         <ListItem>
                           <ListItemText
                             primary="完了予定時刻"
                             secondary={new Date(
-                              selectedCooker.estimated_completion_time
+                              selectedCooker.estimated_completion_time ||
+                                selectedCooker.estimatedCompletionTime
                             ).toLocaleString()}
                           />
                         </ListItem>
@@ -420,7 +442,8 @@ const TakoyakiCookerManagement: React.FC<TakoyakiCookerManagementProps> = ({
         <DialogContent>
           <Box sx={{ pt: 1 }}>
             <Typography variant="body1" gutterBottom>
-              {selectedCooker?.cooker_name} の清掃を開始します。
+              {selectedCooker?.cooker_name || selectedCooker?.name}{" "}
+              の清掃を開始します。
             </Typography>
             <TextField
               fullWidth
@@ -440,7 +463,8 @@ const TakoyakiCookerManagement: React.FC<TakoyakiCookerManagementProps> = ({
           </Button>
           <Button
             onClick={() =>
-              selectedCooker && startMaintenance(selectedCooker.cooker_id)
+              selectedCooker &&
+              startMaintenance(selectedCooker.cooker_id || selectedCooker.id)
             }
             variant="contained"
           >

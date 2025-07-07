@@ -32,12 +32,8 @@ import {
 import { useAppContext } from "../hooks/useAppContext";
 import OrderCompletionDialog from "../components/OrderCompletionDialog";
 import PageLayout from "../components/PageLayout";
-import type {
-  Order,
-  OrderStatus,
-  PaymentStatus,
-  CookingStatus,
-} from "../types";
+import CustomerNavigationBar from "../components/CustomerNavigationBar";
+import type { Order, OrderStatus, PaymentStatus } from "../types";
 
 interface SimpleProduct {
   id: string;
@@ -354,22 +350,23 @@ function OrderPage() {
 
         // 注文完了ダイアログ用のOrder形式に変換
         const newOrder: Order = {
-          order_id: createdOrder.order_id,
-          customer_id: createdOrder.customer_id || 1,
+          id: createdOrder.order_id?.toString() || "1",
+          order_id: createdOrder.order_id?.toString() || "1",
+          orderNumber: createdOrder.order_number,
           order_number: createdOrder.order_number,
-          order_status: createdOrder.status as OrderStatus,
-          payment_status: createdOrder.payment_status as PaymentStatus,
-          total_price: parseFloat(createdOrder.total_amount),
-          order_items: createdOrder.order_items || [],
-          items: createdOrder.order_items || [],
-          total_amount: parseFloat(createdOrder.total_amount),
+          customer_id: createdOrder.customer_id?.toString() || "1",
           status: createdOrder.status as OrderStatus,
+          payment_status: createdOrder.payment_status as PaymentStatus,
+          total: parseFloat(createdOrder.total_amount),
+          total_amount: parseFloat(createdOrder.total_amount),
+          items: createdOrder.order_items || [],
+          order_items: createdOrder.order_items || [],
+          createdAt: new Date(),
+          created_at: new Date().toISOString(),
+          updatedAt: new Date(),
+          updated_at: new Date().toISOString(),
           payment_method: createdOrder.payment_method,
-          estimated_pickup_time: createdOrder.estimated_pickup_time,
-          actual_pickup_time: createdOrder.actual_pickup_time,
           special_instructions: createdOrder.special_instructions || "",
-          created_at: createdOrder.created_at,
-          updated_at: createdOrder.updated_at,
         };
 
         // 注文完了ダイアログの設定
@@ -399,416 +396,427 @@ function OrderPage() {
     systemState.営業状況 === "営業中" && !systemState.緊急停止状態;
 
   return (
-    <PageLayout maxWidth="xl">
-      {/* ヘッダー */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" component="h1" gutterBottom color="primary">
-          注文画面
-        </Typography>
-        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 2 }}>
-          <Chip
-            label={systemState.営業状況}
-            color={systemState.営業状況 === "営業中" ? "success" : "warning"}
-            variant="filled"
-          />
-          <Chip
-            label={systemState.混雑状況}
-            color={
-              systemState.混雑状況 === "混雑"
-                ? "error"
-                : systemState.混雑状況 === "普通"
-                ? "warning"
-                : "success"
-            }
-            variant="outlined"
-          />
-          {systemState.待ち件数 > 0 && (
+    <>
+      <CustomerNavigationBar title="メニュー" />
+      <PageLayout maxWidth="xl">
+        {/* ヘッダー */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h4" component="h1" gutterBottom color="primary">
+            注文画面
+          </Typography>
+          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 2 }}>
             <Chip
-              label={`待ち時間: 約${systemState.待ち件数 * 8}分`}
-              color="info"
+              label={systemState.営業状況}
+              color={systemState.営業状況 === "営業中" ? "success" : "warning"}
+              variant="filled"
+            />
+            <Chip
+              label={systemState.混雑状況}
+              color={
+                systemState.混雑状況 === "混雑"
+                  ? "error"
+                  : systemState.混雑状況 === "普通"
+                  ? "warning"
+                  : "success"
+              }
               variant="outlined"
             />
+            {systemState.待ち件数 > 0 && (
+              <Chip
+                label={`待ち時間: 約${systemState.待ち件数 * 8}分`}
+                color="info"
+                variant="outlined"
+              />
+            )}
+          </Box>
+
+          {!isOrderingAvailable && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+                現在注文を受け付けていません
+              </Typography>
+              <Typography variant="body2">
+                {systemState.営業状況 === "準備中" &&
+                  "営業準備中です。しばらくお待ちください。"}
+                {systemState.営業状況 === "営業終了" &&
+                  "本日の営業は終了いたしました。"}
+                {systemState.緊急停止状態 && "システムメンテナンス中です。"}
+              </Typography>
+            </Alert>
+          )}
+
+          {connectionStatus !== "connected" && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              ネットワークに接続できません。注文機能が利用できない可能性があります。
+            </Alert>
           )}
         </Box>
 
-        {!isOrderingAvailable && (
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-              現在注文を受け付けていません
-            </Typography>
-            <Typography variant="body2">
-              {systemState.営業状況 === "準備中" &&
-                "営業準備中です。しばらくお待ちください。"}
-              {systemState.営業状況 === "営業終了" &&
-                "本日の営業は終了いたしました。"}
-              {systemState.緊急停止状態 && "システムメンテナンス中です。"}
-            </Typography>
-          </Alert>
-        )}
-
-        {connectionStatus !== "connected" && (
+        {/* エラー表示 */}
+        {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            ネットワークに接続できません。注文機能が利用できない可能性があります。
+            {error}
           </Alert>
         )}
-      </Box>
 
-      {/* エラー表示 */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+        {/* ローディング表示 */}
+        {loading && (
+          <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+            <Typography>商品を読み込み中...</Typography>
+          </Box>
+        )}
 
-      {/* ローディング表示 */}
-      {loading && (
-        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-          <Typography>商品を読み込み中...</Typography>
-        </Box>
-      )}
-
-      {/* 商品一覧 */}
-      {!loading && (
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr", // スマホ: 1列
-              sm: "repeat(2, 1fr)", // タブレット: 2列
-              md: "repeat(3, 1fr)", // PC: 3列
-              lg: "repeat(4, 1fr)", // 大画面: 4列
-            },
-            gap: 3,
-            mb: 8,
-          }}
-        >
-          {products.map((product) => (
-            <Card
-              key={product.id}
-              sx={{
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                opacity: !product.available || !isOrderingAvailable ? 0.6 : 1,
-                cursor:
-                  product.available && isOrderingAvailable
-                    ? "pointer"
-                    : "default",
-                transition: "all 0.2s ease-in-out",
-                "&:hover":
-                  product.available && isOrderingAvailable
-                    ? {
-                        boxShadow: 4,
-                        transform: "translateY(-2px)",
-                      }
-                    : {},
-              }}
-              onClick={() =>
-                product.available &&
-                isOrderingAvailable &&
-                handleProductClick(product)
-              }
-            >
-              <CardContent
+        {/* 商品一覧 */}
+        {!loading && (
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr", // スマホ: 1列
+                sm: "repeat(2, 1fr)", // タブレット: 2列
+                md: "repeat(3, 1fr)", // PC: 3列
+                lg: "repeat(4, 1fr)", // 大画面: 4列
+              },
+              gap: 3,
+              mb: 8,
+            }}
+          >
+            {products.map((product) => (
+              <Card
+                key={product.id}
                 sx={{
-                  flexGrow: 1,
+                  height: "100%",
                   display: "flex",
                   flexDirection: "column",
-                  p: 2,
+                  opacity: !product.available || !isOrderingAvailable ? 0.6 : 1,
+                  cursor:
+                    product.available && isOrderingAvailable
+                      ? "pointer"
+                      : "default",
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover":
+                    product.available && isOrderingAvailable
+                      ? {
+                          boxShadow: 4,
+                          transform: "translateY(-2px)",
+                        }
+                      : {},
                 }}
+                onClick={() =>
+                  product.available &&
+                  isOrderingAvailable &&
+                  handleProductClick(product)
+                }
               >
-                <Box
+                <CardContent
                   sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    mb: 1,
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    component="h2"
-                    color="primary"
-                    sx={{
-                      fontSize: { xs: "1rem", sm: "1.1rem" },
-                      fontWeight: "bold",
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    {product.name}
-                  </Typography>
-                  <Chip
-                    label={product.category}
-                    size="small"
-                    color="secondary"
-                    variant="outlined"
-                    sx={{ ml: 1, flexShrink: 0 }}
-                  />
-                </Box>
-
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{
-                    mb: 2,
                     flexGrow: 1,
-                    fontSize: { xs: "0.8rem", sm: "0.875rem" },
-                  }}
-                >
-                  {product.description}
-                </Typography>
-
-                <Box
-                  sx={{
                     display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mt: "auto",
+                    flexDirection: "column",
+                    p: 2,
                   }}
                 >
-                  <Typography
-                    variant="h5"
-                    color="primary"
+                  <Box
                     sx={{
-                      fontWeight: "bold",
-                      fontSize: { xs: "1.2rem", sm: "1.5rem" },
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      mb: 1,
                     }}
                   >
-                    ¥{product.price.toLocaleString()}
+                    <Typography
+                      variant="h6"
+                      component="h2"
+                      color="primary"
+                      sx={{
+                        fontSize: { xs: "1rem", sm: "1.1rem" },
+                        fontWeight: "bold",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {product.name}
+                    </Typography>
+                    <Chip
+                      label={product.category}
+                      size="small"
+                      color="secondary"
+                      variant="outlined"
+                      sx={{ ml: 1, flexShrink: 0 }}
+                    />
+                  </Box>
+
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                      mb: 2,
+                      flexGrow: 1,
+                      fontSize: { xs: "0.8rem", sm: "0.875rem" },
+                    }}
+                  >
+                    {product.description}
                   </Typography>
 
                   <Box
                     sx={{
                       display: "flex",
-                      flexDirection: "column",
-                      alignItems: "flex-end",
-                      gap: 0.5,
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mt: "auto",
                     }}
                   >
-                    {!product.available && (
-                      <Chip
-                        label="売り切れ"
-                        color="error"
-                        size="small"
-                        icon={<WarningIcon />}
-                      />
-                    )}
+                    <Typography
+                      variant="h5"
+                      color="primary"
+                      sx={{
+                        fontWeight: "bold",
+                        fontSize: { xs: "1.2rem", sm: "1.5rem" },
+                      }}
+                    >
+                      ¥{product.price.toLocaleString()}
+                    </Typography>
 
-                    {product.available && !isOrderingAvailable && (
-                      <Chip label="注文停止中" color="warning" size="small" />
-                    )}
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
-      )}
-
-      {/* カート FAB */}
-      {cart.length > 0 && (
-        <Fab
-          color="primary"
-          aria-label="cart"
-          sx={{
-            position: "fixed",
-            bottom: 24,
-            right: 24,
-            zIndex: 1000,
-          }}
-          onClick={() => setCartDialogOpen(true)}
-        >
-          <Badge badgeContent={cart.length} color="error">
-            <CartIcon />
-          </Badge>
-        </Fab>
-      )}
-
-      {/* 商品選択ダイアログ */}
-      <Dialog
-        open={productDialogOpen}
-        onClose={() => setProductDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>{selectedProduct?.name}</DialogTitle>
-        <DialogContent>
-          {selectedProduct && (
-            <Box>
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                {selectedProduct.description}
-              </Typography>
-
-              <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
-                基本価格: ¥{selectedProduct.price.toLocaleString()}
-              </Typography>
-
-              <Divider sx={{ my: 2 }} />
-
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                トッピング選択
-              </Typography>
-
-              <FormGroup>
-                {toppings
-                  .filter((t) => t.available)
-                  .map((topping) => (
-                    <FormControlLabel
-                      key={topping.id}
-                      control={
-                        <Checkbox
-                          checked={selectedToppings.some(
-                            (t) => t.id === topping.id
-                          )}
-                          onChange={() => handleToppingToggle(topping)}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-end",
+                        gap: 0.5,
+                      }}
+                    >
+                      {!product.available && (
+                        <Chip
+                          label="売り切れ"
+                          color="error"
+                          size="small"
+                          icon={<WarningIcon />}
                         />
-                      }
-                      label={
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            width: "100%",
-                          }}
-                        >
-                          <span>{topping.name}</span>
-                          <span>
-                            {topping.price > 0 ? `+¥${topping.price}` : "無料"}
-                          </span>
+                      )}
+
+                      {product.available && !isOrderingAvailable && (
+                        <Chip label="注文停止中" color="warning" size="small" />
+                      )}
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+        )}
+
+        {/* カート FAB */}
+        {cart.length > 0 && (
+          <Fab
+            color="primary"
+            aria-label="cart"
+            sx={{
+              position: "fixed",
+              bottom: 24,
+              right: 24,
+              zIndex: 1000,
+            }}
+            onClick={() => setCartDialogOpen(true)}
+          >
+            <Badge badgeContent={cart.length} color="error">
+              <CartIcon />
+            </Badge>
+          </Fab>
+        )}
+
+        {/* 商品選択ダイアログ */}
+        <Dialog
+          open={productDialogOpen}
+          onClose={() => setProductDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>{selectedProduct?.name}</DialogTitle>
+          <DialogContent>
+            {selectedProduct && (
+              <Box>
+                <Typography
+                  variant="body1"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
+                >
+                  {selectedProduct.description}
+                </Typography>
+
+                <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
+                  基本価格: ¥{selectedProduct.price.toLocaleString()}
+                </Typography>
+
+                <Divider sx={{ my: 2 }} />
+
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                  トッピング選択
+                </Typography>
+
+                <FormGroup>
+                  {toppings
+                    .filter((t) => t.available)
+                    .map((topping) => (
+                      <FormControlLabel
+                        key={topping.id}
+                        control={
+                          <Checkbox
+                            checked={selectedToppings.some(
+                              (t) => t.id === topping.id
+                            )}
+                            onChange={() => handleToppingToggle(topping)}
+                          />
+                        }
+                        label={
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              width: "100%",
+                            }}
+                          >
+                            <span>{topping.name}</span>
+                            <span>
+                              {topping.price > 0
+                                ? `+¥${topping.price}`
+                                : "無料"}
+                            </span>
+                          </Box>
+                        }
+                      />
+                    ))}
+                </FormGroup>
+
+                <Divider sx={{ my: 2 }} />
+
+                <Typography variant="h6" color="primary">
+                  合計: ¥
+                  {calculateItemPrice(
+                    selectedProduct,
+                    selectedToppings
+                  ).toLocaleString()}
+                </Typography>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setProductDialogOpen(false)}>
+              キャンセル
+            </Button>
+            <Button onClick={handleAddToCart} variant="contained">
+              カートに追加
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* カートダイアログ */}
+        <Dialog
+          open={cartDialogOpen}
+          onClose={() => setCartDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>注文内容確認</DialogTitle>
+          <DialogContent>
+            {cart.length === 0 ? (
+              <Typography variant="body1" color="text.secondary">
+                カートは空です
+              </Typography>
+            ) : (
+              <List>
+                {cart.map((item, index) => (
+                  <ListItem key={index} divider>
+                    <ListItemText
+                      primary={item.product.name}
+                      secondary={
+                        <Box>
+                          {item.selectedToppings.length > 0 && (
+                            <Typography variant="body2" color="text.secondary">
+                              トッピング:{" "}
+                              {item.selectedToppings
+                                .map((t) => t.name)
+                                .join(", ")}
+                            </Typography>
+                          )}
+                          <Typography variant="body2" color="primary">
+                            ¥
+                            {calculateItemPrice(
+                              item.product,
+                              item.selectedToppings
+                            ).toLocaleString()}{" "}
+                            × {item.quantity}
+                          </Typography>
                         </Box>
                       }
                     />
-                  ))}
-              </FormGroup>
-
-              <Divider sx={{ my: 2 }} />
-
-              <Typography variant="h6" color="primary">
-                合計: ¥
-                {calculateItemPrice(
-                  selectedProduct,
-                  selectedToppings
-                ).toLocaleString()}
-              </Typography>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setProductDialogOpen(false)}>
-            キャンセル
-          </Button>
-          <Button onClick={handleAddToCart} variant="contained">
-            カートに追加
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* カートダイアログ */}
-      <Dialog
-        open={cartDialogOpen}
-        onClose={() => setCartDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>注文内容確認</DialogTitle>
-        <DialogContent>
-          {cart.length === 0 ? (
-            <Typography variant="body1" color="text.secondary">
-              カートは空です
-            </Typography>
-          ) : (
-            <List>
-              {cart.map((item, index) => (
-                <ListItem key={index} divider>
-                  <ListItemText
-                    primary={item.product.name}
-                    secondary={
-                      <Box>
-                        {item.selectedToppings.length > 0 && (
-                          <Typography variant="body2" color="text.secondary">
-                            トッピング:{" "}
-                            {item.selectedToppings
-                              .map((t) => t.name)
-                              .join(", ")}
-                          </Typography>
-                        )}
-                        <Typography variant="body2" color="primary">
-                          ¥
-                          {calculateItemPrice(
-                            item.product,
-                            item.selectedToppings
-                          ).toLocaleString()}{" "}
-                          × {item.quantity}
+                    <ListItemSecondaryAction>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <IconButton
+                          size="small"
+                          onClick={() => handleQuantityChange(index, -1)}
+                          disabled={item.quantity <= 1}
+                        >
+                          <RemoveIcon />
+                        </IconButton>
+                        <Typography
+                          variant="body1"
+                          sx={{ minWidth: 24, textAlign: "center" }}
+                        >
+                          {item.quantity}
                         </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleQuantityChange(index, 1)}
+                        >
+                          <AddIcon />
+                        </IconButton>
+                        <Button
+                          size="small"
+                          color="error"
+                          onClick={() => handleRemoveFromCart(index)}
+                          sx={{ ml: 1 }}
+                        >
+                          削除
+                        </Button>
                       </Box>
-                    }
-                  />
-                  <ListItemSecondaryAction>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleQuantityChange(index, -1)}
-                        disabled={item.quantity <= 1}
-                      >
-                        <RemoveIcon />
-                      </IconButton>
-                      <Typography
-                        variant="body1"
-                        sx={{ minWidth: 24, textAlign: "center" }}
-                      >
-                        {item.quantity}
-                      </Typography>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleQuantityChange(index, 1)}
-                      >
-                        <AddIcon />
-                      </IconButton>
-                      <Button
-                        size="small"
-                        color="error"
-                        onClick={() => handleRemoveFromCart(index)}
-                        sx={{ ml: 1 }}
-                      >
-                        削除
-                      </Button>
-                    </Box>
-                  </ListItemSecondaryAction>
-                </ListItem>
-              ))}
-            </List>
-          )}
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+              </List>
+            )}
 
-          {cart.length > 0 && (
-            <Box sx={{ mt: 2, p: 2, bgcolor: "grey.100", borderRadius: 2 }}>
-              <Typography
-                variant="h5"
-                color="primary"
-                sx={{ fontWeight: "bold" }}
-              >
-                合計金額: ¥{calculateCartTotal().toLocaleString()}
-              </Typography>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCartDialogOpen(false)}>閉じる</Button>
-          {cart.length > 0 && (
-            <Button onClick={handleOrder} variant="contained" color="primary">
-              注文する
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
+            {cart.length > 0 && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: "grey.100", borderRadius: 2 }}>
+                <Typography
+                  variant="h5"
+                  color="primary"
+                  sx={{ fontWeight: "bold" }}
+                >
+                  合計金額: ¥{calculateCartTotal().toLocaleString()}
+                </Typography>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setCartDialogOpen(false)}>閉じる</Button>
+            {cart.length > 0 && (
+              <Button onClick={handleOrder} variant="contained" color="primary">
+                注文する
+              </Button>
+            )}
+          </DialogActions>
+        </Dialog>
 
-      {/* 注文完了ダイアログ */}
-      <OrderCompletionDialog
-        open={orderCompletionOpen}
-        onClose={() => setOrderCompletionOpen(false)}
-        order={completedOrder}
-        estimatedTime={estimatedTime}
-      />
-    </PageLayout>
+        {/* 注文完了ダイアログ */}
+        <OrderCompletionDialog
+          open={orderCompletionOpen}
+          onClose={() => setOrderCompletionOpen(false)}
+          order={completedOrder}
+          estimatedTime={estimatedTime}
+        />
+      </PageLayout>
+    </>
   );
 }
 

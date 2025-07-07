@@ -53,8 +53,8 @@ const StockManagement: React.FC<StockManagementProps> = ({
   const [adjustType, setAdjustType] = useState<"add" | "subtract">("add");
 
   // 商品名を取得
-  const getProductName = (productId: number) => {
-    const product = products.find((p) => p.product_id === productId);
+  const getProductName = (productId: string | number) => {
+    const product = products.find((p) => p.product_id === String(productId));
     return product?.product_name || `商品ID: ${productId}`;
   };
 
@@ -107,7 +107,7 @@ const StockManagement: React.FC<StockManagementProps> = ({
     dispatch({
       type: "UPDATE_STOCK",
       payload: {
-        product_id: selectedStock.product_id,
+        product_id: Number(selectedStock.product_id),
         quantity: finalQuantity,
         reason: adjustReason,
       },
@@ -117,10 +117,10 @@ const StockManagement: React.FC<StockManagementProps> = ({
   };
 
   // 在庫アラートを解決
-  const handleResolveAlert = (alertId: number) => {
+  const handleResolveAlert = (alertId: string | number) => {
     dispatch({
       type: "RESOLVE_STOCK_ALERT",
-      payload: alertId,
+      payload: Number(alertId),
     });
   };
 
@@ -195,14 +195,20 @@ const StockManagement: React.FC<StockManagementProps> = ({
             .filter((alert) => !alert.is_resolved)
             .map((alert) => (
               <Alert
-                key={alert.alert_id}
-                severity={alert.alert_type === "在庫切れ" ? "error" : "warning"}
+                key={alert.alert_id || alert.id}
+                severity={
+                  (alert.alert_type || alert.alertType) === "在庫切れ"
+                    ? "error"
+                    : "warning"
+                }
                 sx={{ mb: 1 }}
                 action={
                   <Button
                     color="inherit"
                     size="small"
-                    onClick={() => handleResolveAlert(alert.alert_id)}
+                    onClick={() =>
+                      handleResolveAlert(alert.alert_id || alert.id)
+                    }
                   >
                     解決
                   </Button>
@@ -210,10 +216,13 @@ const StockManagement: React.FC<StockManagementProps> = ({
               >
                 <Box>
                   <Typography variant="body2" fontWeight="medium">
-                    {getProductName(alert.product_id)} - {alert.message}
+                    {getProductName(alert.product_id || alert.productId)} -{" "}
+                    {alert.message}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {new Date(alert.created_at).toLocaleString()}
+                    {new Date(
+                      alert.created_at || alert.timestamp
+                    ).toLocaleString()}
                   </Typography>
                 </Box>
               </Alert>
@@ -266,19 +275,19 @@ const StockManagement: React.FC<StockManagementProps> = ({
                         <Typography
                           variant="body2"
                           color={
-                            stock.available_stock === 0
+                            (stock.available_stock || stock.current_stock) === 0
                               ? "error"
                               : "textPrimary"
                           }
                         >
-                          {stock.available_stock}
-                          {stock.reserved_stock > 0 && (
+                          {stock.available_stock || stock.current_stock}
+                          {(stock.reserved_stock || 0) > 0 && (
                             <Typography
                               variant="caption"
                               color="text.secondary"
                               sx={{ ml: 1 }}
                             >
-                              (予約: {stock.reserved_stock})
+                              (予約: {stock.reserved_stock || 0})
                             </Typography>
                           )}
                         </Typography>

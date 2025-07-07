@@ -29,9 +29,40 @@ import {
   Refresh as RefreshIcon,
   LocalFireDepartment as FireIcon,
 } from "@mui/icons-material";
-import type { Order, OrderStatus, CookingStatus } from "../types";
-import WaitTimeDisplay from "../components/WaitTimeDisplay";
+// import WaitTimeDisplay from "../components/WaitTimeDisplay"; // 一時的に無効化
 import { AudioNotificationService } from "../utils/audioNotification";
+// import { useSocket } from "../hooks/useSocket"; // 一時的に無効化
+
+// 厨房管理画面用の型定義
+interface KitchenOrder {
+  order_id: number;
+  customer_id: number | null;
+  order_number: string;
+  status: string;
+  payment_status: string;
+  total_amount: number;
+  order_items: Array<{
+    order_item_id: number;
+    product_id: number;
+    product_name: string;
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+    toppings: Array<{
+      topping_id: number;
+      topping_name: string;
+      price: number;
+    }>;
+    cooking_time: number;
+    cooking_instruction: string;
+  }>;
+  payment_method: string;
+  estimated_pickup_time: string;
+  actual_pickup_time: string | null;
+  special_instructions: string;
+  created_at: string;
+  updated_at: string;
+}
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -55,160 +86,8 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-// ダミーの注文データ
-const dummyOrders: Order[] = [
-  {
-    order_id: 1,
-    customer_id: 1,
-    order_number: "A001",
-    order_status: "waiting" as OrderStatus,
-    payment_status: "unpaid" as const,
-    total_price: 1300,
-    order_items: [
-      {
-        order_item_id: 1,
-        order_id: 1,
-        product_id: 1,
-        product_name: "たこ焼き 8個入り",
-        quantity: 2,
-        unit_price: 600,
-        subtotal: 1200,
-        total_price: 1200,
-        cooking_status: "waiting" as CookingStatus,
-        toppings: [
-          {
-            order_topping_id: 1,
-            order_item_id: 1,
-            topping_id: 1,
-            topping_name: "青のり",
-            price: 50,
-            is_active: true,
-            target_product_ids: [1],
-            display_order: 1,
-            created_at: "2024-01-01T00:00:00Z",
-            updated_at: "2024-01-01T00:00:00Z",
-          },
-          {
-            order_topping_id: 2,
-            order_item_id: 1,
-            topping_id: 2,
-            topping_name: "かつお節",
-            price: 50,
-            is_active: true,
-            target_product_ids: [1],
-            display_order: 2,
-            created_at: "2024-01-01T00:00:00Z",
-            updated_at: "2024-01-01T00:00:00Z",
-          },
-        ],
-        cooking_time: 10,
-        cooking_instruction: "",
-        created_at: "2024-01-01T10:00:00Z",
-        updated_at: "2024-01-01T10:00:00Z",
-      },
-    ],
-    items: [], // エイリアス（後で設定）
-    total_amount: 1300,
-    status: "waiting" as OrderStatus,
-    payment_method: "現金",
-    estimated_pickup_time: "2024-01-01T10:15:00Z",
-    actual_pickup_time: null,
-    special_instructions: "",
-    created_at: "2024-01-01T10:00:00Z",
-    updated_at: "2024-01-01T10:00:00Z",
-  },
-  {
-    order_id: 2,
-    customer_id: 2,
-    order_number: "A002",
-    order_status: "cooking" as OrderStatus,
-    payment_status: "unpaid" as const,
-    total_price: 880,
-    order_items: [
-      {
-        order_item_id: 2,
-        order_id: 2,
-        product_id: 2,
-        product_name: "たこ焼き 12個入り",
-        quantity: 1,
-        unit_price: 850,
-        subtotal: 850,
-        total_price: 850,
-        cooking_status: "cooking" as CookingStatus,
-        toppings: [
-          {
-            order_topping_id: 3,
-            order_item_id: 2,
-            topping_id: 3,
-            topping_name: "マヨネーズ",
-            price: 30,
-            is_active: true,
-            target_product_ids: [2],
-            display_order: 3,
-            created_at: "2024-01-01T00:00:00Z",
-            updated_at: "2024-01-01T00:00:00Z",
-          },
-        ],
-        cooking_time: 12,
-        cooking_instruction: "",
-        created_at: "2024-01-01T10:02:00Z",
-        updated_at: "2024-01-01T10:02:00Z",
-      },
-    ],
-    items: [], // エイリアス（後で設定）
-    total_amount: 880,
-    status: "cooking" as OrderStatus,
-    payment_method: "現金",
-    estimated_pickup_time: "2024-01-01T10:17:00Z",
-    actual_pickup_time: null,
-    special_instructions: "",
-    created_at: "2024-01-01T10:02:00Z",
-    updated_at: "2024-01-01T10:03:00Z",
-  },
-  {
-    order_id: 3,
-    customer_id: 3,
-    order_number: "A003",
-    order_status: "completed" as OrderStatus,
-    payment_status: "unpaid" as const,
-    total_price: 1100,
-    order_items: [
-      {
-        order_item_id: 3,
-        order_id: 3,
-        product_id: 3,
-        product_name: "たこ焼き 16個入り",
-        quantity: 1,
-        unit_price: 1100,
-        subtotal: 1100,
-        total_price: 1100,
-        cooking_status: "completed" as CookingStatus,
-        toppings: [],
-        cooking_time: 15,
-        cooking_instruction: "",
-        created_at: "2024-01-01T10:01:00Z",
-        updated_at: "2024-01-01T10:01:00Z",
-      },
-    ],
-    items: [], // エイリアス（後で設定）
-    total_amount: 1100,
-    status: "completed" as OrderStatus,
-    payment_method: "現金",
-    estimated_pickup_time: "2024-01-01T10:20:00Z",
-    actual_pickup_time: null,
-    special_instructions: "",
-    created_at: "2024-01-01T10:01:00Z",
-    updated_at: "2024-01-01T10:06:00Z",
-  },
-];
-
-// エイリアスを設定
-dummyOrders.forEach((order) => {
-  order.items = order.order_items;
-});
-
 function KitchenPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<KitchenOrder[]>([]);
   const [selectedTab, setSelectedTab] = useState(0);
   const [cookingTimers, setCookingTimers] = useState<Record<number, number>>(
     {}
@@ -217,6 +96,10 @@ function KitchenPage() {
   const [error, setError] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // Socket.io統合
+  // const socket = useSocket(); // 一時的に無効化
+  const socket = null; // 一時的にnullに設定
 
   // 音声通知サービス
   const [audioService] = useState(() => new AudioNotificationService());
@@ -259,6 +142,7 @@ function KitchenPage() {
           throw new Error("不正なデータ形式です");
         }
 
+        // APIレスポンス型定義
         interface ApiOrder {
           order_id: number;
           customer_id: number | null;
@@ -267,9 +151,19 @@ function KitchenPage() {
           payment_status: string;
           total_amount: string;
           items: Array<{
+            order_item_id?: number;
+            product_id: number;
             product_name: string;
             quantity: number;
+            unit_price: number;
             total_price: number;
+            toppings?: Array<{
+              topping_id: number;
+              topping_name: string;
+              price: number;
+            }>;
+            cooking_time: number;
+            cooking_instruction?: string;
           }>;
           payment_method: string;
           estimated_pickup_time: string;
@@ -279,25 +173,34 @@ function KitchenPage() {
           updated_at: string;
         }
 
-        // APIデータをOrder形式に変換
-        const formattedOrders: Order[] = result.data.map((order: ApiOrder) => ({
-          order_id: order.order_id,
-          customer_id: order.customer_id,
-          order_number: order.order_number,
-          order_status: order.status as OrderStatus,
-          payment_status: order.payment_status as "paid" | "unpaid" | "pending",
-          total_price: parseFloat(order.total_amount),
-          order_items: order.items || [],
-          total_amount: parseFloat(order.total_amount),
-          status: order.status as OrderStatus,
-          payment_method: order.payment_method,
-          estimated_pickup_time: order.estimated_pickup_time,
-          actual_pickup_time: order.actual_pickup_time,
-          special_instructions: order.special_instructions || "",
-          created_at: order.created_at,
-          updated_at: order.updated_at,
-          items: order.items || [],
-        }));
+        // APIデータをKitchenOrder形式に変換
+        const formattedOrders: KitchenOrder[] = result.data.map(
+          (order: ApiOrder) => ({
+            order_id: order.order_id,
+            customer_id: order.customer_id,
+            order_number: order.order_number,
+            status: order.status,
+            payment_status: order.payment_status,
+            total_amount: parseFloat(order.total_amount),
+            order_items: order.items.map((item) => ({
+              order_item_id: item.order_item_id || 0,
+              product_id: item.product_id,
+              product_name: item.product_name,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              total_price: item.total_price,
+              toppings: item.toppings || [],
+              cooking_time: item.cooking_time,
+              cooking_instruction: item.cooking_instruction || "",
+            })),
+            payment_method: order.payment_method,
+            estimated_pickup_time: order.estimated_pickup_time,
+            actual_pickup_time: order.actual_pickup_time,
+            special_instructions: order.special_instructions || "",
+            created_at: order.created_at,
+            updated_at: order.updated_at,
+          })
+        );
 
         setOrders(formattedOrders);
         setRetryCount(0);
@@ -363,6 +266,57 @@ function KitchenPage() {
     };
   }, [fetchOrders]);
 
+  // Socket.io統合とリアルタイム更新
+  useEffect(() => {
+    if (!socket) return;
+
+    // 厨房に参加
+    socket.emit("join-kitchen");
+
+    // 新しい注文の通知
+    socket.on("new-order", (orderData) => {
+      console.log("新しい注文:", orderData);
+      fetchOrders(false);
+      audioService.playNewOrder();
+    });
+
+    // 注文状況の更新
+    socket.on("order-status-updated", (data) => {
+      console.log("注文状況更新:", data);
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.order_id === data.orderId
+            ? {
+                ...order,
+                status: data.status,
+                updated_at: new Date().toISOString(),
+              }
+            : order
+        )
+      );
+    });
+
+    // 調理完了通知
+    socket.on("cooking-completed", (data) => {
+      console.log("調理完了:", data);
+      audioService.playOrderReady(data.orderNumber);
+    });
+
+    // 緊急通知
+    socket.on("emergency-notification", (data) => {
+      console.log("緊急通知:", data);
+      // 緊急通知音を再生（playEmergencyメソッドがない場合は警告音で代替）
+      audioService.playNewOrder();
+    });
+
+    return () => {
+      socket.off("new-order");
+      socket.off("order-status-updated");
+      socket.off("cooking-completed");
+      socket.off("emergency-notification");
+    };
+  }, [socket, audioService, fetchOrders]);
+
   // 手動更新
   const handleRefresh = () => {
     setLoading(true);
@@ -394,7 +348,7 @@ function KitchenPage() {
   }, []);
 
   // 注文の状態を更新
-  const updateOrderStatus = async (orderId: number, newStatus: OrderStatus) => {
+  const updateOrderStatus = async (orderId: number, newStatus: string) => {
     try {
       const response = await fetch(
         `http://localhost:3001/api/orders/${orderId}/status`,
@@ -458,7 +412,10 @@ function KitchenPage() {
   };
 
   // 注文カードのレンダリング
-  const renderOrderCard = (order: Order, showActions: boolean = true) => {
+  const renderOrderCard = (
+    order: KitchenOrder,
+    showActions: boolean = true
+  ) => {
     const elapsedTime = getElapsedTime(order.created_at);
     const isUrgent = elapsedTime > 15; // 15分以上経過で緊急
     const cookingTimer = cookingTimers[order.order_id];
@@ -495,7 +452,10 @@ function KitchenPage() {
 
             {/* 待ち時間表示（コンパクト表示） */}
             <Box sx={{ my: 1 }}>
-              <WaitTimeDisplay orderId={order.order_id} compact={true} />
+              {/* <WaitTimeDisplay orderId={order.order_id} compact={true} /> */}
+              <Typography variant="caption" color="text.secondary">
+                待ち時間表示（一時的に無効化）
+              </Typography>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Chip
@@ -538,7 +498,7 @@ function KitchenPage() {
 
           {/* 注文アイテム */}
           <List dense>
-            {order.items.map((item) => (
+            {order.order_items.map((item) => (
               <ListItem key={item.order_item_id} divider>
                 <ListItemAvatar>
                   <Avatar sx={{ bgcolor: "orange.light" }}>

@@ -111,6 +111,12 @@ class SocketServiceImpl implements SocketService {
   }
 
   connect(userType: UserType): void {
+    // 開発中でSocket.ioを無効化する場合
+    if (import.meta.env.VITE_DISABLE_SOCKET === "true") {
+      console.log("Socket.io is disabled in development mode");
+      return;
+    }
+
     if (this.socket?.connected) {
       console.log("Socket already connected");
       return;
@@ -374,18 +380,26 @@ class SocketServiceImpl implements SocketService {
     if (this.socket?.connected) {
       console.log(`📤 Emitting ${event}:`, data);
       this.socket.emit(event, data);
+    } else {
+      console.warn(`Socket not connected, cannot emit ${event}`);
     }
   }
 
   on(event: string, callback: (data: SocketEventData) => void): void {
     if (this.socket) {
       this.socket.on(event, callback);
+    } else {
+      console.warn(`Socket not initialized, cannot listen to ${event}`);
     }
   }
 
   off(event: string, callback?: (data: SocketEventData) => void): void {
     if (this.socket) {
       this.socket.off(event, callback);
+    } else {
+      console.warn(
+        `Socket not initialized, cannot remove listener for ${event}`
+      );
     }
   }
 

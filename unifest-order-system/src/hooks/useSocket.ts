@@ -19,6 +19,12 @@ export const useSocket = (options: UseSocketOptions = {}) => {
   const socketRef = useRef<Socket | null>(null);
 
   const connectSocket = useCallback(() => {
+    // 開発中でSocket.ioを無効化する場合
+    if (import.meta.env.VITE_DISABLE_SOCKET === "true") {
+      console.log("Socket.io is disabled in development mode");
+      return;
+    }
+
     // Socket.io接続を初期化
     socketRef.current = io(SOCKET_URL, {
       transports: ["websocket", "polling"],

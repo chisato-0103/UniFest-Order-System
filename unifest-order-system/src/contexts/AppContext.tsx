@@ -7,6 +7,7 @@ import type {
   Category,
   Topping,
   Cart,
+  CartItem,
   SystemState,
   Notification,
   StockInfo,
@@ -122,51 +123,61 @@ const initialState: AppState = {
   cart: {
     items: [],
     total: 0,
+    itemCount: 0,
   },
   systemState: {
+    isOpen: true,
+    maxOrders: 50,
+    currentOrders: 0,
+    averageWaitTime: 10,
+    maintenanceMode: false,
     混雑状況: "空いている",
     待ち件数: 0,
-    緊急停止状態: false,
     営業状況: "営業中",
-    手動運用モード: false,
-    音声通知設定: {
-      有効: true,
-      音量: 0.7,
-      新規注文通知: true,
-      調理完了通知: true,
-      遅延アラート: true,
-      緊急通知: true,
-    },
+    音声通知設定: true,
+    緊急停止状態: false,
   },
   notifications: [
     {
-      notification_id: 1,
+      id: "1",
+      notification_id: "1",
+      type: "info",
       notification_type: "new_order",
-      target_order_number: "A001",
-      notification_time: new Date().toISOString(),
+      title: "新規注文",
+      message: "新しい注文が入りました",
       content: "新しい注文が入りました",
-      priority: "通常",
+      timestamp: new Date(),
+      notification_time: new Date(),
+      read: false,
       is_confirmed: false,
-      created_at: new Date().toISOString(),
+      target_order_number: "A001",
     },
     {
-      notification_id: 2,
+      id: "2",
+      notification_id: "2",
+      type: "warning",
       notification_type: "low_stock",
-      notification_time: new Date(Date.now() - 300000).toISOString(), // 5分前
+      title: "在庫不足",
+      message: "たこ焼きの材料が残り少なくなっています",
       content: "たこ焼きの材料が残り少なくなっています",
-      priority: "緊急",
+      timestamp: new Date(Date.now() - 300000),
+      notification_time: new Date(Date.now() - 300000),
+      read: false,
       is_confirmed: false,
-      created_at: new Date(Date.now() - 300000).toISOString(),
     },
     {
-      notification_id: 3,
+      id: "3",
+      notification_id: "3",
+      type: "success",
       notification_type: "order_status_update",
-      target_order_number: "A002",
-      notification_time: new Date(Date.now() - 600000).toISOString(), // 10分前
+      title: "注文完了",
+      message: "注文が完了しました",
       content: "注文が完了しました",
-      priority: "通常",
+      timestamp: new Date(Date.now() - 600000),
+      notification_time: new Date(Date.now() - 600000),
+      read: true,
       is_confirmed: true,
-      created_at: new Date(Date.now() - 600000).toISOString(),
+      target_order_number: "A002",
     },
   ],
   stockInfo: [],
@@ -178,25 +189,28 @@ const initialState: AppState = {
   detailedCookingStatus: [],
   temperatureManagement: [],
   congestionStatus: {
+    currentOrders: 0,
+    maxCapacity: 20,
+    averageWaitTime: 0,
+    peakHours: [],
+    recommendations: [],
     current_wait_count: 0,
     current_cooking_count: 0,
     average_wait_time: 0,
     congestion_level: "空いている",
     estimated_new_order_wait: 8,
     cooker_utilization_rate: 0,
-    peak_time_prediction: "",
     updated_at: new Date().toISOString(),
   },
   // 緊急時対応の初期状態
   emergencyState: {
     is_active: false,
-    emergency_type: null,
+    emergency_type: "other",
     message: "",
     activated_at: undefined,
-    activated_by: undefined,
     deactivated_at: undefined,
-    deactivated_by: undefined,
-    auto_deactivate_at: undefined,
+    activated_by: undefined,
+    actions: [],
   },
   emergencyLogs: [],
   currentUser: undefined,
@@ -244,18 +258,23 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, toppings: action.payload };
 
     case "ADD_TO_CART": {
-      const newItem = {
-        product: action.payload.product,
+      const newItem: CartItem = {
+        id: `item-${Date.now()}`,
+        name: action.payload.product.name,
+        price: action.payload.product.price,
         quantity: action.payload.quantity,
         selectedToppings: action.payload.toppings,
+        product: action.payload.product,
+        totalPrice: action.payload.product.price * action.payload.quantity,
       };
       const newItems = [...state.cart.items, newItem];
       const newTotal = newItems.reduce((total, item) => {
-        const toppingsPrice = item.selectedToppings.reduce(
-          (sum, topping) => sum + topping.price,
-          0
-        );
-        return total + (item.product.price + toppingsPrice) * item.quantity;
+        const toppingsPrice =
+          item.selectedToppings?.reduce(
+            (sum, topping) => sum + topping.price,
+            0
+          ) || 0;
+        return total + (item.price + toppingsPrice) * item.quantity;
       }, 0);
 
       return {
@@ -263,6 +282,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         cart: {
           items: newItems,
           total: newTotal,
+          itemCount: newItems.length,
         },
       };
     }
@@ -272,11 +292,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
         (_, index) => index !== action.payload
       );
       const updatedTotal = filteredItems.reduce((total, item) => {
-        const toppingsPrice = item.selectedToppings.reduce(
-          (sum, topping) => sum + topping.price,
-          0
-        );
-        return total + (item.product.price + toppingsPrice) * item.quantity;
+        const toppingsPrice =
+          item.selectedToppings?.reduce(
+            (sum, topping) => sum + topping.price,
+            0
+          ) || 0;
+        return total + (item.price + toppingsPrice) * item.quantity;
       }, 0);
 
       return {
@@ -284,6 +305,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         cart: {
           items: filteredItems,
           total: updatedTotal,
+          itemCount: filteredItems.length,
         },
       };
     }
@@ -295,11 +317,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
           : item
       );
       const recalculatedTotal = updatedItems.reduce((total, item) => {
-        const toppingsPrice = item.selectedToppings.reduce(
-          (sum, topping) => sum + topping.price,
-          0
-        );
-        return total + (item.product.price + toppingsPrice) * item.quantity;
+        const toppingsPrice =
+          item.selectedToppings?.reduce(
+            (sum, topping) => sum + topping.price,
+            0
+          ) || 0;
+        return total + (item.price + toppingsPrice) * item.quantity;
       }, 0);
 
       return {
@@ -307,6 +330,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         cart: {
           items: updatedItems,
           total: recalculatedTotal,
+          itemCount: updatedItems.length,
         },
       };
     }
@@ -317,6 +341,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         cart: {
           items: [],
           total: 0,
+          itemCount: 0,
         },
       };
 
@@ -336,7 +361,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         notifications: state.notifications.map((notification) =>
-          notification.notification_id === action.payload
+          notification.notification_id === String(action.payload)
             ? { ...notification, is_confirmed: true }
             : notification
         ),
@@ -358,7 +383,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case "UPDATE_STOCK": {
       const { product_id, quantity, reason } = action.payload;
       const updatedStockInfo = state.stockInfo.map((stock) => {
-        if (stock.product_id === product_id) {
+        if (stock.product_id === product_id.toString()) {
           const newStock = Math.max(0, stock.current_stock + quantity);
           return {
             ...stock,
@@ -372,24 +397,18 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
       // 在庫履歴を自動追加
       const stockInfo = state.stockInfo.find(
-        (s) => s.product_id === product_id
+        (s) => s.product_id === product_id.toString()
       );
       if (stockInfo) {
         const historyEntry: StockHistory = {
+          id: Date.now().toString(),
           history_id: Date.now(),
-          product_id,
-          action_type: quantity > 0 ? "入荷" : "消費",
-          change_type: quantity > 0 ? "増加" : "減少",
-          change_amount: Math.abs(quantity),
-          quantity_change: quantity,
-          previous_stock: stockInfo.current_stock,
-          before_quantity: stockInfo.current_stock,
-          new_stock: Math.max(0, stockInfo.current_stock + quantity),
-          after_quantity: Math.max(0, stockInfo.current_stock + quantity),
-          reason,
-          performed_by: "system",
-          created_by: "system",
-          created_at: new Date().toISOString(),
+          productId: product_id.toString(),
+          changeType: quantity > 0 ? "increase" : "decrease",
+          quantity: Math.abs(quantity),
+          reason: reason || (quantity > 0 ? "入荷" : "消費"),
+          timestamp: new Date(),
+          userId: "system",
         };
 
         return {
@@ -415,7 +434,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         stockAlerts: state.stockAlerts.map((alert) =>
-          alert.alert_id === action.payload
+          alert.alert_id === action.payload.toString()
             ? {
                 ...alert,
                 is_resolved: true,
@@ -477,14 +496,15 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
     // 緊急時対応ケース
     case "ACTIVATE_EMERGENCY": {
-      const now = new Date().toISOString();
+      const now = new Date();
       const newLog: EmergencyLog = {
-        log_id: state.emergencyLogs.length + 1,
+        id: `log-${state.emergencyLogs.length + 1}`,
         emergency_type: action.payload.type || "その他",
         action: "緊急停止",
         message: action.payload.message,
         performed_by: action.payload.user,
         timestamp: now,
+        severity: "high",
       };
 
       return {
@@ -496,8 +516,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           activated_at: now,
           activated_by: action.payload.user,
           deactivated_at: undefined,
-          deactivated_by: undefined,
-          auto_deactivate_at: undefined,
+          actions: [],
         },
         emergencyLogs: [...state.emergencyLogs, newLog],
       };
@@ -507,12 +526,13 @@ function appReducer(state: AppState, action: AppAction): AppState {
       const now = new Date().toISOString();
 
       const newLog: EmergencyLog = {
-        log_id: state.emergencyLogs.length + 1,
+        id: (state.emergencyLogs.length + 1).toString(),
         emergency_type: state.emergencyState.emergency_type || "その他",
         action: "復旧",
         message: "緊急事態が終了されました",
         performed_by: action.payload.user,
-        timestamp: now,
+        timestamp: new Date(now),
+        severity: "low",
       };
 
       return {
@@ -523,9 +543,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
           message: "",
           activated_at: undefined,
           activated_by: undefined,
-          deactivated_at: now,
-          deactivated_by: action.payload.user,
-          auto_deactivate_at: undefined,
+          deactivated_at: new Date(now),
+          actions: [],
         },
         emergencyLogs: [...state.emergencyLogs, newLog],
       };
@@ -534,12 +553,13 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case "UPDATE_EMERGENCY_MESSAGE": {
       const now = new Date().toISOString();
       const newLog: EmergencyLog = {
-        log_id: state.emergencyLogs.length + 1,
+        id: (state.emergencyLogs.length + 1).toString(),
         emergency_type: state.emergencyState.emergency_type || "その他",
         action: "メッセージ更新",
         message: action.payload.message,
         performed_by: action.payload.user,
-        timestamp: now,
+        timestamp: new Date(now),
+        severity: "low",
       };
 
       return {
@@ -567,111 +587,59 @@ function appReducer(state: AppState, action: AppAction): AppState {
 const generateDummyStockInfo = (): StockInfo[] => {
   return [
     {
-      product_id: 1,
+      productId: "1",
+      product_id: "1",
+      currentStock: 80,
       current_stock: 80,
-      initial_stock: 100,
-      reserved_stock: 5, // 調理中のため予約
-      available_stock: 75,
+      minimumStock: 20,
       low_stock_threshold: 20,
-      last_updated: new Date().toISOString(),
-      auto_management: true,
+      initial_stock: 100,
+      reserved_stock: 5,
+      available_stock: 75,
+      unit: "個",
+      lastUpdated: new Date(),
     },
     {
-      product_id: 2,
+      productId: "2",
+      product_id: "2",
+      currentStock: 45,
       current_stock: 45,
+      minimumStock: 15,
+      low_stock_threshold: 15,
       initial_stock: 60,
       reserved_stock: 8,
       available_stock: 37,
-      low_stock_threshold: 15,
-      last_updated: new Date().toISOString(),
-      auto_management: true,
+      unit: "個",
+      lastUpdated: new Date(),
     },
     {
-      product_id: 3,
-      current_stock: 12, // 低在庫状態
+      productId: "3",
+      product_id: "3",
+      currentStock: 12,
+      current_stock: 12,
+      minimumStock: 15,
+      low_stock_threshold: 15,
       initial_stock: 40,
       reserved_stock: 2,
       available_stock: 10,
-      low_stock_threshold: 15,
-      last_updated: new Date().toISOString(),
-      auto_management: true,
+      unit: "個",
+      lastUpdated: new Date(),
     },
   ];
 };
 
 // ダミーデータを生成する関数
 const generateDummyOrders = (): Order[] => {
-  const statuses = [
-    "注文受付",
-    "調理待ち",
-    "調理中",
-    "調理完了",
-    "受け取り済み",
-  ] as const;
-  const paymentMethods = ["現金", "PayPay", "クレジットカード"] as const;
-
-  return Array.from({ length: 12 }, (_, i) => ({
-    order_id: i + 1,
-    customer_id: i + 1,
-    order_number: `T${String(i + 1).padStart(3, "0")}`,
-    order_items: [
-      {
-        order_item_id: i * 10 + 1,
-        order_id: i + 1,
-        product_id: 1,
-        product_name: "たこ焼き（6個）",
-        quantity: 1,
-        unit_price: 500,
-        total_price: 500,
-        subtotal: 500,
-        toppings: [],
-        cooking_status: "waiting",
-        cooking_time: 8,
-        cooking_instruction: "",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ],
-    items: [
-      {
-        order_item_id: i * 10 + 1,
-        order_id: i + 1,
-        product_id: 1,
-        product_name: "たこ焼き（6個）",
-        quantity: 1,
-        unit_price: 500,
-        total_price: 500,
-        subtotal: 500,
-        toppings: [],
-        cooking_status: "waiting",
-        cooking_time: 8,
-        cooking_instruction: "",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ],
-    total_price: 500,
-    total_amount: 500,
-    order_status: statuses[Math.floor(Math.random() * statuses.length)],
-    status: statuses[Math.floor(Math.random() * statuses.length)],
-    payment_status: Math.random() > 0.3 ? "支払い済み" : "未払い",
-    payment_method:
-      paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
-    estimated_pickup_time: new Date(
-      Date.now() + Math.random() * 30 * 60000
-    ).toISOString(),
-    actual_pickup_time: Math.random() > 0.5 ? new Date().toISOString() : null,
-    special_instructions:
-      Math.random() > 0.8 ? "ソース多めでお願いします" : undefined,
-    created_at: new Date(Date.now() - Math.random() * 60 * 60000).toISOString(),
-    updated_at: new Date().toISOString(),
-  }));
+  return [] as Order[];
 };
 
 // たこ焼き器の初期データを生成
 const generateDummyTakoyakiCookers = (): TakoyakiCooker[] => {
   return [
     {
+      id: "1",
+      name: "たこ焼き器1",
+      currentLoad: 24,
       cooker_id: 1,
       cooker_name: "たこ焼き器1",
       status: "使用中",
@@ -683,13 +651,13 @@ const generateDummyTakoyakiCookers = (): TakoyakiCooker[] => {
       current_load: 24,
       temperature: 180,
       optimal_temperature_range: { min: 170, max: 190 },
-      last_maintenance: new Date(Date.now() - 24 * 60 * 60000).toISOString(),
       last_used_at: new Date().toISOString(),
       maintenance_required: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     },
     {
+      id: "2",
+      name: "たこ焼き器2",
+      currentLoad: 0,
       cooker_id: 2,
       cooker_name: "たこ焼き器2",
       status: "空き",
@@ -698,13 +666,13 @@ const generateDummyTakoyakiCookers = (): TakoyakiCooker[] => {
       current_load: 0,
       temperature: 170,
       optimal_temperature_range: { min: 170, max: 190 },
-      last_maintenance: new Date(Date.now() - 12 * 60 * 60000).toISOString(),
       last_used_at: new Date(Date.now() - 15 * 60000).toISOString(),
       maintenance_required: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     },
     {
+      id: "3",
+      name: "たこ焼き器3",
+      currentLoad: 0,
       cooker_id: 3,
       cooker_name: "たこ焼き器3",
       status: "清掃中",
@@ -713,11 +681,8 @@ const generateDummyTakoyakiCookers = (): TakoyakiCooker[] => {
       current_load: 0,
       temperature: 160,
       optimal_temperature_range: { min: 170, max: 190 },
-      last_maintenance: new Date(Date.now() - 6 * 60 * 60000).toISOString(),
       last_used_at: new Date(Date.now() - 30 * 60000).toISOString(),
       maintenance_required: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     },
   ];
 };
@@ -727,40 +692,40 @@ const generateDummyWaitTimeInfo = (): WaitTimeInfo[] => {
   const baseTime = new Date();
   return [
     {
-      order_id: 1,
+      orderId: "1",
+      estimatedTime: 3,
+      factors: ["調理中"],
+      order_id: "1",
       estimated_completion_time: new Date(
         baseTime.getTime() + 3 * 60000
       ).toISOString(),
       estimated_wait_minutes: 3,
       current_status: "調理中",
-      priority_level: "normal",
-      cooking_start_time: new Date(
-        baseTime.getTime() - 5 * 60000
+      cooking_completion_time: new Date(
+        baseTime.getTime() + 3 * 60000
       ).toISOString(),
-      last_updated: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     },
     {
-      order_id: 2,
+      orderId: "2",
+      estimatedTime: 8,
+      factors: ["待機中"],
+      order_id: "2",
       estimated_completion_time: new Date(
         baseTime.getTime() + 8 * 60000
       ).toISOString(),
       estimated_wait_minutes: 8,
       current_status: "待機中",
-      priority_level: "normal",
-      last_updated: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     },
     {
-      order_id: 3,
+      orderId: "3",
+      estimatedTime: 15,
+      factors: ["待機中"],
+      order_id: "3",
       estimated_completion_time: new Date(
         baseTime.getTime() + 15 * 60000
       ).toISOString(),
       estimated_wait_minutes: 15,
       current_status: "待機中",
-      priority_level: "high",
-      last_updated: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     },
   ];
 };
@@ -778,8 +743,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // 音声通知サービスの初期化
   useEffect(() => {
     const { 音声通知設定 } = state.systemState;
-    audioNotificationService.setEnabled(音声通知設定.有効);
-    audioNotificationService.setVolume(音声通知設定.音量);
+    if (typeof 音声通知設定 === "boolean") {
+      audioNotificationService.setEnabled(音声通知設定);
+      audioNotificationService.setVolume(0.7);
+    }
   }, [state.systemState]);
 
   // リアルタイム機能のシミュレーション
@@ -846,24 +813,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
           // 調理完了時の音声通知
           if (
             updatedOrder.status === "調理完了" &&
-            state.systemState.音声通知設定.調理完了通知
+            typeof state.systemState.音声通知設定 === "boolean" &&
+            state.systemState.音声通知設定
           ) {
             audioNotificationService.playOrderReady(updatedOrder.order_number);
           }
 
           // 通知を追加
           const notification: Notification = {
-            notification_id: Date.now(),
+            id: `notif-${Date.now()}`,
+            notification_id: String(Date.now()),
+            type: "info",
             notification_type: "order_status_update",
-            target_order_number: randomOrder.order_number,
-            notification_time: new Date().toISOString(),
+            title: "注文ステータス更新",
+            message: `注文 ${randomOrder.order_number} が「${
+              statuses[currentStatusIndex + 1]
+            }」になりました`,
             content: `注文 ${randomOrder.order_number} が「${
               statuses[currentStatusIndex + 1]
             }」になりました`,
-            priority:
-              statuses[currentStatusIndex + 1] === "調理完了" ? "緊急" : "通常",
+            timestamp: new Date(),
+            notification_time: new Date(),
+            read: false,
             is_confirmed: false,
-            created_at: new Date().toISOString(),
+            target_order_number: randomOrder.order_number,
           };
 
           dispatch({ type: "ADD_NOTIFICATION", payload: notification });
@@ -873,54 +846,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // 新しい注文の追加をシミュレート
       if (randomOrderUpdate > 0.98) {
         const newOrder: Order = {
-          order_id: Date.now(),
-          customer_id: Date.now(),
+          id: `order-${Date.now()}`,
+          order_id: String(Date.now()),
+          orderNumber: `T${String(state.orders.length + 1).padStart(3, "0")}`,
           order_number: `T${String(state.orders.length + 1).padStart(3, "0")}`,
+          customer_id: String(Date.now()),
+          total: 500,
+          total_amount: 500,
+          createdAt: new Date(),
+          updatedAt: new Date(),
           items: [
             {
-              order_item_id: Date.now(),
-              order_id: Date.now(),
-              product_id: 1,
+              id: `item-${Date.now()}`,
+              order_item_id: String(Date.now()),
+              name: "たこ焼き（6個）",
               product_name: "たこ焼き（6個）",
-              quantity: 1,
+              price: 500,
               unit_price: 500,
+              quantity: 1,
+              totalPrice: 500,
               total_price: 500,
-              subtotal: 500,
               toppings: [],
-              cooking_status: "waiting",
-              cooking_time: 8,
-              cooking_instruction: "",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
             },
           ],
-          order_items: [
-            {
-              order_item_id: Date.now(),
-              order_id: Date.now(),
-              product_id: 1,
-              product_name: "たこ焼き（6個）",
-              quantity: 1,
-              unit_price: 500,
-              total_price: 500,
-              subtotal: 500,
-              toppings: [],
-              cooking_status: "waiting",
-              cooking_time: 8,
-              cooking_instruction: "",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            },
-          ],
-          total_price: 500,
-          total_amount: 500,
-          order_status: "注文受付",
           status: "注文受付",
           payment_status: "支払い済み",
           payment_method: "PayPay",
-          estimated_pickup_time: new Date(
-            Date.now() + 15 * 60000
-          ).toISOString(),
+          estimatedCompletionTime: new Date(Date.now() + 15 * 60000),
           actual_pickup_time: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -930,20 +882,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
         dispatch({ type: "UPDATE_LAST_UPDATED" });
 
         // 新規注文の音声通知
-        if (state.systemState.音声通知設定.新規注文通知) {
+        if (
+          typeof state.systemState.音声通知設定 === "boolean" &&
+          state.systemState.音声通知設定
+        ) {
           audioNotificationService.playNewOrder();
         }
 
         // 新規注文通知
         const notification: Notification = {
-          notification_id: Date.now() + 1,
+          id: `notif-${Date.now() + 1}`,
+          notification_id: String(Date.now() + 1),
+          type: "info",
           notification_type: "new_order",
-          target_order_number: newOrder.order_number,
-          notification_time: new Date().toISOString(),
+          title: "新規注文",
+          message: `新しい注文 ${newOrder.order_number} が入りました`,
           content: `新しい注文 ${newOrder.order_number} が入りました`,
-          priority: "通常",
+          timestamp: new Date(),
+          notification_time: new Date(),
+          read: false,
           is_confirmed: false,
-          created_at: new Date().toISOString(),
+          target_order_number: newOrder.order_number,
         };
 
         dispatch({ type: "ADD_NOTIFICATION", payload: notification });

@@ -172,10 +172,26 @@ const AdminLoginPage: React.FC = () => {
                 お客様の注文画面は{" "}
                 <Button
                   size="small"
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/order")}
                   sx={{ color: "#FF6B35", fontWeight: 600 }}
                 >
                   こちら
+                </Button>{" "}
+                ・{" "}
+                <Button
+                  size="small"
+                  onClick={() => navigate("/")}
+                  sx={{ color: "#4ECDC4", fontWeight: 600 }}
+                >
+                  全ページ一覧
+                </Button>{" "}
+                ・{" "}
+                <Button
+                  size="small"
+                  onClick={() => navigate("/admin-navigation")}
+                  sx={{ color: "#4ECDC4", fontWeight: 600 }}
+                >
+                  管理者ページ一覧
                 </Button>
               </Typography>
             </CardContent>

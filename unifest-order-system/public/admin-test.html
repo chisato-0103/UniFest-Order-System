@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>管理者認証テスト</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      button {
+        background-color: #ff6b35;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 10px;
+        font-size: 16px;
+      }
+      button:hover {
+        background-color: #e55a2d;
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+      .success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔐 UniFest 管理者認証テスト</h1>
+
+      <div class="status info">
+        <p>現在の認証状態: <span id="authStatus">確認中...</span></p>
+      </div>
+
+      <h2>📋 管理者ページURL一覧</h2>
+      <ul>
+        <li>
+          <a href="http://localhost:5173/admin/login" target="_blank"
+            >管理者ログイン</a
+          >
+        </li>
+        <li>
+          <a href="http://localhost:5173/admin" target="_blank"
+            >管理者ダッシュボード</a
+          >
+        </li>
+        <li>
+          <a href="http://localhost:5173/admin/kitchen" target="_blank"
+            >厨房管理画面</a
+          >
+        </li>
+        <li>
+          <a href="http://localhost:5173/admin/monitor" target="_blank"
+            >店舗監視画面</a
+          >
+        </li>
+        <li>
+          <a href="http://localhost:5173/admin/payment" target="_blank"
+            >支払い管理画面</a
+          >
+        </li>
+        <li>
+          <a href="http://localhost:5173/admin/delivery" target="_blank"
+            >配送管理画面</a
+          >
+        </li>
+        <li>
+          <a href="http://localhost:5173/admin/history" target="_blank"
+            >履歴管理画面</a
+          >
+        </li>
+        <li>
+          <a href="http://localhost:5173/admin/products" target="_blank"
+            >商品管理画面</a
+          >
+        </li>
+        <li>
+          <a href="http://localhost:5173/admin/settings" target="_blank"
+            >システム設定画面</a
+          >
+        </li>
+      </ul>
+
+      <h2>🔑 認証テスト</h2>
+      <p><strong>管理者パスワード:</strong> <code>takoyaki2024</code></p>
+
+      <button onclick="forceLogin()">🔓 強制ログイン</button>
+      <button onclick="logout()">🔒 ログアウト</button>
+      <button onclick="checkAuth()">🔍 認証状態確認</button>
+
+      <h2>🧪 テスト用ルート（認証なし）</h2>
+      <ul>
+        <li>
+          <a href="http://localhost:5173/test/kitchen" target="_blank"
+            >厨房画面（テスト）</a
+          >
+        </li>
+        <li>
+          <a href="http://localhost:5173/test/monitor" target="_blank"
+            >監視画面（テスト）</a
+          >
+        </li>
+        <li>
+          <a href="http://localhost:5173/kitchen" target="_blank"
+            >厨房画面（旧URL）</a
+          >
+        </li>
+        <li>
+          <a href="http://localhost:5173/store-monitor" target="_blank"
+            >監視画面（旧URL）</a
+          >
+        </li>
+      </ul>
+
+      <div id="result"></div>
+    </div>
+
+    <script>
+      function forceLogin() {
+        localStorage.setItem("unifest_admin_auth", "true");
+        showResult(
+          "✅ 強制ログイン完了！管理者ページにアクセスできます。",
+          "success"
+        );
+        checkAuth();
+      }
+
+      function logout() {
+        localStorage.removeItem("unifest_admin_auth");
+        showResult("🔒 ログアウト完了！", "info");
+        checkAuth();
+      }
+
+      function checkAuth() {
+        const authStatus = localStorage.getItem("unifest_admin_auth");
+        const statusElement = document.getElementById("authStatus");
+
+        if (authStatus === "true") {
+          statusElement.textContent = "✅ 認証済み（管理者）";
+          statusElement.style.color = "#155724";
+        } else {
+          statusElement.textContent = "❌ 未認証";
+          statusElement.style.color = "#721c24";
+        }
+      }
+
+      function showResult(message, type) {
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+      }
+
+      // ページ読み込み時に認証状態を確認
+      checkAuth();
+    </script>
+  </body>
+</html>

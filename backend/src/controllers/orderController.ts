@@ -405,9 +405,16 @@ export const createOrder = async (
         ]);
       }
 
-      // QRコード生成
+      // QRコード生成（小さいサイズで生成）
       const qrCodeData = `${process.env.FRONTEND_URL}/order/${orderNumber}`;
-      const qrCodeDataURL = await QRCode.toDataURL(qrCodeData);
+      const qrCodeDataURL = await QRCode.toDataURL(qrCodeData, {
+        width: 200,
+        margin: 1,
+        color: {
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
+      });
 
       // QRコードをDBに保存
       await client.query(`UPDATE orders SET qr_code = $1 WHERE order_id = $2`, [
@@ -417,10 +424,18 @@ export const createOrder = async (
 
       await client.query("COMMIT");
 
-      // 完成した注文データを取得
+      // 完成した注文データを取得（QRコードを含まない軽量版）
       const finalOrderQuery = `
         SELECT
-          o.*,
+          o.order_id,
+          o.order_number,
+          o.customer_id,
+          o.total_amount,
+          o.status,
+          o.payment_status,
+          o.payment_method,
+          o.estimated_pickup_time,
+          o.created_at,
           COALESCE(
             JSON_AGG(
               JSON_BUILD_OBJECT(
@@ -444,6 +459,7 @@ export const createOrder = async (
       `;
 
       const finalResult = await db.query(finalOrderQuery, [order.order_id]);
+      const orderData = finalResult.rows[0];
 
       // 注文受付のソケット通知
       emitSocketNotification("order_placed", {
@@ -454,15 +470,15 @@ export const createOrder = async (
         status: "注文受付",
         payment_status: "未払い",
         items: orderItems,
-        qr_code: qrCodeDataURL,
       });
 
+      // レスポンスにはQRコードを含めない（別途APIで取得）
       res.status(201).json({
         success: true,
         message: "注文が正常に作成されました",
         data: {
-          ...finalResult.rows[0],
-          qr_code: qrCodeDataURL,
+          ...orderData,
+          qr_code_url: `/api/orders/${orderNumber}/qr`,
         },
       });
     } catch (error) {

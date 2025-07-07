@@ -111,10 +111,23 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
                       }}
                     >
                       <Typography variant="body1" fontWeight="medium">
-                        {item.product_name} × {item.quantity}
+                        {(
+                          item as unknown as {
+                            product_name?: string;
+                            name?: string;
+                          }
+                        ).product_name || (item as OrderItem).name}{" "}
+                        × {item.quantity}
                       </Typography>
                       <Typography variant="body1" fontWeight="bold">
-                        {formatPrice(item.total_price)}
+                        {formatPrice(
+                          (
+                            item as unknown as {
+                              total_price?: number;
+                              totalPrice?: number;
+                            }
+                          ).total_price || (item as OrderItem).totalPrice
+                        )}
                       </Typography>
                     </Box>
                   }
@@ -123,7 +136,18 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
                     item.toppings.length > 0 && (
                       <Typography variant="body2" color="text.secondary">
                         トッピング:{" "}
-                        {item.toppings.map((t) => t.topping_name).join(", ")}
+                        {item.toppings
+                          .map(
+                            (t) =>
+                              (
+                                t as unknown as {
+                                  topping_name?: string;
+                                  name?: string;
+                                }
+                              ).topping_name ||
+                              (t as unknown as { name: string }).name
+                          )
+                          .join(", ")}
                       </Typography>
                     )
                   }

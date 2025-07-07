@@ -43,6 +43,7 @@ import {
   Warning as WarningIcon,
 } from "@mui/icons-material";
 import { useAppContext } from "../hooks/useAppContext";
+import AdminNavigationBar from "../components/AdminNavigationBar";
 
 interface ProductWithStock {
   id: string;
@@ -273,6 +274,7 @@ function ProductManagementPage() {
 
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
+      <AdminNavigationBar />
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom color="primary">
           商品管理

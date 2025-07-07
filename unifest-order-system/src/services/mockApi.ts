@@ -100,6 +100,7 @@ const initialMockOrders: Order[] = [
         price: 500,
         quantity: 1,
         totalPrice: 500,
+        toppings: [], // 必須プロパティを追加
       },
     ],
     status: "pending",
@@ -122,6 +123,7 @@ const initialMockOrders: Order[] = [
         price: 700,
         quantity: 1,
         totalPrice: 700,
+        toppings: [], // 必須プロパティを追加
       },
     ],
     status: "confirmed",
@@ -144,6 +146,7 @@ const initialMockOrders: Order[] = [
         price: 600,
         quantity: 2,
         totalPrice: 1200,
+        toppings: [{ id: "1", name: "ねぎ", price: 50, available: true }], // トッピング付きの例として
       },
     ],
     status: "preparing",
@@ -166,6 +169,7 @@ const initialMockOrders: Order[] = [
         price: 650,
         quantity: 1,
         totalPrice: 650,
+        toppings: [{ id: "2", name: "明太子", price: 100, available: true }], // トッピング付きの例として
       },
       {
         id: "5",
@@ -173,6 +177,7 @@ const initialMockOrders: Order[] = [
         price: 650,
         quantity: 1,
         totalPrice: 650,
+        toppings: [{ id: "3", name: "チーズ", price: 100, available: true }], // トッピング付きの例として
       },
     ],
     status: "ready",

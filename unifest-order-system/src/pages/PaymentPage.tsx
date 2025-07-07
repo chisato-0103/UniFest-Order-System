@@ -1,31 +1,33 @@
-import { useState, useEffect } from "react";
+// 🧰 Reactと画面の部品を持ってくる
+import { useState, useEffect } from "react"; // Reactの基本機能
+import { useSearchParams } from "react-router-dom"; // URLパラメーター取得
 import {
-  Container,
-  Typography,
-  Box,
-  Card,
-  CardContent,
-  Button,
-  Chip,
-  Alert,
-  Badge,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  AppBar,
-  Toolbar,
-  Divider,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  InputAdornment,
-  LinearProgress,
+  Container, // 画面全体を囲む容器
+  Typography, // 文字表示用
+  Box, // レイアウト用の箱
+  Card, // カード型の表示
+  CardContent, // カードの中身
+  Button, // ボタン
+  Chip, // 小さなタグ表示
+  Alert, // 警告メッセージ
+  Badge, // バッジ表示
+  TextField, // 入力欄
+  Dialog, // ポップアップ画面
+  DialogTitle, // ポップアップのタイトル
+  DialogContent, // ポップアップの中身
+  DialogActions, // ポップアップのボタン
+  AppBar, // 上部のバー
+  Toolbar, // ツールバー
+  Divider, // 区切り線
+  Table, // 表
+  TableBody, // 表の本体
+  TableCell, // 表のセル
+  TableContainer, // 表の容器
+  TableHead, // 表のヘッダー
+  TableRow, // 表の行
+  Paper, // 紙のような背景
+  InputAdornment, // 入力欄の装飾
+  LinearProgress, // プログレスバー
 } from "@mui/material";
 import {
   Payment as PaymentIcon,
@@ -34,10 +36,13 @@ import {
   Refresh as RefreshIcon,
 } from "@mui/icons-material";
 import type { Order, PaymentStatus } from "../types";
-import MockApi from "../services/mockApi";
 import AdminNavigationBar from "../components/AdminNavigationBar";
+import { OrderService, ApiError } from "../services/apiService"; // 統一API通信サービス
 
 function PaymentPage() {
+  const [searchParams] = useSearchParams(); // URLパラメーター取得機能
+  const highlightOrderId = searchParams.get("order"); // URLから注文番号を取得
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
@@ -47,46 +52,27 @@ function PaymentPage() {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [change, setChange] = useState(0);
 
-  // APIから注文データを取得
+  // 🌐 統一APIサービスから注文データを取得
   const fetchOrders = async () => {
     try {
       setError("");
-      const result = await MockApi.getOrders();
+      setLoading(true);
 
-      // Mock APIの場合、データを直接使用
-      const formattedOrders: Order[] = result.data.map(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (order: any) => ({
-          order_id: (order.order_id || order.id || "").toString(),
-          customer_id: order.customer_id,
-          order_number: order.order_number,
-          order_status: order.order_status,
-          payment_status: order.payment_status,
-          total_price: order.total_price,
-          order_items: order.order_items || order.items || [],
-          payment_method: order.payment_method || "cash",
-          estimated_pickup_time:
-            order.estimated_pickup_time || new Date().toISOString(),
-          actual_pickup_time: order.actual_pickup_time || null,
-          special_instructions: order.special_instructions || "",
-          created_at: order.created_at || new Date().toISOString(),
-          updated_at: order.updated_at || new Date().toISOString(),
-          id: (order.order_id || order.id || "").toString(),
-          orderNumber: order.order_number,
-          total: order.total_price,
-          total_amount: order.total_price,
-          status: order.order_status || "pending",
-          createdAt: new Date(order.created_at || new Date().toISOString()),
-          updatedAt: new Date(order.updated_at || new Date().toISOString()),
-          items: order.order_items || order.items || [],
-        })
-      );
+      // 統一APIサービスで注文データを取得
+      const ordersData = await OrderService.getOrders();
+      setOrders(ordersData);
 
-      setOrders(formattedOrders);
+      console.log("支払い画面: 注文データを取得", ordersData.length, "件");
     } catch (err: unknown) {
       console.error("支払いデータ取得エラー:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "データの取得に失敗しました";
+
+      let errorMessage = "データの取得に失敗しました";
+      if (err instanceof ApiError) {
+        errorMessage = err.message;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -114,18 +100,52 @@ function PaymentPage() {
     };
   }, []);
 
+  // 🎯 強調表示された注文に自動スクロール
+  useEffect(() => {
+    if (highlightOrderId && orders.length > 0 && !loading) {
+      // 該当する注文が見つかったら少し遅延してスクロール
+      setTimeout(() => {
+        const targetOrder = orders.find(
+          (order) =>
+            order.order_number === highlightOrderId ||
+            order.order_id === highlightOrderId ||
+            order.id === highlightOrderId
+        );
+
+        if (targetOrder) {
+          // 注文が見つかった場合は検索欄をクリアして該当注文を表示
+          setSearchTerm("");
+
+          // ページトップにスクロール（注文リストが見えるように）
+          window.scrollTo({
+            top: 300,
+            behavior: "smooth",
+          });
+        }
+      }, 1000);
+    }
+  }, [highlightOrderId, orders, loading]);
+
   // 支払い処理
+  // 💳 支払い処理（統一APIサービス使用）
   const handlePayment = async () => {
     if (!selectedOrder) return;
 
     try {
-      // モックAPIを使用（実際のAPIコールは行わない）
-      await new Promise((resolve) => setTimeout(resolve, 500)); // 遅延をシミュレート
+      const orderTotal = selectedOrder.total_amount || selectedOrder.total || 0;
+      const receivedAmount = parseFloat(paymentAmount) || orderTotal;
+
+      // 統一APIサービスで支払い処理
+      await OrderService.processPayment(selectedOrder.id, {
+        paymentMethod: "cash",
+        amount: orderTotal,
+        receivedAmount: receivedAmount,
+      });
 
       // ローカル状態を更新
       setOrders((prev) =>
         prev.map((order) =>
-          order.order_id === selectedOrder.order_id
+          order.id === selectedOrder.id
             ? { ...order, payment_status: "paid" as PaymentStatus }
             : order
         )
@@ -135,10 +155,18 @@ function PaymentPage() {
       setSelectedOrder(null);
       setPaymentAmount("");
       setChange(0);
+
+      console.log(`支払い完了: 注文${selectedOrder.orderNumber}`);
     } catch (err: unknown) {
       console.error("支払い処理エラー:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "支払い処理に失敗しました";
+
+      let errorMessage = "支払い処理に失敗しました";
+      if (err instanceof ApiError) {
+        errorMessage = `支払いエラー: ${err.message}`;
+      } else if (err instanceof Error) {
+        errorMessage = `支払いエラー: ${err.message}`;
+      }
+
       setError(errorMessage);
     }
   };
@@ -247,6 +275,23 @@ function PaymentPage() {
           </Alert>
         )}
 
+        {/* 🎉 新しい注文の案内メッセージ */}
+        {highlightOrderId && (
+          <Alert
+            severity="success"
+            sx={{ mb: 2 }}
+            onClose={() => {
+              // URLパラメーターをクリア
+              const url = new URL(window.location.href);
+              url.searchParams.delete("order");
+              window.history.replaceState({}, "", url.toString());
+            }}
+          >
+            注文番号 <strong>{highlightOrderId}</strong> の注文が完了しました！
+            下記リストで支払いを行ってください。
+          </Alert>
+        )}
+
         {/* ローディング表示 */}
         {loading && (
           <Box sx={{ mb: 2 }}>
@@ -287,59 +332,96 @@ function PaymentPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {unpaidOrders.map((order) => (
-                <TableRow key={order.order_id}>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="bold">
-                      {order.order_number}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Box>
-                      {order.items.map((item, index) => (
-                        <Typography key={index} variant="body2">
-                          {item.product_name || item.name || "商品名不明"} ×{" "}
-                          {item.quantity}
+              {unpaidOrders.map((order) => {
+                // 🎯 カートから来た注文番号と一致する場合は強調表示
+                const isHighlighted =
+                  highlightOrderId &&
+                  (order.order_number === highlightOrderId ||
+                    order.order_id === highlightOrderId ||
+                    order.id === highlightOrderId);
+
+                return (
+                  <TableRow
+                    key={order.order_id}
+                    sx={{
+                      // 🌟 強調表示のスタイル
+                      backgroundColor: isHighlighted ? "primary.50" : "inherit",
+                      border: isHighlighted ? 2 : 0,
+                      borderColor: isHighlighted
+                        ? "primary.main"
+                        : "transparent",
+                      "&:hover": {
+                        backgroundColor: isHighlighted
+                          ? "primary.100"
+                          : "action.hover",
+                      },
+                    }}
+                  >
+                    <TableCell>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Typography variant="body2" fontWeight="bold">
+                          {order.order_number}
                         </Typography>
-                      ))}
-                    </Box>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Typography variant="h6" color="primary">
-                      ¥
-                      {(
-                        order.total_amount ||
-                        order.total ||
-                        0
-                      ).toLocaleString()}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={getStatusText(order.payment_status)}
-                      color={getStatusColor(order.payment_status)}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {new Date(order.created_at).toLocaleString()}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      startIcon={<MoneyIcon />}
-                      onClick={() => openPaymentDialog(order)}
-                      disabled={order.payment_status === "paid"}
-                      size="small"
-                    >
-                      支払い
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        {/* 🔥 新しい注文にはバッジを表示 */}
+                        {isHighlighted && (
+                          <Chip
+                            label="新規"
+                            size="small"
+                            color="primary"
+                            variant="filled"
+                          />
+                        )}
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box>
+                        {order.items.map((item, index) => (
+                          <Typography key={index} variant="body2">
+                            {item.product_name || item.name || "商品名不明"} ×{" "}
+                            {item.quantity}
+                          </Typography>
+                        ))}
+                      </Box>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography variant="h6" color="primary">
+                        ¥
+                        {(
+                          order.total_amount ||
+                          order.total ||
+                          0
+                        ).toLocaleString()}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={getStatusText(order.payment_status)}
+                        color={getStatusColor(order.payment_status)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {new Date(order.created_at).toLocaleString()}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<MoneyIcon />}
+                        onClick={() => openPaymentDialog(order)}
+                        disabled={order.payment_status === "paid"}
+                        size="small"
+                      >
+                        支払い
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
               {unpaidOrders.length === 0 && !loading && (
                 <TableRow>
                   <TableCell colSpan={6} align="center">

@@ -1,13 +1,23 @@
 {
+  "_comment_name": "🏪 プロジェクトの名前",
   "name": "unifest-order-system-backend",
+  "_comment_version": "📦 バージョン番号（1.0.0 = 最初のバージョン）",
   "version": "1.0.0",
+  "_comment_description": "📝 このプロジェクトの説明",
   "description": "大学祭たこ焼き店舗向けオーダー管理システム - バックエンドAPI",
+  "_comment_main": "🚀 アプリを起動する時に最初に実行されるファイル",
   "main": "dist/server.js",
+  "_comment_scripts": "⚡ よく使うコマンドの短縮版",
   "scripts": {
+    "_comment_build": "TypeScriptをJavaScriptに変換する",
     "build": "tsc && node scripts/copy-sql.js",
+    "_comment_start": "本番環境でサーバーを起動する",
     "start": "node dist/server.js",
+    "_comment_dev": "開発中にサーバーを起動する（変更を自動で反映）",
     "dev": "nodemon src/server.ts",
+    "_comment_test": "テストを実行する（まだ作ってない）",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "_comment_init-db": "データベースを初期化する",
     "init-db": "node scripts/init-db.js",
     "init-db:improved": "node scripts/init-db-improved.js",
     "init-db:prod": "NODE_ENV=production node scripts/init-db-improved.js",
@@ -16,6 +26,7 @@
     "test-render-db": "node scripts/test-render-db.js",
     "check-env": "node scripts/check-env.js"
   },
+  "_comment_keywords": "🏷️ 検索用のキーワード",
   "keywords": [
     "order-management",
     "takoyaki",

@@ -1,30 +1,36 @@
-import React from "react";
+// 🧭 お客さん用のナビゲーション画面
+// お客さんが「何をしたいか」選べるメニュー画面です
+// 例：注文する、注文状況を見る、管理者ページに行く
+
+import React from "react"; // Reactの基本道具
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Box,
-  Container,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemButton,
+  AppBar, // 上部バー
+  Toolbar, // ツールバー
+  Typography, // 文字表示
+  Button, // ボタン
+  Box, // レイアウト用の箱
+  Container, // 全体を囲む容器
+  Paper, // 紙のような背景
+  List, // リスト表示
+  ListItem, // リストの項目
+  ListItemText, // リスト項目のテキスト
+  ListItemIcon, // リスト項目のアイコン
+  ListItemButton, // リスト項目のボタン
 } from "@mui/material";
 import {
-  Home as HomeIcon,
-  ShoppingCart as ShoppingCartIcon,
-  Search as SearchIcon,
-  Info as InfoIcon,
-  AdminPanelSettings as AdminIcon,
+  Home as HomeIcon, // ホームアイコン
+  ShoppingCart as ShoppingCartIcon, // ショッピングカートアイコン
+  Search as SearchIcon, // 検索アイコン
+  Info as InfoIcon, // 情報アイコン
+  AdminPanelSettings as AdminIcon, // 管理者アイコン
 } from "@mui/icons-material";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // ページ移動の道具
 
+// 🧭 お客さん用ナビゲーション部品
 const CustomerNavigation: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // ページ移動機能
 
+  // 👥 お客さん用のページリスト
   const customerPages = [
     {
       path: "/order",

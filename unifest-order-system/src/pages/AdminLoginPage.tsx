@@ -1,41 +1,48 @@
-import React, { useState } from "react";
+// 🔐 管理者ログインページ
+// 店長さんや従業員が管理者画面に入るためのパスワード入力画面です
+// 正しいパスワードを入れないと、売上画面や設定画面は見れません
+
+import React, { useState } from "react"; // Reactの基本機能
 import {
-  Box,
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  Container,
-  Paper,
-  InputAdornment,
-  IconButton,
+  Box, // レイアウト用の箱
+  Card, // カード表示
+  CardContent, // カードの中身
+  TextField, // 入力欄
+  Button, // ボタン
+  Typography, // 文字表示
+  Alert, // 警告メッセージ
+  Container, // 全体を囲む容器
+  Paper, // 紙のような背景
+  InputAdornment, // 入力欄の装飾
+  IconButton, // アイコンボタン
 } from "@mui/material";
 import {
-  Visibility,
-  VisibilityOff,
-  AdminPanelSettings,
-  Restaurant,
+  Visibility, // 目のアイコン（パスワード表示）
+  VisibilityOff, // 目を閉じたアイコン（パスワード非表示）
+  AdminPanelSettings, // 管理者パネルアイコン
+  Restaurant, // レストランアイコン
 } from "@mui/icons-material";
-import { useAuth } from "../hooks/useAuth";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth"; // ログイン機能を使う道具
+import { useNavigate, useLocation } from "react-router-dom"; // ページ移動の道具
 
+// 🔐 管理者ログインページの部品
 const AdminLoginPage: React.FC = () => {
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [password, setPassword] = useState(""); // パスワード入力欄の内容
+  const [showPassword, setShowPassword] = useState(false); // パスワードを見せるかどうか
+  const [error, setError] = useState(""); // エラーメッセージ
+  const [isLoading, setIsLoading] = useState(false); // ログイン処理中かどうか
+  const { login } = useAuth(); // ログイン機能
+  const navigate = useNavigate(); // ページ移動機能
+  const location = useLocation(); // 現在のページ情報
 
+  // ログイン成功後に行きたいページ（デフォルトは管理者トップ）
   const from = location.state?.from?.pathname || "/admin";
 
+  // 📝 ログインボタンを押した時の処理
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
+    e.preventDefault(); // ページ更新を防ぐ
+    setError(""); // エラーメッセージをクリア
+    setIsLoading(true); // 処理中マークをつける
 
     // 少し遅延を入れて本格的な認証感を演出
     await new Promise((resolve) => setTimeout(resolve, 1000));

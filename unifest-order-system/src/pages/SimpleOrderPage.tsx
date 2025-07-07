@@ -164,6 +164,10 @@ const SimpleOrderPage: React.FC = () => {
           price: item.price,
           quantity: item.quantity,
           totalPrice: item.total,
+          toppings: [], // 必須フィールドを追加
+          category: "たこ焼き",
+          description: item.product_name,
+          available: true,
         })),
         total: cartTotal,
       };

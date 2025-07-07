@@ -1,30 +1,34 @@
-import express from "express";
-import cors from "cors";
-import helmet from "helmet";
-import morgan from "morgan";
-import compression from "compression";
-import rateLimit from "express-rate-limit";
-import { createServer } from "http";
-import { Server } from "socket.io";
-import dotenv from "dotenv";
-import { testConnection } from "./database/connection";
-import { initializeDatabase, checkTableCounts } from "./database/init";
-import { ensureOrdersTable } from "./database/ensure-orders";
-import { pool } from "./database/connection";
-import { SocketHandlers } from "./socket/socketHandlers";
-import { startStatsPolling } from "./controllers/statsController";
+// 🏗️ Webサーバーを作るために必要な道具たちを持ってくる
+import express from "express"; // Webサーバーを作る道具
+import cors from "cors"; // 他のサイトからアクセスできるようにする道具
+import helmet from "helmet"; // セキュリティを強くする道具
+import morgan from "morgan"; // アクセスログを記録する道具
+import compression from "compression"; // データを小さくして送る道具
+import rateLimit from "express-rate-limit"; // 一度にたくさんアクセスされるのを防ぐ道具
+import { createServer } from "http"; // HTTPサーバーを作る道具
+import { Server } from "socket.io"; // リアルタイム通信をする道具
+import dotenv from "dotenv"; // 秘密の設定を読み込む道具
 
-// ルーターのインポート
-import productsRouter from "./routes/products";
-import ordersRouter from "./routes/orders";
-import categoriesRouter from "./routes/categories";
-import toppingsRouter from "./routes/toppings";
-import stockRouter from "./routes/stock";
-import statsRouter from "./routes/stats";
-import emergencyRouter from "./routes/emergency";
-import settingsRouter from "./routes/settings";
+// 🗄️ データベースに関する道具たち
+import { testConnection } from "./database/connection"; // データベースに繋がるかテストする
+import { initializeDatabase, checkTableCounts } from "./database/init"; // データベースを初期化する
+import { ensureOrdersTable } from "./database/ensure-orders"; // 注文テーブルがあるか確認する
+import { pool } from "./database/connection"; // データベースに繋ぐ
+import { SocketHandlers } from "./socket/socketHandlers"; // リアルタイム通信の処理
+import { startStatsPolling } from "./controllers/statsController"; // 統計情報を定期的に取得
 
-// コントローラーにSocket.ioインスタンスを注入
+// 📋 各機能のルーター（道案内）を持ってくる
+import productsRouter from "./routes/products"; // 商品に関する処理
+import ordersRouter from "./routes/orders"; // 注文に関する処理
+import categoriesRouter from "./routes/categories"; // カテゴリに関する処理
+import toppingsRouter from "./routes/toppings"; // トッピングに関する処理
+import stockRouter from "./routes/stock"; // 在庫に関する処理
+import statsRouter from "./routes/stats"; // 統計に関する処理
+import emergencyRouter from "./routes/emergency"; // 緊急時の処理
+import settingsRouter from "./routes/settings"; // 設定に関する処理
+
+// 🔌 各機能にリアルタイム通信の道具を渡す
+// （これで注文が入ったらすぐに画面が更新されるよ！）
 import { setSocketInstance as setOrderSocketInstance } from "./controllers/orderController";
 import { setSocketInstance as setProductSocketInstance } from "./controllers/productController";
 import { setSocketInstance as setCategorySocketInstance } from "./controllers/categoryController";
@@ -34,26 +38,27 @@ import { setSocketInstance as setStockSocketInstance } from "./controllers/stock
 import { setSocketInstance as setStatsSocketInstance } from "./controllers/statsController";
 import { setSocketInstance as setEmergencySocketInstance } from "./controllers/emergencyController";
 
-// 環境変数の読み込み
+// 🔐 秘密の設定（パスワードとか）を読み込む
 dotenv.config();
 
-// Express アプリケーションの作成
+// 🏠 Webサーバーの家を建てる
 const app = express();
 const server = createServer(app);
 
-// Socket.IO の設定
+// 📡 リアルタイム通信の設定（注文が入ったらすぐ知らせてくれる）
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
+    origin: process.env.FRONTEND_URL || "http://localhost:5173", // フロントエンドのアドレス
+    methods: ["GET", "POST", "PUT", "DELETE"], // 使える操作の種類
+    credentials: true, // クッキーも一緒に送る
   },
 });
 
-// Socket.IO ハンドラーの初期化
+// 📡 リアルタイム通信の処理係を作る
 const socketHandlers = new SocketHandlers(io);
 
-// コントローラーにSocket.ioインスタンスを注入
+// 🔌 各機能にリアルタイム通信の道具を配る
+// （これで注文が入ったらキッチン画面にすぐ表示されるよ！）
 setOrderSocketInstance(io);
 setProductSocketInstance(io);
 setCategorySocketInstance(io);
@@ -63,37 +68,37 @@ setStockSocketInstance(io);
 setStatsSocketInstance(io);
 setEmergencySocketInstance(io);
 
-// 基本ミドルウェア
+// 🛡️ セキュリティとパフォーマンスの設定
 app.use(
   helmet({
-    contentSecurityPolicy: false, // Socket.IOのため無効化
+    contentSecurityPolicy: false, // Socket.IOを使うために無効化
   })
 );
-app.use(compression());
-app.use(morgan("combined"));
+app.use(compression()); // データを圧縮して送信を速くする
+app.use(morgan("combined")); // アクセスログを記録する
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    credentials: true,
+    origin: process.env.FRONTEND_URL || "http://localhost:5173", // フロントエンドからのアクセスを許可
+    credentials: true, // クッキーも一緒に送れるようにする
   })
 );
 
-// Rate limiting
+// 🚦 アクセス制限（一度にたくさんアクセスされるのを防ぐ）
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15分
-  max: 100, // 最大100リクエスト/15分
+  windowMs: 15 * 60 * 1000, // 15分の間に
+  max: 100, // 最大100回までしかアクセスできない
   message: {
-    error: "Too many requests from this IP, please try again later.",
+    error: "Too many requests from this IP, please try again later.", // 制限メッセージ
   },
 });
 app.use("/api/", limiter);
 
-// JSON パースの設定
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+// 📝 データの受け取り設定
+app.use(express.json({ limit: "10mb" })); // JSON形式のデータを10MBまで受け取る
+app.use(express.urlencoded({ extended: true, limit: "10mb" })); // フォームデータも受け取る
 
-// API ルーターの設定
-app.use("/api/products", productsRouter);
+// 🗺️ 各機能への道案内を設定
+app.use("/api/products", productsRouter); // 商品に関する処理
 app.use("/api/orders", ordersRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/toppings", toppingsRouter);

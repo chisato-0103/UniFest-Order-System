@@ -1,40 +1,37 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { Box } from "@mui/material";
-import CssBaseline from "@mui/material/CssBaseline";
-import { SimpleAppProvider } from "./contexts/SimpleAppContext2";
-import { AppProvider } from "./contexts/AppContext";
-import { AuthProvider } from "./contexts/AuthContext";
-import SimpleOrderPage from "./pages/SimpleOrderPage";
+// 🧭 ページの移動とデザインのための道具たち
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; // ページ移動の道具
+import { ThemeProvider, createTheme } from "@mui/material/styles"; // 見た目のテーマを作る道具
+import { Box } from "@mui/material"; // レイアウト用の箱
+import CssBaseline from "@mui/material/CssBaseline"; // デフォルトスタイルをリセット
+import { SimpleAppProvider } from "./contexts/SimpleAppContext2"; // 簡単なアプリの状態管理
+import { AppProvider } from "./contexts/AppContext"; // アプリ全体の状態管理
+import { AuthProvider } from "./contexts/AuthContext"; // ログイン状態の管理
+import SimpleOrderPage from "./pages/SimpleOrderPage"; // 簡単注文ページ
 
-// Components
+// 🧩 部品（コンポーネント）
 // import NavigationBar from "./components/NavigationBar";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "./components/ProtectedRoute"; // 管理者のみアクセスできるページを守る
 
-// Pages
-import OrderPage from "./pages/OrderPage";
-import OrderTestPage from "./pages/OrderTestPage";
-import CustomerStatusPage from "./pages/CustomerStatusPage";
-import AdminLoginPage from "./pages/AdminLoginPage";
-import AdminDashboard from "./pages/AdminDashboard";
-import SimpleOrderPageTest from "./pages/SimpleOrderPageTest";
-import KitchenPageTest from "./pages/KitchenPageTest";
-import KitchenPageSimple from "./pages/KitchenPageSimple";
-import KitchenPageSimpleTest from "./pages/KitchenPageSimpleTest";
-import TestRoute from "./pages/TestRoute";
-import NavigationPage from "./pages/NavigationPage";
-import AdminNavigationPage from "./pages/AdminNavigationPage";
+// 🏪 お客さん用のページたち
+import OrderPage from "./pages/OrderPage"; // 注文ページ
+import CustomerStatusPage from "./pages/CustomerStatusPage"; // お客さんの注文状況ページ
+import AdminLoginPage from "./pages/AdminLoginPage"; // 管理者ログインページ
+import AdminDashboard from "./pages/AdminDashboard"; // 管理者ダッシュボード
+import KitchenPageSimple from "./pages/KitchenPageSimple"; // 簡単キッチンページ
+import NavigationPage from "./pages/NavigationPage"; // ナビゲーションページ
+import AdminNavigationPage from "./pages/AdminNavigationPage"; // 管理者ナビゲーションページ
+import CartPage from "./pages/CartPage"; // カートページ
 
-// Admin Pages
-import StoreMonitorPage from "./pages/StoreMonitorPage";
-import KitchenPage from "./pages/KitchenPage";
-import PaymentPage from "./pages/PaymentPage";
-import DeliveryPage from "./pages/DeliveryPage";
-import HistoryPage from "./pages/HistoryPage";
-import ProductManagementPage from "./pages/ProductManagementPage";
-import SystemSettingsPage from "./pages/SystemSettingsPage";
+// 👨‍💼 管理者用のページたち
+import StoreMonitorPage from "./pages/StoreMonitorPage"; // お店の状況監視ページ
+import KitchenPage from "./pages/KitchenPage"; // キッチン画面
+import PaymentPage from "./pages/PaymentPage"; // 支払い画面
+import DeliveryPage from "./pages/DeliveryPage"; // 受け渡し画面
+import HistoryPage from "./pages/HistoryPage"; // 注文履歴ページ
+import ProductManagementPage from "./pages/ProductManagementPage"; // 商品管理ページ
+import SystemSettingsPage from "./pages/SystemSettingsPage"; // システム設定ページ
 
-// MUIテーマ設定
+// 🎨 アプリの見た目設定（たこ焼き屋さんっぽい色）
 const theme = createTheme({
   palette: {
     primary: {
@@ -44,7 +41,7 @@ const theme = createTheme({
       main: "#4ECDC4", // 爽やかな青緑
     },
     background: {
-      default: "#F7F7F7",
+      default: "#F7F7F7", // 背景色（薄いグレー）
     },
   },
   typography: {
@@ -88,27 +85,21 @@ function App() {
                   <Route path="/order" element={<SimpleOrderPage />} />
                   <Route path="/simple-order" element={<SimpleOrderPage />} />
 
-                  {/* お客様向けその他のページ */}
+                  {/* 🛍️ お客様向けその他のページ */}
+                  <Route path="/cart" element={<CartPage />} />
                   <Route
                     path="/customer-status"
                     element={<CustomerStatusPage />}
                   />
 
-                  {/* 開発・テスト用（デモ・比較用） */}
+                  {/* 🎮 開発・デモ用（比較用） */}
                   <Route path="/order-demo" element={<OrderPage />} />
-                  <Route
-                    path="/simple-order-test"
-                    element={<SimpleOrderPageTest />}
-                  />
 
-                  {/* 注文テストページ */}
-                  <Route path="/order-test" element={<OrderTestPage />} />
-
-                  {/* 管理者ログイン */}
+                  {/* 🔐 管理者ログイン */}
                   <Route path="/admin-login" element={<AdminLoginPage />} />
                   <Route path="/admin/login" element={<AdminLoginPage />} />
 
-                  {/* 管理者ダッシュボード */}
+                  {/* 📊 管理者ダッシュボード */}
                   <Route
                     path="/admin"
                     element={
@@ -118,7 +109,7 @@ function App() {
                     }
                   />
 
-                  {/* 管理者向け画面（保護されたルート） */}
+                  {/* 👨‍💼 管理者向け画面（保護されたルート） */}
                   <Route
                     path="/admin/monitor"
                     element={
@@ -131,7 +122,7 @@ function App() {
                     path="/admin/kitchen"
                     element={
                       <ProtectedRoute>
-                        <KitchenPageTest />
+                        <KitchenPage />
                       </ProtectedRoute>
                     }
                   />
@@ -192,22 +183,16 @@ function App() {
                     element={<SystemSettingsPage />}
                   />
 
-                  {/* テスト用：認証なしルート */}
-                  <Route path="/test/kitchen" element={<KitchenPageTest />} />
-                  <Route path="/test/monitor" element={<StoreMonitorPage />} />
-                  <Route path="/test/route" element={<TestRoute />} />
+                  {/* 🧭 管理者ナビゲーション */}
                   <Route
                     path="/admin-navigation"
                     element={<AdminNavigationPage />}
                   />
-                  <Route path="/kitchen-test" element={<KitchenPageTest />} />
+
+                  {/* 🍳 キッチン画面（認証なし・開発用） */}
                   <Route
                     path="/kitchen-simple"
                     element={<KitchenPageSimple />}
-                  />
-                  <Route
-                    path="/kitchen-simple-test"
-                    element={<KitchenPageSimpleTest />}
                   />
                 </Routes>
               </Box>

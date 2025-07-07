@@ -1,30 +1,32 @@
 #!/bin/bash
 
-# UniFest Order System デプロイメントスクリプト
+# 🚀 UniFest Order System デプロイメントスクリプト
+# このファイルは、アプリを本番環境に公開するためのスクリプトです
 # 使用方法: ./deploy.sh [環境] [オプション]
-# 環境: dev, staging, production
-# オプション: --build-only, --no-cache, --logs
+# 環境: dev（開発）, staging（テスト）, production（本番）
+# オプション: --build-only（ビルドのみ）, --no-cache（キャッシュなし）, --logs（ログ表示）
 
-set -e
+set -e # エラーが起きたらすぐに止まる
 
-# 色付きメッセージ
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# 🌈 色付きメッセージ（見やすくするため）
+RED='\033[0;31m'    # 赤色（エラー用）
+GREEN='\033[0;32m'  # 緑色（成功用）
+YELLOW='\033[1;33m' # 黄色（警告用）
+BLUE='\033[0;34m'   # 青色（情報用）
+NC='\033[0m'        # 色なし（リセット）
 
-# 引数解析
-ENVIRONMENT=${1:-dev}
-BUILD_ONLY=false
-NO_CACHE=false
-SHOW_LOGS=false
+# 📝 コマンドの引数を解析
+ENVIRONMENT=${1:-dev}  # 環境（デフォルトは dev）
+BUILD_ONLY=false       # ビルドのみかどうか
+NO_CACHE=false         # キャッシュを使わないかどうか
+SHOW_LOGS=false        # ログを表示するかどうか
 
+# 🔍 オプションをチェック
 for arg in "$@"
 do
     case $arg in
         --build-only)
-        BUILD_ONLY=true
+        BUILD_ONLY=true    # ビルドのみフラグをオンにする
         shift
         ;;
         --no-cache)

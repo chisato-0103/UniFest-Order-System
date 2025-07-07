@@ -1,53 +1,72 @@
-import { useState, useEffect, useCallback } from "react";
+// 👨‍🍳 キッチン画面（調理担当者が使う画面）
+// 新しい注文が表示されて、「調理開始」「完成」ボタンで進捗を管理できます
+// 注文が入ると音で知らせてくれるので、見逃しません
+
+import { useState, useEffect, useCallback, useRef } from "react"; // Reactの基本機能
 import {
-  Container,
-  Typography,
-  Box,
-  Card,
-  CardContent,
-  Button,
-  Chip,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Avatar,
-  Alert,
-  Badge,
-  LinearProgress,
-  Tab,
-  Tabs,
-  AppBar,
-  Toolbar,
+  Container, // 全体を囲む容器
+  Typography, // 文字表示
+  Box, // レイアウト用の箱
+  Card, // カード表示
+  CardContent, // カードの中身
+  Button, // ボタン
+  Chip, // ステータス表示用の小さなタグ
+  List, // リスト表示
+  ListItem, // リストの項目
+  ListItemText, // リスト項目のテキスト
+  ListItemAvatar, // リスト項目のアバター
+  Avatar, // 丸いアイコン
+  Alert, // 警告メッセージ
+  Badge, // バッジ（数字表示）
+  LinearProgress, // プログレスバー
+  Tab, // タブ
+  Tabs, // タブグループ
+  AppBar, // 上部バー
+  Toolbar, // ツールバー
+  Dialog, // ダイアログ
+  DialogTitle, // ダイアログタイトル
+  DialogContent, // ダイアログコンテンツ
+  DialogActions, // ダイアログアクション
+  IconButton, // アイコンボタン
+  Divider, // 区切り線
 } from "@mui/material";
 import {
-  Restaurant as RestaurantIcon,
-  Timer as TimerIcon,
-  CheckCircle as CheckCircleIcon,
-  Warning as WarningIcon,
-  PlayArrow as PlayArrowIcon,
-  Refresh as RefreshIcon,
-  LocalFireDepartment as FireIcon,
+  Restaurant as RestaurantIcon, // レストランアイコン
+  Timer as TimerIcon, // タイマーアイコン
+  CheckCircle as CheckCircleIcon, // 完成チェックアイコン
+  Warning as WarningIcon, // 警告アイコン
+  PlayArrow as PlayArrowIcon, // 開始アイコン
+  Refresh as RefreshIcon, // 更新アイコン
+  LocalFireDepartment as FireIcon, // 火のアイコン
+  BugReport as BugReportIcon, // デバッグアイコン
+  Close as CloseIcon, // 閉じるアイコン
 } from "@mui/icons-material";
 // import WaitTimeDisplay from "../components/WaitTimeDisplay"; // 一時的に無効化
-import { AudioNotificationService } from "../utils/audioNotification";
+import { AudioNotificationService } from "../utils/audioNotification"; // 音の通知サービス
+import {
+  fetchOrders as apiFetchOrders,
+  updateOrderStatus as apiUpdateOrderStatus,
+} from "../utils/apiClient"; // 改良版API通信
+import { API_BASE_URL } from "../config/api"; // API設定
+import { apiLogger } from "../utils/logger"; // デバッグログ
 // import { useSocket } from "../hooks/useSocket"; // 一時的に無効化
 
-// 厨房管理画面用の型定義
+// 🍳 厨房管理画面用の注文データの形
 interface KitchenOrder {
-  order_id: number;
-  customer_id: number | null;
-  order_number: string;
-  status: string;
-  payment_status: string;
-  total_amount: number;
+  order_id: number; // 注文番号
+  customer_id: number | null; // お客さん番号
+  order_number: string; // 注文番号（文字）
+  status: string; // 状況（待機中、調理中、完成）
+  payment_status: string; // 支払い状況
+  total_amount: number; // 合計金額
   order_items: Array<{
-    order_item_id: number;
-    product_id: number;
-    product_name: string;
-    quantity: number;
-    unit_price: number;
-    total_price: number;
+    // 注文した商品のリスト
+    order_item_id: number; // 注文商品番号
+    product_id: number; // 商品番号
+    product_name: string; // 商品名
+    quantity: number; // 個数
+    unit_price: number; // 単価
+    total_price: number; // 小計
     toppings: Array<{
       topping_id: number;
       topping_name: string;
@@ -94,49 +113,45 @@ function KitchenPage() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
-  const [retryCount, setRetryCount] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showDebug, setShowDebug] = useState(false); // デバッグパネル表示状態
+
+  // AbortController の管理をuseRefで行う
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Socket.io統合
   // const socket = useSocket(); // 一時的に無効化
   const socket = null; // 一時的にnullに設定
 
   // 音声通知サービス
-  const [audioService] = useState(() => new AudioNotificationService());
-
-  // APIからデータを取得（エラーハンドリング強化版）
+  const [audioService] = useState(() => new AudioNotificationService()); // APIからデータを取得（AbortController競合回避版）
   const fetchOrders = useCallback(
     async (showErrorAlert = true) => {
+      // 既存のリクエストがあればキャンセル
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+
+      // 新しいAbortControllerを作成
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       try {
         setError("");
-        if (!navigator.onLine) {
-          throw new Error("インターネット接続がありません");
+
+        // コントローラーがすでに中止されているかチェック
+        if (controller.signal.aborted) {
+          return;
         }
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒タイムアウト
+        // 改良版APIクライアントを使用
+        const result = await apiFetchOrders(API_BASE_URL);
 
-        const response = await fetch("http://localhost:3001/api/orders", {
-          signal: controller.signal,
-          headers: {
-            "Cache-Control": "no-cache",
-          },
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error("APIエンドポイントが見つかりません");
-          } else if (response.status === 500) {
-            throw new Error("サーバーエラーが発生しました");
-          } else if (response.status >= 400) {
-            throw new Error(`HTTPエラー: ${response.status}`);
-          }
-          throw new Error("データの取得に失敗しました");
+        // 処理中にキャンセルされた場合は結果を無視
+        if (controller.signal.aborted) {
+          return;
         }
-
-        const result = await response.json();
 
         if (!result.success || !Array.isArray(result.data)) {
           throw new Error("不正なデータ形式です");
@@ -202,69 +217,120 @@ function KitchenPage() {
           })
         );
 
+        // 最終チェック：処理完了直前にキャンセルされていないか確認
+        if (controller.signal.aborted) {
+          return;
+        }
+
         setOrders(formattedOrders);
-        setRetryCount(0);
+
+        // 正常完了時にAbortControllerをクリア
+        abortControllerRef.current = null;
       } catch (err: unknown) {
         console.error("注文データ取得エラー:", err);
 
-        let errorMessage = "注文データの取得に失敗しました";
-
-        if (err instanceof Error) {
-          if (err.name === "AbortError") {
-            errorMessage = "通信がタイムアウトしました";
-          } else if (err.message.includes("Failed to fetch")) {
-            errorMessage = "サーバーに接続できません";
-          } else if (err.message) {
-            errorMessage = err.message;
-          }
+        // AbortErrorの場合は静かに終了（ユーザーにエラー表示しない）
+        if (err instanceof Error && err.name === "AbortError") {
+          return;
         }
 
-        setError(errorMessage);
+        // 詳細エラー情報をログに記録
+        const errorInfo = {
+          timestamp: new Date().toISOString(),
+          url: `${API_BASE_URL}/api/orders`,
+          error:
+            err instanceof Error
+              ? {
+                  name: err.name,
+                  message: err.message,
+                  stack: err.stack,
+                }
+              : String(err),
+          userAgent: navigator.userAgent,
+          online: navigator.onLine,
+          connectionType:
+            (
+              navigator as Navigator & {
+                connection?: { effectiveType?: string };
+              }
+            ).connection?.effectiveType || "unknown",
+        };
+
+        apiLogger.log(
+          "ERROR",
+          "KITCHEN_FETCH",
+          "厨房画面でのデータ取得エラー",
+          errorInfo
+        );
+
+        let errorMessage = "注文データの取得に失敗しました";
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        }
 
         if (showErrorAlert) {
-          // 自動リトライ
-          if (retryCount < 3) {
-            setTimeout(() => {
-              setRetryCount((prev) => prev + 1);
-              fetchOrders(false);
-            }, 2000 + retryCount * 1000); // 指数バックオフ
-          }
+          setError(errorMessage);
         }
       } finally {
         setLoading(false);
+        // エラーが発生した場合もAbortControllerをクリア
+        if (
+          abortControllerRef.current &&
+          !abortControllerRef.current.signal.aborted
+        ) {
+          abortControllerRef.current = null;
+        }
       }
     },
-    [retryCount]
+    [] // retryCountから依存関係を除去（無限ループ防止）
   );
 
   // 初回データ取得とネットワーク状態監視
   useEffect(() => {
-    setLoading(true);
-    fetchOrders();
+    let mounted = true; // コンポーネントがマウントされているかチェック
+
+    const initializeData = async () => {
+      if (!mounted) return;
+      setLoading(true);
+      await fetchOrders();
+    };
+
+    initializeData();
 
     // ネットワーク状態の監視
     const handleOnline = () => {
+      if (!mounted) return;
       setIsOnline(true);
       fetchOrders(false);
     };
-    const handleOffline = () => setIsOnline(false);
+    const handleOffline = () => {
+      if (!mounted) return;
+      setIsOnline(false);
+    };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    // 定期的にデータを更新
-    const interval = setInterval(() => {
-      if (navigator.onLine) {
-        fetchOrders(false);
-      }
-    }, 5000);
+    // 定期的にデータを更新（負荷軽減のため頻度を大幅削減）
+    const intervalId = setInterval(() => {
+      if (!mounted || !navigator.onLine) return;
+      fetchOrders(false);
+    }, 60000); // 1分間隔に変更
 
     return () => {
-      clearInterval(interval);
+      mounted = false;
+      clearInterval(intervalId);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+
+      // アクティブなAPIリクエストをキャンセル
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
     };
-  }, [fetchOrders]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // fetchOrdersへの依存関係を意図的に除去（無限ループ防止）
 
   // Socket.io統合とリアルタイム更新
   useEffect(() => {
@@ -315,7 +381,8 @@ function KitchenPage() {
       socket.off("cooking-completed");
       socket.off("emergency-notification");
     };
-  }, [socket, audioService, fetchOrders]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, audioService]); // fetchOrdersへの依存関係を除去
 
   // 手動更新
   const handleRefresh = () => {
@@ -347,21 +414,17 @@ function KitchenPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // 注文の状態を更新
+  // 注文の状態を更新（改良版APIクライアント使用）
   const updateOrderStatus = async (orderId: number, newStatus: string) => {
     try {
-      const response = await fetch(
-        `http://localhost:3001/api/orders/${orderId}/status`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status: newStatus }),
-        }
+      // 改良版APIクライアントを使用
+      const result = await apiUpdateOrderStatus(
+        API_BASE_URL,
+        orderId,
+        newStatus
       );
 
-      if (response.ok) {
+      if (result.success) {
         // 成功時にローカルステートを更新
         setOrders((prev) =>
           prev.map((order) =>
@@ -390,7 +453,27 @@ function KitchenPage() {
       }
     } catch (error) {
       console.error("ステータス更新エラー:", error);
-      alert("ネットワークエラーが発生しました");
+
+      // 詳細エラー情報をログに記録
+      apiLogger.log("ERROR", "STATUS_UPDATE", "注文ステータス更新エラー", {
+        orderId,
+        newStatus,
+        error:
+          error instanceof Error
+            ? {
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+              }
+            : String(error),
+        timestamp: new Date().toISOString(),
+      });
+
+      if (error instanceof Error) {
+        alert(`エラー: ${error.message}`);
+      } else {
+        alert("ネットワークエラーが発生しました");
+      }
     }
   };
 
@@ -607,6 +690,18 @@ function KitchenPage() {
           >
             更新
           </Button>
+          {/* デバッグボタン（開発時のみ表示） */}
+          {import.meta.env.DEV && (
+            <IconButton
+              onClick={() => setShowDebug(true)}
+              color="inherit"
+              size="small"
+              sx={{ ml: 1 }}
+              title="デバッグ情報を表示"
+            >
+              <BugReportIcon />
+            </IconButton>
+          )}
         </Toolbar>
       </AppBar>
 
@@ -622,7 +717,6 @@ function KitchenPage() {
           }
         >
           {error}
-          {retryCount > 0 && ` (再試行中: ${retryCount}/3)`}
         </Alert>
       )}
 
@@ -697,6 +791,88 @@ function KitchenPage() {
           )}
         </TabPanel>
       </Box>
+
+      {/* 🐛 デバッグダイアログ */}
+      <Dialog
+        open={showDebug}
+        onClose={() => setShowDebug(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            デバッグ情報
+            <IconButton onClick={() => setShowDebug(false)} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              API統計 (過去1時間)
+            </Typography>
+            {(() => {
+              const stats = apiLogger.getStats();
+              return (
+                <Box
+                  component="pre"
+                  sx={{
+                    backgroundColor: "#f5f5f5",
+                    p: 2,
+                    borderRadius: 1,
+                    fontSize: "0.875rem",
+                    overflow: "auto",
+                    mb: 2,
+                  }}
+                >
+                  {JSON.stringify(stats, null, 2)}
+                </Box>
+              );
+            })()}
+
+            <Divider sx={{ my: 2 }} />
+
+            <Typography variant="h6" gutterBottom>
+              最新ログ (最新10件)
+            </Typography>
+            <Box
+              component="pre"
+              sx={{
+                backgroundColor: "#f5f5f5",
+                p: 2,
+                borderRadius: 1,
+                fontSize: "0.875rem",
+                overflow: "auto",
+                maxHeight: 300,
+              }}
+            >
+              {apiLogger
+                .exportLogs()
+                .logs.slice(-10)
+                .map(
+                  (log) =>
+                    `[${log.timestamp}] ${log.level} - ${log.category}: ${
+                      log.message
+                    }\n${
+                      log.data ? JSON.stringify(log.data, null, 2) + "\n" : ""
+                    }---\n`
+                )
+                .join("")}
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => apiLogger.clearLogs()} color="warning">
+            ログクリア
+          </Button>
+          <Button onClick={() => setShowDebug(false)}>閉じる</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

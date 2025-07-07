@@ -1,59 +1,65 @@
-// 基本的な型定義
+// 📦 データの形（型）を決めるファイル
+// プログラムで使うデータがどんな形をしているか決めています
+// 例：商品には名前、値段、説明があるよ！という決まりを作っています
 
+// 🍽️ 商品の情報を表すデータの形（統一版）
 export interface Product {
-  id: string;
-  product_id: string;
-  name: string;
-  product_name: string;
-  price: number;
-  category: string;
-  description: string;
-  available: boolean;
-  status?: string;
-  image?: string;
-  preparationTime?: number;
+  id: string; // 商品の番号（例：P001）
+  name: string; // 商品の名前（例：たこ焼き）
+  price: number; // 値段（例：500円）
+  category: string; // カテゴリ（例：メイン料理）
+  description: string; // 商品の説明（例：タコが入ったおいしい丸い食べ物）
+  available: boolean; // 今注文できるかどうか（true=できる、false=できない）
+  status?: string; // 状態（例：人気商品）
+  image?: string; // 商品の写真のファイル名
+  preparationTime?: number; // 作るのにかかる時間（分）
+
+  // 🔄 API互換性フィールド（削除予定）
+  product_id?: string;
+  product_name?: string;
 }
 
+// 🏷️ カテゴリ（商品の種類分け）の情報を表すデータの形
 export interface Category {
-  id: string;
-  name: string;
-  description?: string;
-  sortOrder?: number;
+  id: string; // カテゴリの番号
+  name: string; // カテゴリの名前（例：メイン料理、飲み物）
+  description?: string; // カテゴリの説明
+  sortOrder?: number; // 表示する順番
 }
 
+// 🍯 トッピング（追加料理）の情報を表すデータの形（統一版）
 export interface Topping {
-  id: string;
+  id: string; // トッピングの番号
+  name: string; // トッピングの名前（例：マヨネーズ、青のり）
+  price: number; // トッピングの値段（例：50円）
+  available: boolean; // 利用可能かどうか
+
+  // 🔄 API互換性フィールド（削除予定）
   topping_id?: string | number;
   order_topping_id?: string | number;
-  name: string;
   topping_name?: string;
-  price: number;
-  available: boolean;
 }
 
+// 🛒 カートに入れた商品の情報（統一版）
 export interface CartItem {
-  id: string;
+  id: string; // 商品ID
+  name: string; // 商品名
+  price: number; // 単価
+  quantity: number; // 数量
+  toppings: Topping[]; // 選択されたトッピング
+  totalPrice: number; // 合計金額（単価 × 数量 + トッピング）
+  product?: Product; // 元の商品情報（参照用）
+
+  // 🔄 API互換性フィールド（削除予定）
   order_item_id?: string | number;
-  name: string;
   product_name?: string;
-  price: number;
   unit_price?: number;
-  quantity: number;
-  toppings?: Topping[];
   selectedToppings?: Topping[];
-  product?: Product;
-  totalPrice: number;
   total_price?: number;
 }
 
-export interface OrderItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  toppings?: Topping[];
-  totalPrice: number;
-}
+// 📝 注文商品の情報（CartItemと統合）
+export type OrderItem = CartItem;
 
 export interface Cart {
   items: CartItem[];

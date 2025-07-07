@@ -1,43 +1,47 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useReducer, useEffect } from "react";
-import type { ReactNode } from "react";
-import type {
-  Order,
-  Product,
-  Category,
-  Topping,
-  Cart,
-  CartItem,
-  SystemState,
-  Notification,
-  StockInfo,
-  StockHistory,
-  StockAlert,
-  WaitTimeInfo,
-  TakoyakiCooker,
-  DetailedCookingStatus,
-  TemperatureManagement,
-  CongestionStatus,
-  EmergencyState,
-  EmergencyLog,
-} from "../types";
-import { audioNotificationService } from "../utils/audioNotification";
+// 📱 アプリ全体の状態（情報）を管理するファイル
+// 注文、商品、カートなど、アプリで使う全ての情報をここで管理しています
+// どのページからでも同じ情報を見ることができるようにする仕組みです
 
-// State型定義
+import React, { createContext, useReducer, useEffect } from "react"; // Reactの基本道具
+import type { ReactNode } from "react"; // React部品の型
+import type {
+  Order, // 注文の情報
+  Product, // 商品の情報
+  Category, // カテゴリの情報
+  Topping, // トッピングの情報
+  Cart, // カートの情報
+  CartItem, // カートに入れた商品の情報
+  SystemState, // システムの状態
+  Notification, // 通知の情報
+  StockInfo, // 在庫の情報
+  StockHistory, // 在庫履歴
+  StockAlert, // 在庫アラート
+  WaitTimeInfo, // 待ち時間の情報
+  TakoyakiCooker, // たこ焼き器の情報
+  DetailedCookingStatus, // 詳細調理状況
+  TemperatureManagement, // 温度管理
+  CongestionStatus, // 混雑状況
+  EmergencyState, // 緊急時状態
+  EmergencyLog, // 緊急時ログ
+} from "../types";
+import { audioNotificationService } from "../utils/audioNotification"; // 音の通知サービス
+
+// 🗂️ アプリで管理する全ての情報の入れ物（State型定義）
 interface AppState {
-  orders: Order[];
-  products: Product[];
-  categories: Category[];
-  toppings: Topping[];
-  cart: Cart;
-  systemState: SystemState;
-  notifications: Notification[];
-  stockInfo: StockInfo[];
-  stockHistory: StockHistory[];
-  stockAlerts: StockAlert[];
-  // 待ち時間管理関連
-  waitTimeInfo: WaitTimeInfo[];
-  takoyakiCookers: TakoyakiCooker[];
+  orders: Order[]; // 注文のリスト
+  products: Product[]; // 商品のリスト
+  categories: Category[]; // カテゴリのリスト
+  toppings: Topping[]; // トッピングのリスト
+  cart: Cart; // ショッピングカート
+  systemState: SystemState; // システムの状態（営業中か休憩中か等）
+  notifications: Notification[]; // 通知のリスト
+  stockInfo: StockInfo[]; // 在庫情報のリスト
+  stockHistory: StockHistory[]; // 在庫履歴のリスト
+  stockAlerts: StockAlert[]; // 在庫アラートのリスト
+  // ⏰ 待ち時間管理関連
+  waitTimeInfo: WaitTimeInfo[]; // 待ち時間情報のリスト
+  takoyakiCookers: TakoyakiCooker[]; // たこ焼き器のリスト
   detailedCookingStatus: DetailedCookingStatus[];
   temperatureManagement: TemperatureManagement[];
   congestionStatus: CongestionStatus;
@@ -263,17 +267,14 @@ function appReducer(state: AppState, action: AppAction): AppState {
         name: action.payload.product.name,
         price: action.payload.product.price,
         quantity: action.payload.quantity,
-        selectedToppings: action.payload.toppings,
+        toppings: action.payload.toppings || [], // 🔄 統一型定義に対応
         product: action.payload.product,
         totalPrice: action.payload.product.price * action.payload.quantity,
       };
       const newItems = [...state.cart.items, newItem];
       const newTotal = newItems.reduce((total, item) => {
         const toppingsPrice =
-          item.selectedToppings?.reduce(
-            (sum, topping) => sum + topping.price,
-            0
-          ) || 0;
+          item.toppings?.reduce((sum, topping) => sum + topping.price, 0) || 0;
         return total + (item.price + toppingsPrice) * item.quantity;
       }, 0);
 
@@ -293,10 +294,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       );
       const updatedTotal = filteredItems.reduce((total, item) => {
         const toppingsPrice =
-          item.selectedToppings?.reduce(
-            (sum, topping) => sum + topping.price,
-            0
-          ) || 0;
+          item.toppings?.reduce((sum, topping) => sum + topping.price, 0) || 0;
         return total + (item.price + toppingsPrice) * item.quantity;
       }, 0);
 
@@ -318,10 +316,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       );
       const recalculatedTotal = updatedItems.reduce((total, item) => {
         const toppingsPrice =
-          item.selectedToppings?.reduce(
-            (sum, topping) => sum + topping.price,
-            0
-          ) || 0;
+          item.toppings?.reduce((sum, topping) => sum + topping.price, 0) || 0;
         return total + (item.price + toppingsPrice) * item.quantity;
       }, 0);
 

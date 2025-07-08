@@ -106,8 +106,11 @@ class SocketServiceImpl implements SocketService {
   private baseUrl: string;
 
   constructor() {
-    // 環境変数からバックエンドURLを取得、デフォルトはlocalhost:3001
-    this.baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+    // 環境変数からWebSocket用URLを優先して取得、なければAPI用、さらにデフォルト
+    this.baseUrl =
+      import.meta.env.VITE_SOCKET_URL ||
+      import.meta.env.VITE_API_URL ||
+      "http://localhost:3001";
   }
 
   connect(userType: UserType): void {

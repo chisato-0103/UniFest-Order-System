@@ -114,7 +114,7 @@ const CartPage: React.FC = () => {
             name: t.name,
             price: t.price,
           })),
-          // 必要ならcooking_instruction等もここで付与
+          cooking_instruction: "", // 空文字で必ず付与
         };
       });
       console.log(

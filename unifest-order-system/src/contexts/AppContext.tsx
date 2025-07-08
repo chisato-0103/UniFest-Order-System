@@ -263,7 +263,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
     case "ADD_TO_CART": {
       const newItem: CartItem = {
-        id: `item-${Date.now()}`,
+        id: action.payload.product.id, // 本番APIのproduct.idをそのまま使用
         name: action.payload.product.name,
         price: action.payload.product.price,
         quantity: action.payload.quantity,

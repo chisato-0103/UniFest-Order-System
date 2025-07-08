@@ -107,8 +107,8 @@ const CartPage: React.FC = () => {
       const itemsForApi = cart.items.map((item) => {
         const productIdNum = Number(item.id);
         return {
-          ...item,
-          product_id: productIdNum, // 数値型に変換
+          product_id: productIdNum, // 必要なフィールドのみ
+          quantity: item.quantity,
           toppings: (item.toppings || []).map((t) => ({
             topping_id: t.id,
             name: t.name,

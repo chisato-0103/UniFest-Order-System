@@ -20,6 +20,8 @@ import {
   Chip,
   Paper,
 } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import {
   Add,
   Remove,
@@ -302,9 +304,10 @@ const OrderPage: React.FC = () => {
           {/* カートボタン（バッジで個数表示） */}
           <Badge badgeContent={getCartItemCount()} color="primary">
             <Button
+              component={RouterLink}
+              to="/cart"
               variant="outlined"
               startIcon={<ShoppingCart />}
-              href="/cart"
               size="large"
             >
               カート

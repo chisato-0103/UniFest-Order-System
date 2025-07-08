@@ -105,17 +105,32 @@ const CartPage: React.FC = () => {
 
       // toppingsをバックエンド期待形式（topping_id付き）に変換
       const itemsForApi = cart.items.map((item) => {
-        const productIdNum = Number(item.id);
+        // product_idは必ず数値で送る
+        let product_id = undefined;
+        if (item.product && (item.product.product_id || item.product.id)) {
+          // Product型のproduct_id優先、なければid
+          product_id = Number(item.product.product_id ?? item.product.id);
+        } else if (item.id) {
+          product_id = Number(item.id);
+        }
         return {
-          product_id: productIdNum, // 必要なフィールドのみ
+          product_id,
           quantity: item.quantity,
           toppings: (item.toppings || []).map((t) => ({
-            topping_id: t.id,
+            topping_id: t.topping_id ?? t.id,
             name: t.name,
             price: t.price,
           })),
-          cooking_instruction: "", // 空文字で必ず付与
+          cooking_instruction: "",
         };
+      });
+      // デバッグ: itemsForApiのproduct_id型と値を全て出力
+      itemsForApi.forEach((item, idx) => {
+        console.log(
+          `itemsForApi[${idx}].product_id:`,
+          item.product_id,
+          typeof item.product_id
+        );
       });
       console.log(
         "[注文API送信直前] itemsForApi:",

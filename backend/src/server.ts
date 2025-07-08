@@ -51,6 +51,8 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://unifest-order.onrender.com",
   "https://unifest-order.onrender.com/",
+  "https://unifest-frontend.onrender.com", // 追加
+  "https://unifest-frontend.onrender.com/", // 追加
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 

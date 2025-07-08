@@ -3,7 +3,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { Box } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
 import { SimpleAppProvider } from "./contexts/SimpleAppContext";
-import SimpleOrderPage from "./pages/SimpleOrderPage";
+import OrderPage from "./pages/OrderPage";
 
 // MUIテーマ設定
 const theme = createTheme({
@@ -34,7 +34,7 @@ function App() {
             }}
           >
             <Routes>
-              <Route path="/" element={<SimpleOrderPage />} />
+              <Route path="/" element={<OrderPage />} />
             </Routes>
           </Box>
         </Router>

@@ -45,12 +45,21 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 
+// 柔軟なCORS設定
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://unifest-order.onrender.com",
+  "https://unifest-order.onrender.com/",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 // 📡 リアルタイム通信の設定（注文が入ったらすぐ知らせてくれる）
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "https://unifest-order.onrender.com/", // フロントエンドのアドレス
-    methods: ["GET", "POST", "PUT", "DELETE"], // 使える操作の種類
-    credentials: true, // クッキーも一緒に送る
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   },
 });
 
@@ -76,21 +85,20 @@ app.use(
 );
 app.use(compression()); // データを圧縮して送信を速くする
 app.use(morgan("combined")); // アクセスログを記録する
-// 柔軟なCORS設定
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "https://unifest-order.onrender.com",
-  process.env.FRONTEND_URL, // 環境変数から取得
-];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      console.log("CORS origin check:", origin);
+      // スラッシュ有無を無視して比較
+      const normalizedOrigin = origin ? origin.replace(/\/$/, "") : origin;
+      const normalizedAllowed = allowedOrigins.map((o) =>
+        o ? o.replace(/\/$/, "") : o
+      );
+      if (!origin || normalizedAllowed.includes(normalizedOrigin)) {
         callback(null, true);
       } else {
-        callback(new Error("CORS policy violation"));
+        callback(new Error("CORS policy violation: " + origin));
       }
     },
     credentials: true,

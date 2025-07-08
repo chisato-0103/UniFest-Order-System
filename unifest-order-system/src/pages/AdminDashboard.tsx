@@ -209,7 +209,8 @@ const AdminDashboard: React.FC = () => {
               sm: "repeat(2, 1fr)",
               md: "repeat(3, 1fr)",
             },
-            gap: 3,
+            gap: { xs: 2, sm: 3 },
+            mb: 4,
           }}
         >
           {adminMenuItems.map((item) => (

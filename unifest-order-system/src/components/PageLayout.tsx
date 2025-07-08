@@ -23,8 +23,10 @@ const PageLayout: React.FC<PageLayoutProps> = ({
       maxWidth={maxWidth}
       sx={{
         pt: { xs: 7, sm: 8 }, // AppBarの高さ分のパディング
-        py: 3,
-        px: { xs: 2, sm: 3 },
+        py: { xs: 2, sm: 3 }, // スマホ時は余白を小さく
+        px: { xs: 1, sm: 3 }, // スマホ時は余白を小さく
+        mx: "auto",
+        minHeight: { xs: "100vh", md: "90vh" },
         ...sx,
       }}
     >

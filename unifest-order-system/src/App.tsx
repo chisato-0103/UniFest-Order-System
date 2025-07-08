@@ -6,7 +6,7 @@ import CssBaseline from "@mui/material/CssBaseline"; // デフォルトスタイ
 import { SimpleAppProvider } from "./contexts/SimpleAppContext2"; // 簡単なアプリの状態管理
 import { AppProvider } from "./contexts/AppContext"; // アプリ全体の状態管理
 import { AuthProvider } from "./contexts/AuthContext"; // ログイン状態の管理
-import SimpleOrderPage from "./pages/SimpleOrderPage"; // 簡単注文ページ
+// import SimpleOrderPage from "./pages/SimpleOrderPage"; // 簡単注文ページ
 
 // 🧩 部品（コンポーネント）
 // import NavigationBar from "./components/NavigationBar";
@@ -83,7 +83,7 @@ function App() {
 
                   {/* お客様向け画面 - 統一された注文ページ */}
                   <Route path="/order" element={<OrderPage />} />
-                  <Route path="/simple-order" element={<SimpleOrderPage />} />
+                  {/* <Route path="/simple-order" element={<SimpleOrderPage />} /> */}
 
                   {/* 🛍️ お客様向けその他のページ */}
                   <Route path="/cart" element={<CartPage />} />

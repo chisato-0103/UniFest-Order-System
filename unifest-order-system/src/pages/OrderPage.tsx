@@ -1,4 +1,11 @@
 // 🍽️ 注文ページ - 統一されたアーキテクチャ版
+// ===============================
+// このファイルは「注文ページ」のReactコンポーネントです。
+// 商品一覧の取得・表示、カートへの追加、トッピング選択など、
+// ユーザーが注文を行うための主要なUIとロジックを担います。
+// MUI(Material UI)のコンポーネントを多用し、
+// 状態管理はAppContext(グローバル)を利用しています。
+// ===============================
 import React, { useState, useEffect, useContext } from "react";
 import {
   Container,
@@ -24,21 +31,27 @@ import { AppContext } from "../contexts/AppContext";
 import { ProductService } from "../services/apiService";
 import type { Product, Topping } from "../types";
 
+// ===============================
 // 商品カードコンポーネント
+// 1つの商品を表示し、数量・トッピング選択、カート追加ボタンを提供
 interface ProductCardProps {
-  product: Product;
+  product: Product; // 商品情報
   onAddToCart: (
     product: Product,
     quantity: number,
     toppings: Topping[]
-  ) => void;
+  ) => void; // カート追加時のコールバック
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
+  // 数量の状態
   const [quantity, setQuantity] = useState(1);
+  // 選択中トッピング
   const [selectedToppings, setSelectedToppings] = useState<Topping[]>([]);
+  // 全トッピング一覧
   const [toppings, setToppings] = useState<Topping[]>([]);
 
+  // トッピング一覧をAPIから取得
   useEffect(() => {
     const loadToppings = async () => {
       try {
@@ -51,6 +64,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
     loadToppings();
   }, []);
 
+  // トッピングの選択・解除
   const handleToppingToggle = (topping: Topping) => {
     setSelectedToppings((prev) =>
       prev.find((t) => t.id === topping.id)
@@ -59,6 +73,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
     );
   };
 
+  // 合計金額を計算（商品＋トッピング）
   const getTotalPrice = () => {
     const toppingsPrice = selectedToppings.reduce(
       (sum, topping) => sum + topping.price,
@@ -67,22 +82,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
     return (product.price + toppingsPrice) * quantity;
   };
 
+  // カート追加ボタン押下時の処理
   const handleAddToCart = () => {
     onAddToCart(product, quantity, selectedToppings);
-    setQuantity(1);
-    setSelectedToppings([]);
+    setQuantity(1); // 数量リセット
+    setSelectedToppings([]); // トッピングリセット
   };
 
+  // 商品カードのUI
   return (
     <Card
       sx={{
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        opacity: product.available ? 1 : 0.6,
+        opacity: product.available ? 1 : 0.6, // 売り切れ時は薄く表示
       }}
     >
       <CardContent sx={{ flexGrow: 1 }}>
+        {/* 商品名・売り切れ表示 */}
         <Box
           display="flex"
           justifyContent="space-between"
@@ -92,15 +110,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           <Typography variant="h6" component="h3" gutterBottom>
             {product.name}
           </Typography>
+          {/* 売り切れラベル */}
           {!product.available && (
             <Chip label="売り切れ" color="error" size="small" />
           )}
         </Box>
 
+        {/* 商品説明 */}
         <Typography variant="body2" color="text.secondary" gutterBottom>
           {product.description}
         </Typography>
 
+        {/* 価格・調理時間 */}
         <Box display="flex" alignItems="center" gap={1} mb={2}>
           <Typography variant="h6" color="primary">
             ¥{product.price.toLocaleString()}
@@ -113,7 +134,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           />
         </Box>
 
-        {/* トッピング選択 */}
+        {/* トッピング選択欄（トッピングが存在する場合のみ） */}
         {toppings.length > 0 && (
           <Box mb={2}>
             <Typography variant="subtitle2" gutterBottom>
@@ -145,7 +166,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           </Box>
         )}
 
-        {/* 数量選択 */}
+        {/* 数量選択欄 */}
         <Box
           display="flex"
           alignItems="center"
@@ -153,6 +174,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           mb={2}
         >
           <Box display="flex" alignItems="center" gap={1}>
+            {/* 数量減ボタン */}
             <Button
               size="small"
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -160,12 +182,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
             >
               <Remove />
             </Button>
+            {/* 数量表示 */}
             <Typography
               variant="body1"
               sx={{ minWidth: "2ch", textAlign: "center" }}
             >
               {quantity}
             </Typography>
+            {/* 数量増ボタン */}
             <Button
               size="small"
               onClick={() => setQuantity(quantity + 1)}
@@ -175,11 +199,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
             </Button>
           </Box>
 
+          {/* 合計金額表示 */}
           <Typography variant="h6" color="primary">
             ¥{getTotalPrice().toLocaleString()}
           </Typography>
         </Box>
 
+        {/* カート追加ボタン */}
         <Button
           variant="contained"
           fullWidth
@@ -194,13 +220,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   );
 };
 
+// ===============================
 // メイン注文ページコンポーネント
+// 商品一覧の取得・表示、カートへの追加、エラー表示など全体の制御を行う
 const OrderPage: React.FC = () => {
+  // グローバル状態（カート等）
   const { state, dispatch } = useContext(AppContext);
+  // 商品一覧
   const [products, setProducts] = useState<Product[]>([]);
+  // ローディング状態
   const [loading, setLoading] = useState(true);
+  // エラー状態
   const [error, setError] = useState<string | null>(null);
 
+  // 初回マウント時に商品一覧をAPIから取得
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -215,10 +248,10 @@ const OrderPage: React.FC = () => {
         setLoading(false);
       }
     };
-
     loadProducts();
   }, []);
 
+  // カート追加時の処理（AppContext経由でグローバルに反映）
   const handleAddToCart = (
     product: Product,
     quantity: number,
@@ -230,10 +263,12 @@ const OrderPage: React.FC = () => {
     });
   };
 
+  // カート内アイテム数を取得
   const getCartItemCount = () => {
     return state.cart.itemCount;
   };
 
+  // ローディング中はスピナー表示
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -249,9 +284,10 @@ const OrderPage: React.FC = () => {
     );
   }
 
+  // メインUI
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* ヘッダー */}
+      {/* ヘッダー部分（タイトル・カートボタン） */}
       <Paper elevation={1} sx={{ p: 3, mb: 4 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box>
@@ -263,6 +299,7 @@ const OrderPage: React.FC = () => {
               お好みの商品をお選びください
             </Typography>
           </Box>
+          {/* カートボタン（バッジで個数表示） */}
           <Badge badgeContent={getCartItemCount()} color="primary">
             <Button
               variant="outlined"
@@ -276,14 +313,14 @@ const OrderPage: React.FC = () => {
         </Box>
       </Paper>
 
-      {/* エラー表示 */}
+      {/* エラー表示（API失敗時） */}
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
 
-      {/* 商品一覧 */}
+      {/* 商品一覧グリッド */}
       <Box
         display="grid"
         gridTemplateColumns={{
@@ -302,7 +339,7 @@ const OrderPage: React.FC = () => {
         ))}
       </Box>
 
-      {/* 商品がない場合のメッセージ */}
+      {/* 商品が0件の場合のメッセージ */}
       {!loading && products.length === 0 && (
         <Box textAlign="center" py={8}>
           <Typography variant="h6" color="text.secondary">
@@ -314,4 +351,6 @@ const OrderPage: React.FC = () => {
   );
 };
 
+// ===============================
+// エクスポート
 export default OrderPage;

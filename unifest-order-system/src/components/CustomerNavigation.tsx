@@ -18,11 +18,10 @@ import {
   ListItemButton, // リスト項目のボタン
 } from "@mui/material";
 import {
-  Home as HomeIcon, // ホームアイコン
-  ShoppingCart as ShoppingCartIcon, // ショッピングカートアイコン
-  Search as SearchIcon, // 検索アイコン
-  Info as InfoIcon, // 情報アイコン
-  AdminPanelSettings as AdminIcon, // 管理者アイコン
+  Home as HomeIcon,
+  ShoppingCart as ShoppingCartIcon,
+  Search as SearchIcon,
+  AdminPanelSettings as AdminIcon,
 } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom"; // ページ移動の道具
 
@@ -46,6 +45,7 @@ const CustomerNavigation: React.FC = () => {
     },
   ];
 
+  // デモ・テストページからSimpleOrderPage関連を削除
   const demoPages = [
     {
       path: "/order-demo",
@@ -53,12 +53,7 @@ const CustomerNavigation: React.FC = () => {
       description: "別デザインのデモ版",
       icon: <ShoppingCartIcon />,
     },
-    {
-      path: "/simple-order-test",
-      label: "🧪 テスト画面",
-      description: "開発・テスト用",
-      icon: <InfoIcon />,
-    },
+    // SimpleOrderPage関連は廃止
   ];
 
   return (

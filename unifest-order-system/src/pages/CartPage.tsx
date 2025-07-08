@@ -40,31 +40,7 @@ const CartPage: React.FC = () => {
 
   const cart = state.cart; // カート情報を取得
 
-  // 🧪 テスト用：ダミー商品をカートに追加
-  const addTestProduct = () => {
-    dispatch({
-      type: "ADD_TO_CART",
-      payload: {
-        product: {
-          id: "test-1",
-          name: "テスト用たこ焼き 8個入り",
-          price: 650,
-          category: "メイン",
-          description: "テスト用商品です",
-          available: true,
-        },
-        quantity: 1,
-        toppings: [
-          {
-            id: "topping-1",
-            name: "青のり",
-            price: 50,
-            available: true,
-          },
-        ],
-      },
-    });
-  };
+  // 🧪 テスト用：ダミー商品をカートに追加（本番では未使用のため削除）
 
   // 🔧 カート操作関数
   const updateCartItemQuantity = (index: number, quantity: number) => {
@@ -105,7 +81,19 @@ const CartPage: React.FC = () => {
     setIsOrdering(true);
 
     try {
-      // � テスト商品やidが数値でない商品が含まれていないかチェック
+      // デバッグ: カート内idの型と値を全て出力
+      cart.items.forEach((item, idx) => {
+        const isInvalid = isNaN(Number(item.id));
+        console.log(
+          `cart.items[${idx}].id:`,
+          item.id,
+          "typeof:",
+          typeof item.id,
+          "isNaN:",
+          isInvalid
+        );
+      });
+      // テスト商品やidが数値でない商品が含まれていないかチェック
       const invalidItem = cart.items.find((item) => isNaN(Number(item.id)));
       if (invalidItem) {
         alert(
@@ -171,15 +159,15 @@ const CartPage: React.FC = () => {
           <Typography variant="h4" component="h1" sx={{ fontWeight: "bold" }}>
             🛒 カート
           </Typography>
-          {/* 🧪 テスト用ボタン */}
-          <Button
+          {/* 🧪 テスト用ボタン（本番では非表示） */}
+          {/* <Button
             variant="outlined"
             size="small"
             onClick={addTestProduct}
             sx={{ ml: "auto" }}
           >
             テスト商品追加
-          </Button>
+          </Button> */}
         </Box>
 
         {/* 📦 カートの中身 */}

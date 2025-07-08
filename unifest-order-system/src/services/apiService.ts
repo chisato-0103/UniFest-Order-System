@@ -395,7 +395,7 @@ export class OrderService {
       const requestData = {
         customer_id: null, // 顧客ID（未使用）
         items: orderData.items.map((item) => ({
-          product_id: item.id, // 商品ID
+          product_id: Number(item.id), // 商品IDは必ずnumber型で送信
           quantity: item.quantity, // 数量
           unit_price: item.price, // 単価
           toppings: item.toppings || [], // トッピング

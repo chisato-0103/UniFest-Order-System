@@ -4,9 +4,9 @@
 
 // 📍 サーバーの住所を環境変数から取得（設定ファイルから読む）
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3001"; // 普通のAPI用
+  import.meta.env.VITE_API_URL || "https://unifest-backend.onrender.com"; // 普通のAPI用
 export const SOCKET_URL =
-  import.meta.env.VITE_SOCKET_URL || "http://localhost:3001"; // リアルタイム通信用
+  import.meta.env.VITE_SOCKET_URL || "https://unifest-backend.onrender.com"; // リアルタイム通信用
 
 // 🗺️ 各機能のサーバー住所一覧
 export const API_ENDPOINTS = {

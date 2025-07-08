@@ -34,7 +34,7 @@ INSERT INTO system_settings (setting_name, setting_value, data_type, description
 
 -- QRコード設定
 ('qr_code_enabled', 'true', 'boolean', 'QRコード生成の有効/無効'),
-('customer_check_url', 'http://localhost:5173/customer', 'string', 'お客様確認画面URL'),
+('customer_check_url', 'https://unifest-order.onrender.com/customer', 'string', 'お客様確認画面URL'),
 
 -- 安全・品質設定
 ('max_cooking_temperature_time', '20', 'number', '最大調理後経過時間（分）'),

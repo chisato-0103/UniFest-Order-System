@@ -69,7 +69,7 @@ npm install
 npm run dev
 ```
 
-ブラウザで `http://localhost:5173` を開くとアプリケーションが表示されます。
+ブラウザで `https://unifest-order.onrender.com/` を開くとアプリケーションが表示されます。
 
 ## 📱 画面構成
 

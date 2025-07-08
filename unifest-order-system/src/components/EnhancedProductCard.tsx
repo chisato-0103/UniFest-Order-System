@@ -59,22 +59,25 @@ const EnhancedProductCard: React.FC<EnhancedProductCardProps> = ({
         sx={{
           height: "100%",
           width: "100%",
+          maxWidth: { xs: "100%", sm: 340 },
+          margin: "0 auto",
           cursor: "pointer",
           transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           "&:hover": {
-            transform: "translateY(-8px)",
-            boxShadow: "0 12px 35px rgba(0,0,0,0.15)",
+            transform: "scale(1.04) translateY(-8px)",
+            boxShadow: "0 16px 40px rgba(80,80,180,0.18)",
           },
-          borderRadius: 4,
+          borderRadius: { xs: 3, sm: 5 },
           overflow: "hidden",
           position: "relative",
           background: product.available
-            ? "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)"
+            ? "linear-gradient(135deg, #fff 0%, #f8f9fa 100%)"
             : "linear-gradient(135deg, #f5f5f5 0%, #e9ecef 100%)",
           opacity: product.available ? 1 : 0.6,
-          minHeight: 400,
+          minHeight: { xs: 320, sm: 400 },
           display: "flex",
           flexDirection: "column",
+          boxShadow: "0 4px 24px rgba(80,80,180,0.10)",
         }}
       >
         {/* カテゴリバッジ */}

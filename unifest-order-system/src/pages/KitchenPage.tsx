@@ -664,9 +664,9 @@ function KitchenPage() {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1, sm: 3 } }}>
-      <AppBar position="static" color="default" sx={{ mb: { xs: 2, sm: 3 } }}>
-        <Toolbar sx={{ px: { xs: 1, sm: 2 } }}>
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      <AppBar position="static" color="default" sx={{ mb: 3 }}>
+        <Toolbar>
           <FireIcon sx={{ mr: 2 }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             厨房管理

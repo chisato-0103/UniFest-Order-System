@@ -22,16 +22,30 @@ const PageLayout: React.FC<PageLayoutProps> = ({
     <Container
       maxWidth={maxWidth}
       sx={{
-        pt: { xs: 7, sm: 8 }, // AppBarの高さ分のパディング
-        py: { xs: 2, sm: 3 }, // スマホ時は余白を小さく
-        px: { xs: 1, sm: 3 }, // スマホ時は余白を小さく
-        mx: "auto",
-        minHeight: { xs: "100vh", md: "90vh" },
+        pt: { xs: 6, sm: 8 },
+        py: { xs: 2, sm: 4 },
+        px: { xs: 1, sm: 3 },
+        borderRadius: { xs: 0, sm: 6 },
+        boxShadow: { xs: "none", sm: "0 8px 32px rgba(80,80,180,0.10)" },
+        background: {
+          xs: "linear-gradient(135deg, #fff 0%, #f8f9fa 100%)",
+          sm: "linear-gradient(135deg, #f8f9fa 0%, #e3e8ff 100%)",
+        },
+        minHeight: { xs: "100vh", sm: 600 },
         ...sx,
       }}
     >
       {title && (
-        <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+            mb: 3,
+            color: "#3a3a7a",
+            textShadow: "0 2px 8px #e3e8ff",
+            fontSize: { xs: "2rem", sm: "2.5rem" },
+          }}
+        >
           {title}
         </Typography>
       )}

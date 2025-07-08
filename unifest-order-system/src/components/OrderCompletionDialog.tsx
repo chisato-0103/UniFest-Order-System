@@ -56,8 +56,14 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: 3,
+          borderRadius: { xs: 2, sm: 5 },
           overflow: "visible",
+          boxShadow: "0 8px 40px rgba(80,80,180,0.18)",
+          background: "linear-gradient(135deg, #fff 0%, #f8f9fa 100%)",
+          p: { xs: 1, sm: 3 },
+          m: { xs: 1, sm: 3 },
+          width: { xs: "95vw", sm: "auto" },
+          maxWidth: { xs: "95vw", sm: 520 },
         },
       }}
     >

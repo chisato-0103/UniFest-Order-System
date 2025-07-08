@@ -122,12 +122,17 @@ const CartPage: React.FC = () => {
         JSON.stringify(itemsForApi, null, 2)
       );
 
-      const order = await OrderService.createOrder({
-        items: itemsForApi as OrderItemForApi[], // 型安全にAPI送信
+      const orderRequestBody = {
+        items: itemsForApi as OrderItemForApi[],
         totalAmount: calculateTotal(),
         paymentMethod: "cash",
         specialInstructions: "",
-      });
+      };
+      console.log(
+        "[注文API送信直前] orderRequestBody:",
+        JSON.stringify(orderRequestBody, null, 2)
+      );
+      const order = await OrderService.createOrder(orderRequestBody);
 
       console.log("注文完了:", order);
 

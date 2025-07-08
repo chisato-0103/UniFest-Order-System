@@ -30,6 +30,7 @@ import { useNavigate } from "react-router-dom"; // ページ移動の道具
 import { useAppContext } from "../hooks/useAppContext"; // カート状態管理
 import CustomerNavigationBar from "../components/CustomerNavigationBar"; // お客さん用ナビバー
 import { OrderService, ApiError } from "../services/apiService"; // 統一API通信サービス
+import type { OrderItemForApi } from "./../services/orderTypes";
 
 // 🛒 カートページの部品
 const CartPage: React.FC = () => {
@@ -102,10 +103,32 @@ const CartPage: React.FC = () => {
     }
 
     setIsOrdering(true);
+
     try {
-      // 🚀 統一APIサービスで注文を送信
+      // � テスト商品やidが数値でない商品が含まれていないかチェック
+      const invalidItem = cart.items.find((item) => isNaN(Number(item.id)));
+      if (invalidItem) {
+        alert(
+          "カート内に本番商品でない商品（テスト商品やidが数値でない商品）が含まれています。注文できません。"
+        );
+        setIsOrdering(false);
+        return;
+      }
+
+      // toppingsをバックエンド期待形式（topping_id付き）に変換
+      const itemsForApi = cart.items.map((item) => ({
+        ...item,
+        product_id: Number(item.id), // 数値型に変換
+        toppings: (item.toppings || []).map((t) => ({
+          topping_id: t.id,
+          name: t.name,
+          price: t.price,
+        })),
+        // 必要ならcooking_instruction等もここで付与
+      }));
+
       const order = await OrderService.createOrder({
-        items: cart.items,
+        items: itemsForApi as OrderItemForApi[], // 型安全にAPI送信
         totalAmount: calculateTotal(),
         paymentMethod: "cash",
         specialInstructions: "",

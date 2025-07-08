@@ -12,10 +12,11 @@ import type {
   Product, // 商品型
   Topping, // トッピング型
   Order, // 注文型
-  CartItem, // カート内商品型
+  // CartItem, // カート内商品型（未使用のためコメントアウト）
   OrderStatus, // 注文ステータス型
   PaymentStatus, // 支払いステータス型
 } from "../types";
+import type { OrderItemForApi } from "./orderTypes";
 
 // 🚫 API通信のエラー種別
 // API通信で発生したエラーを表現する独自エラークラス
@@ -376,8 +377,9 @@ export class OrderService {
 
   // 📝 新しい注文を作成
   // サーバーに注文データをPOSTし、作成されたOrder型を返す
+
   static async createOrder(orderData: {
-    items: CartItem[]; // カート内商品リスト
+    items: OrderItemForApi[]; // API送信用の注文商品リスト
     totalAmount: number; // 合計金額
     paymentMethod?: string; // 支払い方法
     specialInstructions?: string; // 特記事項
@@ -421,11 +423,42 @@ export class OrderService {
       ); // 成功ログ
 
       // 🔄 レスポンスをOrder型に変換
+      // API送信用OrderItemForApi[]をCartItem[]に変換（最低限の型整合性を保つ）
+      type ToppingForApi = {
+        topping_id: string | number;
+        name?: string;
+        price?: number;
+      };
+      const itemsAsCartItem = orderData.items.map((item) => ({
+        id: String(item.product_id),
+        name:
+          typeof item.product_name === "string"
+            ? item.product_name
+            : typeof item.name === "string"
+            ? item.name
+            : "商品",
+        price: typeof item.price === "number" ? item.price : 0,
+        quantity: item.quantity,
+        toppings: (item.toppings || []).map((t: ToppingForApi) => ({
+          id: String(t.topping_id),
+          name: typeof t.name === "string" ? t.name : "トッピング",
+          price: typeof t.price === "number" ? t.price : 0,
+          available: true,
+        })),
+        totalPrice:
+          (typeof item.price === "number" ? item.price : 0) * item.quantity +
+          (item.toppings || []).reduce(
+            (sum: number, t: ToppingForApi) =>
+              sum + (typeof t.price === "number" ? t.price : 0),
+            0
+          ),
+      }));
+
       const order: Order = {
         id: (result.order_id || result.id || "").toString(), // 注文ID
         orderNumber: String(result.order_number || ""), // 注文番号
         customer_id: result.customer_id as string | number | undefined, // 顧客ID
-        items: orderData.items, // 商品リスト
+        items: itemsAsCartItem, // 商品リスト（CartItem[]型に変換）
         total: orderData.totalAmount, // 合計
         total_amount: orderData.totalAmount, // 合計
         status: ((result.order_status as string) || "pending") as OrderStatus, // 注文ステータス
@@ -436,7 +469,7 @@ export class OrderService {
         createdAt: new Date(String(result.created_at || new Date())), // 作成日時
         updatedAt: new Date(String(result.updated_at || new Date())), // 更新日時
         order_number: String(result.order_number || ""), // 注文番号（別名）
-        order_items: orderData.items, // 商品リスト（別名）
+        order_items: itemsAsCartItem, // 商品リスト（CartItem[]型に変換）
       };
 
       return order; // 作成されたOrder型を返す

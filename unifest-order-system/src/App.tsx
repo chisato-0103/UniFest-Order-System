@@ -82,7 +82,7 @@ function App() {
                   <Route path="/" element={<NavigationPage />} />
 
                   {/* お客様向け画面 - 統一された注文ページ */}
-                  <Route path="/order" element={<SimpleOrderPage />} />
+                  <Route path="/order" element={<OrderPage />} />
                   <Route path="/simple-order" element={<SimpleOrderPage />} />
 
                   {/* 🛍️ お客様向けその他のページ */}

@@ -105,15 +105,10 @@ const CartPage: React.FC = () => {
 
       // toppingsをバックエンド期待形式（topping_id付き）に変換
       const itemsForApi = cart.items.map((item, idx) => {
-        // product_idは必ず数値化して渡す
-        let product_id: number | null = null;
-        if (item.product && item.product.product_id !== undefined) {
-          product_id = Number(item.product.product_id);
-        } else if (item.product && item.product.id !== undefined) {
-          product_id = Number(item.product.id);
-        } else if (item.id !== undefined) {
-          product_id = Number(item.id);
-        }
+        // product_idはどこに入っていても必ず数値化して渡す
+        const product_id_raw =
+          item.product?.product_id ?? item.product?.id ?? item.id;
+        const product_id = Number(product_id_raw);
         if (isNaN(product_id)) {
           console.error(`cart.items[${idx}]: product_idが不正です`, item);
         }

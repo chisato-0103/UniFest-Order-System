@@ -236,6 +236,7 @@ export const createOrder = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  console.log("受信リクエストbody:", req.body);
   try {
     const {
       customer_id,
@@ -257,14 +258,8 @@ export const createOrder = async (
     try {
       await client.query("BEGIN");
 
-      // 注文番号を生成（YYYYMMDD-HHMMSS-XXX形式）
+      // 注文番号をDB関数で生成
       const now = new Date();
-      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
-      const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, "");
-      const randomNum = Math.floor(Math.random() * 1000)
-        .toString()
-        .padStart(3, "0");
-      const orderNumber = `${dateStr}-${timeStr}-${randomNum}`;
 
       // 商品情報を取得して価格計算
       let totalAmount = 0;
@@ -332,22 +327,7 @@ export const createOrder = async (
           cooking_instruction: item.cooking_instruction || null,
         });
 
-        // 在庫を減らす
-        await client.query(
-          `UPDATE products SET stock_quantity = stock_quantity - $1 WHERE product_id = $2`,
-          [item.quantity, product.product_id]
-        );
-
-        // 在庫が0になった場合の自動無効化
-        if (
-          product.auto_disable_on_zero &&
-          product.stock_quantity - item.quantity <= 0
-        ) {
-          await client.query(
-            `UPDATE products SET status = '売り切れ' WHERE product_id = $1`,
-            [product.product_id]
-          );
-        }
+        // 在庫更新はDBトリガーに任せるため、ここのロジックは削除
       }
 
       // 推定調理時間を計算
@@ -364,13 +344,12 @@ export const createOrder = async (
           customer_id, order_number, total_amount, status, payment_status,
           payment_method, estimated_pickup_time, special_instructions
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        VALUES ($1, generate_order_number(), $2, $3, $4, $5, $6, $7)
         RETURNING *
       `;
 
       const orderValues = [
         customer_id || null,
-        orderNumber,
         totalAmount,
         "注文受付",
         "未払い",
@@ -381,6 +360,7 @@ export const createOrder = async (
 
       const orderResult = await client.query(orderQuery, orderValues);
       const order = orderResult.rows[0];
+      const orderNumber = order.order_number; // DBから返された注文番号を使用
 
       // 注文商品を保存
       for (const item of orderItems) {

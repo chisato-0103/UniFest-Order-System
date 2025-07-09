@@ -118,7 +118,7 @@ const CartPage: React.FC = () => {
           quantity: item.quantity,
           toppings: (Array.isArray(item.toppings) ? item.toppings : []).map(
             (t) => ({
-              topping_id: t.topping_id ?? t.id,
+              topping_id: Number(t.topping_id ?? t.id),
               name: t.name,
               price: t.price,
             })

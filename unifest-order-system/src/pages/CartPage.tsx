@@ -103,12 +103,15 @@ const CartPage: React.FC = () => {
         return;
       }
 
+      // デバッグ: cart.itemsの中身を出力
+      console.log("[DEBUG] cart.items:", JSON.stringify(cart.items, null, 2));
+
       // toppingsをバックエンド期待形式（topping_id付き）に変換
       const itemsForApi = cart.items.map((item, idx) => {
-        // product_idはどこに入っていても必ず数値化して渡す
-        const product_id_raw =
-          item.product?.product_id ?? item.product?.id ?? item.id;
-        const product_id = Number(product_id_raw);
+        // id優先でproduct_idをセット（idがなければproduct?.id）
+        const product_id = Number(
+          item.id ?? item.product?.id ?? item.product?.product_id
+        );
         if (isNaN(product_id)) {
           console.error(`cart.items[${idx}]: product_idが不正です`, item);
         }

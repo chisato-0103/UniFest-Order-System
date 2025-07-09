@@ -116,11 +116,13 @@ const CartPage: React.FC = () => {
         return {
           product_id,
           quantity: item.quantity,
-          toppings: (item.toppings || []).map((t) => ({
-            topping_id: t.topping_id ?? t.id,
-            name: t.name,
-            price: t.price,
-          })),
+          toppings: (Array.isArray(item.toppings) ? item.toppings : []).map(
+            (t) => ({
+              topping_id: t.topping_id ?? t.id,
+              name: t.name,
+              price: t.price,
+            })
+          ),
           cooking_instruction: "",
         };
       });

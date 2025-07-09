@@ -108,15 +108,10 @@ const CartPage: React.FC = () => {
 
       // toppingsをバックエンド期待形式（topping_id付き）に変換
       const itemsForApi = cart.items.map((item, idx) => {
-        let product_id: number | null = null;
-        if (item.id !== undefined) {
-          product_id = Number(item.id);
-        } else if (item.product?.id !== undefined) {
-          product_id = Number(item.product.id);
-        }
+        const product_id = Number(item.id || (item.product && item.product.id));
         if (isNaN(product_id)) {
-          product_id = null;
           console.error(`cart.items[${idx}]: product_idが不正です`, item);
+          throw new Error("不正な商品IDです");
         }
         return {
           product_id,
@@ -131,21 +126,8 @@ const CartPage: React.FC = () => {
           cooking_instruction: "",
         };
       });
-      if (itemsForApi.some((item) => isNaN(item.product_id))) {
-        alert("カート内の商品に不正な商品IDが含まれています。注文できません。");
-        setIsOrdering(false);
-        return;
-      }
-      // デバッグ: itemsForApiのproduct_id型と値を全て出力
-      itemsForApi.forEach((item, idx) => {
-        console.log(
-          `itemsForApi[${idx}].product_id:`,
-          item.product_id,
-          typeof item.product_id
-        );
-      });
       console.log(
-        "[注文API送信直前] itemsForApi:",
+        "[API送信直前] itemsForApi:",
         JSON.stringify(itemsForApi, null, 2)
       );
 

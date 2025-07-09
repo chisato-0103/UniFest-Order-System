@@ -1,6 +1,11 @@
 // 🏗️ Webサーバーを作るために必要な道具たちを持ってくる
+
 import express from "express"; // Webサーバーを作る道具
 import path from "path";
+
+// 🏠 Webサーバーの家を建てる
+const app = express();
+
 // 静的ファイル配信（フロントエンドのビルド成果物を返す）
 const frontendDistPath = path.resolve(
   __dirname,
@@ -49,8 +54,6 @@ import { setSocketInstance as setEmergencySocketInstance } from "./controllers/e
 // 🔐 秘密の設定（パスワードとか）を読み込む
 dotenv.config();
 
-// 🏠 Webサーバーの家を建てる
-const app = express();
 const server = createServer(app);
 
 // 柔軟なCORS設定

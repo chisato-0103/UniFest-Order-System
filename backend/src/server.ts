@@ -1,5 +1,13 @@
 // 🏗️ Webサーバーを作るために必要な道具たちを持ってくる
 import express from "express"; // Webサーバーを作る道具
+import path from "path";
+// 静的ファイル配信（フロントエンドのビルド成果物を返す）
+const frontendDistPath = path.resolve(
+  __dirname,
+  "../../unifest-order-system/dist"
+);
+app.use(express.static(frontendDistPath));
+
 import cors from "cors"; // 他のサイトからアクセスできるようにする道具
 import helmet from "helmet"; // セキュリティを強くする道具
 import morgan from "morgan"; // アクセスログを記録する道具
@@ -186,7 +194,15 @@ app.use(
   }
 );
 
-// 404 ハンドラー
+// SPAルーティング対応: API以外のGETリクエストはindex.htmlを返す
+app.get("*", (req, res, next) => {
+  if (req.method !== "GET" || req.path.startsWith("/api/")) {
+    return next();
+  }
+  res.sendFile(path.join(frontendDistPath, "index.html"));
+});
+
+// 404 ハンドラー（API用）
 app.use("*", (req, res) => {
   res.status(404).json({
     error: {

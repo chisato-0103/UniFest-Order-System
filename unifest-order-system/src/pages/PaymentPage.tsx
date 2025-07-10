@@ -147,11 +147,14 @@ function PaymentPage() {
       const receivedAmount = parseFloat(paymentAmount) || orderTotal;
 
       // 統一APIサービスで支払い処理
-      await OrderService.processPayment(selectedOrder.id, {
-        paymentMethod: "cash",
-        amount: orderTotal,
-        receivedAmount: receivedAmount,
-      });
+      await OrderService.processPayment(
+        selectedOrder.order_id || selectedOrder.id,
+        {
+          paymentMethod: "cash",
+          amount: orderTotal,
+          receivedAmount: receivedAmount,
+        }
+      );
 
       // ローカル状態を更新
       setOrders((prev) =>

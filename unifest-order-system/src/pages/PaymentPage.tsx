@@ -62,7 +62,17 @@ function PaymentPage() {
       const ordersData = await OrderService.getOrders();
       setOrders(ordersData);
 
-      console.log("支払い画面: 注文データを取得", ordersData.length, "件");
+      // 取得した注文データの中身を全て出力
+      console.log("[DEBUG] /api/orders response:", ordersData);
+      // payment_statusごとの件数も出力
+      const statusCount = ordersData.reduce(
+        (acc: Record<string, number>, o: any) => {
+          acc[o.payment_status] = (acc[o.payment_status] || 0) + 1;
+          return acc;
+        },
+        {}
+      );
+      console.log("[DEBUG] payment_status count:", statusCount);
     } catch (err: unknown) {
       console.error("支払いデータ取得エラー:", err);
 

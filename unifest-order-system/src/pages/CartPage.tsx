@@ -171,8 +171,8 @@ const CartPage: React.FC = () => {
 
       alert(`注文が完了しました！\n注文番号: ${order.orderNumber || order.id}`);
 
-      // 支払い画面に移動（注文番号を渡す）
-      navigate(`/payment?order=${order.orderNumber || order.id}`);
+      // 支払い画面への自動遷移をやめる（注文完了ダイアログのみ表示）
+      // navigate(`/payment?order=${order.orderNumber || order.id}`);
     } catch (error) {
       console.error("注文エラー:", error);
 

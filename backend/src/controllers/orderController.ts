@@ -12,6 +12,13 @@ export const processOrderPayment = async (
       return;
     }
 
+    // 許可された支払い方法リスト
+    const allowedMethods = ["現金", "クレジット"];
+    let paymentMethod = req.body.paymentMethod;
+    if (!allowedMethods.includes(paymentMethod)) {
+      paymentMethod = "現金";
+    }
+
     // 注文の存在確認
     const orderResult = await db.query(
       "SELECT * FROM orders WHERE order_id = $1",
@@ -25,7 +32,7 @@ export const processOrderPayment = async (
     // 支払い情報の更新
     await db.query(
       "UPDATE orders SET payment_status = '支払済み', payment_method = $1, updated_at = NOW() WHERE order_id = $2",
-      [req.body.paymentMethod || "現金", orderId]
+      [paymentMethod, orderId]
     );
 
     // 必要ならSocket.io等で通知も可能

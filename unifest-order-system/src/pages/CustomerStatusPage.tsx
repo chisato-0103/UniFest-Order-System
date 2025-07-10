@@ -153,6 +153,8 @@ function CustomerStatusPage() {
     try {
       // MockAPIから注文データを取得
       const result = await MockApi.getOrderByNumber(orderNumber);
+      // 取得したAPIレスポンスをコンソールに出力
+      console.log("[CustomerStatusPage] APIレスポンス:", result);
 
       if (result.success && result.data) {
         const apiOrder = convertToApiOrder(result.data);

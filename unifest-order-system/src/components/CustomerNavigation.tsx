@@ -14,12 +14,10 @@ import {
   ListItemButton, // リスト項目のボタン
   Typography, // 追加: 文字表示
 } from "@mui/material";
-import {
-  Home as HomeIcon,
-  ShoppingCart as ShoppingCartIcon,
-  Search as SearchIcon,
-} from "@mui/icons-material";
+import { Home as HomeIcon, Search as SearchIcon } from "@mui/icons-material";
 import { Link } from "react-router-dom"; // ページ移動の道具
+
+import Button from "@mui/material/Button";
 
 // 🧭 お客さん用ナビゲーション部品
 const CustomerNavigation: React.FC = () => {
@@ -39,19 +37,11 @@ const CustomerNavigation: React.FC = () => {
     },
   ];
 
-  const demoPages = [
-    {
-      path: "/order-demo",
-      label: "🎨 デモ注文画面",
-      description: "別デザインのデモ版",
-      icon: <ShoppingCartIcon />,
-    },
-  ];
+  // デモ・テストページは非表示に
+  // const demoPages = [ ... ];
 
-  // AppBar（ナビゲーションバー）はApp.tsxで共通表示されるため、ここでは削除
   return (
     <Box sx={{ mb: 3 }}>
-      {/* AppBarは削除 */}
       <Container maxWidth="lg">
         <Box
           sx={{
@@ -63,7 +53,7 @@ const CustomerNavigation: React.FC = () => {
             mb: 4,
           }}
         >
-          {/* メインページカード */}
+          {/* メインページカードのみ表示 */}
           <Paper
             elevation={3}
             sx={{
@@ -103,48 +93,22 @@ const CustomerNavigation: React.FC = () => {
                 </ListItem>
               ))}
             </List>
-          </Paper>
 
-          {/* デモ・テストページカード */}
-          <Paper
-            elevation={2}
-            sx={{
-              flex: 1,
-              minWidth: 320,
-              p: 3,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-            }}
-          >
-            <Typography
-              variant="h5"
-              gutterBottom
-              sx={{ fontWeight: 600, color: "#4ECDC4" }}
-            >
-              デモ・テスト用ページ
-            </Typography>
-            <List>
-              {demoPages.map((page) => (
-                <ListItem
-                  key={page.path}
-                  disablePadding
-                  sx={{
-                    borderRadius: 1,
-                    mb: 1,
-                    "&:hover": { backgroundColor: "action.hover" },
-                  }}
-                >
-                  <ListItemButton component={Link} to={page.path}>
-                    <ListItemIcon>{page.icon}</ListItemIcon>
-                    <ListItemText
-                      primary={page.label}
-                      secondary={page.description}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
+            {/* 管理者ログイン導線 */}
+            <Box sx={{ mt: 3, textAlign: "center" }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                管理者の方はこちら
+              </Typography>
+              <Button
+                variant="outlined"
+                color="secondary"
+                component={Link}
+                to="/admin-login"
+                sx={{ fontWeight: 600 }}
+              >
+                管理者ログイン
+              </Button>
+            </Box>
           </Paper>
         </Box>
       </Container>

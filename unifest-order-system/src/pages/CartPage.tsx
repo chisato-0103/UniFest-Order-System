@@ -155,7 +155,7 @@ const CartPage: React.FC = () => {
       const orderRequestBody = {
         items: itemsForApi as OrderItemForApi[],
         totalAmount: calculateTotal(),
-        paymentMethod: "cash",
+        paymentMethod: "現金", // DBの許容値に合わせて修正
         specialInstructions: "",
       };
       console.log(

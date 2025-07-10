@@ -536,6 +536,25 @@ function CustomerStatusPage() {
                   <Typography variant="body2" color="text.secondary">
                     注文時刻: {new Date(order.created_at).toLocaleTimeString()}
                   </Typography>
+                  {/* 支払い状況の表示 */}
+                  <Box
+                    sx={{
+                      mt: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      支払い状況:
+                    </Typography>
+                    {order.payment_status === "completed" ||
+                    order.payment_status === "paid" ? (
+                      <Chip label="支払い済み" color="success" size="small" />
+                    ) : (
+                      <Chip label="未払い" color="warning" size="small" />
+                    )}
+                  </Box>
                 </Box>
               </CardContent>
             </Card>

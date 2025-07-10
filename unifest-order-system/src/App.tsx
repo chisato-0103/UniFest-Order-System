@@ -1,5 +1,10 @@
 // 🧭 ページの移動とデザインのための道具たち
-import { HashRouter as Router, Routes, Route } from "react-router-dom"; // HashRouterでリロード404対策
+import {
+  HashRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom"; // HashRouterでリロード404対策
 import { ThemeProvider, createTheme } from "@mui/material/styles"; // 見た目のテーマを作る道具
 import { Box } from "@mui/material"; // レイアウト用の箱
 import CssBaseline from "@mui/material/CssBaseline"; // デフォルトスタイルをリセット
@@ -9,8 +14,10 @@ import { AuthProvider } from "./contexts/AuthContext"; // ログイン状態の�
 // import SimpleOrderPage from "./pages/SimpleOrderPage"; // 簡単注文ページ
 
 // 🧩 部品（コンポーネント）
-import NavigationBar from "./components/NavigationBar";
+// NavigationBarは使わない
 import ProtectedRoute from "./components/ProtectedRoute"; // 管理者のみアクセスできるページを守る
+import CustomerNavigationBar from "./components/CustomerNavigationBar";
+import AdminNavigationBar from "./components/AdminNavigationBar";
 
 // 🏪 お客さん用のページたち
 import OrderPage from "./pages/OrderPage"; // 注文ページ
@@ -62,6 +69,10 @@ const theme = createTheme({
 });
 
 function App() {
+  const location = useLocation();
+  // 管理者・スタッフ用ページかどうか判定
+  const isAdminRoute = location.pathname.startsWith("/admin");
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -69,7 +80,11 @@ function App() {
         <AppProvider>
           <SimpleAppProvider>
             <Router>
-              <NavigationBar />
+              {isAdminRoute ? (
+                <AdminNavigationBar />
+              ) : (
+                <CustomerNavigationBar />
+              )}
               <Box
                 component="main"
                 sx={{

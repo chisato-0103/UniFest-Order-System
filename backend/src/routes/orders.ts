@@ -40,6 +40,10 @@ router.post("/", createOrder);
 // 注文ステータス更新（管理者・スタッフ向け）
 router.patch("/:id/status", updateOrderStatus);
 
+// 支払い処理API（新規追加）
+import { processOrderPayment } from "../controllers/orderController";
+router.post("/:id/payment", processOrderPayment);
+
 // 特定注文の詳細取得（ID）- 最後に定義
 router.get("/:id", getOrderById);
 

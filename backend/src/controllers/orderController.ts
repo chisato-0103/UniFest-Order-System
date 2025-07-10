@@ -1,3 +1,41 @@
+// 支払い処理API
+export const processOrderPayment = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const orderId = parseInt(req.params.id, 10);
+    if (isNaN(orderId)) {
+      res.status(400).json({ success: false, message: "不正な注文IDです" });
+      return;
+    }
+
+    // 注文の存在確認
+    const orderResult = await db.query(
+      "SELECT * FROM orders WHERE order_id = $1",
+      [orderId]
+    );
+    if (orderResult.rows.length === 0) {
+      res.status(404).json({ success: false, message: "注文が見つかりません" });
+      return;
+    }
+
+    // 支払い情報の更新
+    await db.query(
+      "UPDATE orders SET payment_status = '支払済み', payment_method = $1, updated_at = NOW() WHERE order_id = $2",
+      [req.body.paymentMethod || "現金", orderId]
+    );
+
+    // 必要ならSocket.io等で通知も可能
+
+    res.json({ success: true, message: "支払いが完了しました" });
+  } catch (error) {
+    console.error("支払い処理エラー:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "支払い処理に失敗しました" });
+  }
+};
 import { Request, Response } from "express";
 import { db } from "../database/connection";
 import { Order, OrderItem } from "../types/index";

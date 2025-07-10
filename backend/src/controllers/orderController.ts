@@ -3,6 +3,8 @@ export const processOrderPayment = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  // ルート到達確認ログ
+  console.log("processOrderPayment called", req.params.id);
   try {
     const orderId = parseInt(req.params.id, 10);
     if (isNaN(orderId)) {

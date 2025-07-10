@@ -103,7 +103,7 @@ function PaymentPage() {
 
     const interval = setInterval(() => {
       fetchOrders();
-    }, 5000); // 5秒ごとに更新
+    }, 60000); // 1分ごとに更新
 
     return () => {
       clearInterval(interval);

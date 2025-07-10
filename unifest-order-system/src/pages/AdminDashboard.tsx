@@ -62,8 +62,8 @@ const AdminDashboard: React.FC = () => {
       stats: "本日: ¥25,400",
     },
     {
-      title: "配達管理",
-      description: "受け渡し・配達状況管理",
+      title: "受け渡し管理",
+      description: "受け渡し状況管理",
       icon: <LocalShipping />,
       color: "#96CEB4",
       path: "/admin/delivery",

@@ -45,7 +45,6 @@ const CustomerNavigation: React.FC = () => {
     },
   ];
 
-  // デモ・テストページからSimpleOrderPage関連を削除
   const demoPages = [
     {
       path: "/order-demo",
@@ -53,28 +52,26 @@ const CustomerNavigation: React.FC = () => {
       description: "別デザインのデモ版",
       icon: <ShoppingCartIcon />,
     },
-    // SimpleOrderPage関連は廃止
   ];
 
+  // ホームでは「ホームに戻る」ボタン非表示
   return (
     <Box sx={{ mb: 3 }}>
-      <AppBar position="static" sx={{ mb: 2 }}>
-        <Toolbar>
-          <Button
-            color="inherit"
-            onClick={() => navigate("/")}
-            startIcon={<HomeIcon />}
-            sx={{ mr: 2 }}
+      <AppBar position="static" sx={{ mb: 2, background: "#FF6B35" }}>
+        <Toolbar sx={{ justifyContent: "center" }}>
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{ fontWeight: 700, letterSpacing: 1 }}
           >
-            ホームに戻る
-          </Button>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            🥢 UniFest たこ焼き注文システム - お客様画面
+            UniFest Order System
           </Typography>
+          <Box sx={{ flexGrow: 1 }} />
           <Button
             color="inherit"
             onClick={() => navigate("/admin-login")}
             startIcon={<AdminIcon />}
+            sx={{ position: "absolute", right: 16 }}
           >
             管理者ログイン
           </Button>
@@ -82,61 +79,100 @@ const CustomerNavigation: React.FC = () => {
       </AppBar>
 
       <Container maxWidth="lg">
-        {/* メインページ */}
-        <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            🎯 お客様向けメインページ
-          </Typography>
-          <List>
-            {customerPages.map((page) => (
-              <ListItem
-                key={page.path}
-                disablePadding
-                sx={{
-                  borderRadius: 1,
-                  mb: 1,
-                  "&:hover": { backgroundColor: "action.hover" },
-                }}
-              >
-                <ListItemButton component={Link} to={page.path}>
-                  <ListItemIcon>{page.icon}</ListItemIcon>
-                  <ListItemText
-                    primary={page.label}
-                    secondary={`${page.description} (${page.path})`}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Paper>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            gap: 4,
+            justifyContent: "center",
+            alignItems: "stretch",
+            mb: 4,
+          }}
+        >
+          {/* メインページカード */}
+          <Paper
+            elevation={3}
+            sx={{
+              flex: 1,
+              minWidth: 320,
+              p: 3,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            <Typography
+              variant="h5"
+              gutterBottom
+              sx={{ fontWeight: 600, color: "#FF6B35" }}
+            >
+              お客様向けメインページ
+            </Typography>
+            <List>
+              {customerPages.map((page) => (
+                <ListItem
+                  key={page.path}
+                  disablePadding
+                  sx={{
+                    borderRadius: 1,
+                    mb: 1,
+                    "&:hover": { backgroundColor: "action.hover" },
+                  }}
+                >
+                  <ListItemButton component={Link} to={page.path}>
+                    <ListItemIcon>{page.icon}</ListItemIcon>
+                    <ListItemText
+                      primary={page.label}
+                      secondary={page.description}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
 
-        {/* デモ・テストページ */}
-        <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            🧪 デモ・テスト用ページ
-          </Typography>
-          <List>
-            {demoPages.map((page) => (
-              <ListItem
-                key={page.path}
-                disablePadding
-                sx={{
-                  borderRadius: 1,
-                  mb: 1,
-                  "&:hover": { backgroundColor: "action.hover" },
-                }}
-              >
-                <ListItemButton component={Link} to={page.path}>
-                  <ListItemIcon>{page.icon}</ListItemIcon>
-                  <ListItemText
-                    primary={page.label}
-                    secondary={`${page.description} (${page.path})`}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Paper>
+          {/* デモ・テストページカード */}
+          <Paper
+            elevation={2}
+            sx={{
+              flex: 1,
+              minWidth: 320,
+              p: 3,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            <Typography
+              variant="h5"
+              gutterBottom
+              sx={{ fontWeight: 600, color: "#4ECDC4" }}
+            >
+              デモ・テスト用ページ
+            </Typography>
+            <List>
+              {demoPages.map((page) => (
+                <ListItem
+                  key={page.path}
+                  disablePadding
+                  sx={{
+                    borderRadius: 1,
+                    mb: 1,
+                    "&:hover": { backgroundColor: "action.hover" },
+                  }}
+                >
+                  <ListItemButton component={Link} to={page.path}>
+                    <ListItemIcon>{page.icon}</ListItemIcon>
+                    <ListItemText
+                      primary={page.label}
+                      secondary={page.description}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
+        </Box>
       </Container>
     </Box>
   );

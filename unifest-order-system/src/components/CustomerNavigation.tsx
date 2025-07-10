@@ -4,10 +4,6 @@
 
 import React from "react"; // Reactの基本道具
 import {
-  AppBar, // 上部バー
-  Toolbar, // ツールバー
-  Typography, // 文字表示
-  Button, // ボタン
   Box, // レイアウト用の箱
   Container, // 全体を囲む容器
   Paper, // 紙のような背景
@@ -16,19 +12,17 @@ import {
   ListItemText, // リスト項目のテキスト
   ListItemIcon, // リスト項目のアイコン
   ListItemButton, // リスト項目のボタン
+  Typography, // 追加: 文字表示
 } from "@mui/material";
 import {
   Home as HomeIcon,
   ShoppingCart as ShoppingCartIcon,
   Search as SearchIcon,
-  AdminPanelSettings as AdminIcon,
 } from "@mui/icons-material";
-import { Link, useNavigate } from "react-router-dom"; // ページ移動の道具
+import { Link } from "react-router-dom"; // ページ移動の道具
 
 // 🧭 お客さん用ナビゲーション部品
 const CustomerNavigation: React.FC = () => {
-  const navigate = useNavigate(); // ページ移動機能
-
   // 👥 お客さん用のページリスト
   const customerPages = [
     {
@@ -54,30 +48,10 @@ const CustomerNavigation: React.FC = () => {
     },
   ];
 
-  // ホームでは「ホームに戻る」ボタン非表示
+  // AppBar（ナビゲーションバー）はApp.tsxで共通表示されるため、ここでは削除
   return (
     <Box sx={{ mb: 3 }}>
-      <AppBar position="static" sx={{ mb: 2, background: "#FF6B35" }}>
-        <Toolbar sx={{ justifyContent: "center" }}>
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ fontWeight: 700, letterSpacing: 1 }}
-          >
-            UniFest Order System
-          </Typography>
-          <Box sx={{ flexGrow: 1 }} />
-          <Button
-            color="inherit"
-            onClick={() => navigate("/admin-login")}
-            startIcon={<AdminIcon />}
-            sx={{ position: "absolute", right: 16 }}
-          >
-            管理者ログイン
-          </Button>
-        </Toolbar>
-      </AppBar>
-
+      {/* AppBarは削除 */}
       <Container maxWidth="lg">
         <Box
           sx={{

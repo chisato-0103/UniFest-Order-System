@@ -5,6 +5,9 @@ import dotenv from "dotenv"; // 秘密の設定を読み込む道具
 // 🔐 秘密の設定ファイルを読み込む
 dotenv.config();
 
+// DB接続先を起動時に一度だけ出力
+console.log("[DB CONNECT] DATABASE_URL:", process.env.DATABASE_URL);
+
 // 🏊‍♂️ データベース接続プール（複数の人が同時に使えるようにする仕組み）
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL, // データベースの住所

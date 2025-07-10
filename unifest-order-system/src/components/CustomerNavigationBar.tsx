@@ -14,14 +14,11 @@ import {
   useTheme,
   useMediaQuery,
   Divider,
-  Button,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
   Close as CloseIcon,
   Home as HomeIcon,
-  ShoppingCart as CartIcon,
-  Search as SearchIcon,
   QrCode as QrCodeIcon,
 } from "@mui/icons-material";
 
@@ -48,18 +45,6 @@ const CustomerNavigationBar: React.FC<CustomerNavigationBarProps> = ({
       icon: <HomeIcon />,
       path: "/",
       description: "メニュー一覧",
-    },
-    {
-      label: "注文確認",
-      icon: <CartIcon />,
-      path: "/cart",
-      description: "カートの中身を確認",
-    },
-    {
-      label: "注文状況",
-      icon: <SearchIcon />,
-      path: "/customer-status",
-      description: "注文の進捗を確認",
     },
     {
       label: "QRコード",
@@ -220,26 +205,8 @@ const CustomerNavigationBar: React.FC<CustomerNavigationBarProps> = ({
           </Box>
 
           {/* 右側 - アクションボタン（デスクトップのみ） */}
-          {!isMobile && (
-            <Box sx={{ display: "flex", gap: 1 }}>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<SearchIcon />}
-                onClick={() => handleNavigation("/customer-status")}
-              >
-                注文状況
-              </Button>
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<CartIcon />}
-                onClick={() => handleNavigation("/cart")}
-              >
-                カート
-              </Button>
-            </Box>
-          )}
+          {/* 右側の注文状況・カートボタンは非表示に */}
+          {/* ナビゲーションバー自体はそのまま残す */}
         </Toolbar>
       </AppBar>
 

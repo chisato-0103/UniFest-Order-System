@@ -107,22 +107,43 @@ const CartPage: React.FC = () => {
       console.log("[DEBUG] cart.items:", JSON.stringify(cart.items, null, 2));
 
       // toppingsをバックエンド期待形式（topping_id付き）に変換
-      const itemsForApi = cart.items.map((item, idx) => {
-        const product_id = Number(item.id || (item.product && item.product.id));
-        if (isNaN(product_id)) {
-          console.error(`cart.items[${idx}]: product_idが不正です`, item);
+      const itemsForApi = cart.items.map((item) => {
+        // product_idはCartItemのid（string）またはproduct.id（string）から取得
+        let product_id: number | undefined = undefined;
+        if (typeof item.id === "string" && !isNaN(Number(item.id))) {
+          product_id = Number(item.id);
+        } else if (
+          item.product &&
+          typeof item.product.id === "string" &&
+          !isNaN(Number(item.product.id))
+        ) {
+          product_id = Number(item.product.id);
+        }
+        if (typeof product_id !== "number" || isNaN(product_id)) {
+          console.error("cart.items: product_idが不正です", item);
           throw new Error("不正な商品IDです");
         }
         return {
           product_id,
           quantity: item.quantity,
-          toppings: (Array.isArray(item.toppings) ? item.toppings : []).map(
-            (t) => ({
-              topping_id: Number(t.topping_id ?? t.id),
-              name: t.name,
-              price: t.price,
-            })
-          ),
+          toppings: Array.isArray(item.toppings)
+            ? item.toppings
+                .filter(
+                  (t) =>
+                    (typeof t.topping_id === "string" &&
+                      !isNaN(Number(t.topping_id))) ||
+                    (typeof t.id === "string" && !isNaN(Number(t.id)))
+                )
+                .map((t) => ({
+                  topping_id:
+                    typeof t.topping_id === "string" &&
+                    !isNaN(Number(t.topping_id))
+                      ? Number(t.topping_id)
+                      : Number(t.id),
+                  name: t.name,
+                  price: t.price,
+                }))
+            : [],
           cooking_instruction: "",
         };
       });

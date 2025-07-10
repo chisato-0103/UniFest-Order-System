@@ -68,11 +68,131 @@ const theme = createTheme({
   },
 });
 
-function App() {
+function AppWithNavBar() {
   const location = useLocation();
-  // 管理者・スタッフ用ページかどうか判定
   const isAdminRoute = location.pathname.startsWith("/admin");
+  return (
+    <>
+      {isAdminRoute ? <AdminNavigationBar /> : <CustomerNavigationBar />}
+      <Box
+        component="main"
+        sx={{
+          minHeight: "100vh",
+          backgroundColor: "background.default",
+        }}
+      >
+        <Routes>
+          {/* ホームページ - 全ページナビゲーション */}
+          <Route path="/" element={<NavigationPage />} />
 
+          {/* お客様向け画面 - 統一された注文ページ */}
+          <Route path="/order" element={<OrderPage />} />
+          {/* <Route path="/simple-order" element={<SimpleOrderPage />} /> */}
+
+          {/* 🛍️ お客様向けその他のページ */}
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/customer-status" element={<CustomerStatusPage />} />
+
+          {/* 🎮 開発・デモ用（比較用） */}
+          <Route path="/order-demo" element={<OrderPage />} />
+
+          {/* 🔐 管理者ログイン */}
+          <Route path="/admin-login" element={<AdminLoginPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+
+          {/* 📊 管理者ダッシュボード */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 👨‍💼 管理者向け画面（保護されたルート） */}
+          <Route
+            path="/admin/monitor"
+            element={
+              <ProtectedRoute>
+                <StoreMonitorPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/kitchen"
+            element={
+              <ProtectedRoute>
+                <KitchenPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/payment"
+            element={
+              <ProtectedRoute>
+                <PaymentPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/delivery"
+            element={
+              <ProtectedRoute>
+                <DeliveryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/history"
+            element={
+              <ProtectedRoute>
+                <HistoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/products"
+            element={
+              <ProtectedRoute>
+                <ProductManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute>
+                <SystemSettingsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 後方互換性のための旧ルート（廃止予定） */}
+          <Route path="/store-monitor" element={<StoreMonitorPage />} />
+          <Route path="/kitchen" element={<KitchenPageSimple />} />
+          <Route path="/kitchen-old" element={<KitchenPage />} />
+          <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/delivery" element={<DeliveryPage />} />
+          <Route path="/history" element={<HistoryPage />} />
+          <Route
+            path="/product-management"
+            element={<ProductManagementPage />}
+          />
+          <Route path="/system-settings" element={<SystemSettingsPage />} />
+
+          {/* 🧭 管理者ナビゲーション */}
+          <Route path="/admin-navigation" element={<AdminNavigationPage />} />
+
+          {/* 🍳 キッチン画面（認証なし・開発用） */}
+          <Route path="/kitchen-simple" element={<KitchenPageSimple />} />
+        </Routes>
+      </Box>
+    </>
+  );
+}
+
+function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -80,137 +200,7 @@ function App() {
         <AppProvider>
           <SimpleAppProvider>
             <Router>
-              {isAdminRoute ? (
-                <AdminNavigationBar />
-              ) : (
-                <CustomerNavigationBar />
-              )}
-              <Box
-                component="main"
-                sx={{
-                  minHeight: "100vh",
-                  backgroundColor: "background.default",
-                }}
-              >
-                <Routes>
-                  {/* ホームページ - 全ページナビゲーション */}
-                  <Route path="/" element={<NavigationPage />} />
-
-                  {/* お客様向け画面 - 統一された注文ページ */}
-                  <Route path="/order" element={<OrderPage />} />
-                  {/* <Route path="/simple-order" element={<SimpleOrderPage />} /> */}
-
-                  {/* 🛍️ お客様向けその他のページ */}
-                  <Route path="/cart" element={<CartPage />} />
-                  <Route
-                    path="/customer-status"
-                    element={<CustomerStatusPage />}
-                  />
-
-                  {/* 🎮 開発・デモ用（比較用） */}
-                  <Route path="/order-demo" element={<OrderPage />} />
-
-                  {/* 🔐 管理者ログイン */}
-                  <Route path="/admin-login" element={<AdminLoginPage />} />
-                  <Route path="/admin/login" element={<AdminLoginPage />} />
-
-                  {/* 📊 管理者ダッシュボード */}
-                  <Route
-                    path="/admin"
-                    element={
-                      <ProtectedRoute>
-                        <AdminDashboard />
-                      </ProtectedRoute>
-                    }
-                  />
-
-                  {/* 👨‍💼 管理者向け画面（保護されたルート） */}
-                  <Route
-                    path="/admin/monitor"
-                    element={
-                      <ProtectedRoute>
-                        <StoreMonitorPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/kitchen"
-                    element={
-                      <ProtectedRoute>
-                        <KitchenPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/payment"
-                    element={
-                      <ProtectedRoute>
-                        <PaymentPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/delivery"
-                    element={
-                      <ProtectedRoute>
-                        <DeliveryPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/history"
-                    element={
-                      <ProtectedRoute>
-                        <HistoryPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/products"
-                    element={
-                      <ProtectedRoute>
-                        <ProductManagementPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/settings"
-                    element={
-                      <ProtectedRoute>
-                        <SystemSettingsPage />
-                      </ProtectedRoute>
-                    }
-                  />
-
-                  {/* 後方互換性のための旧ルート（廃止予定） */}
-                  <Route path="/store-monitor" element={<StoreMonitorPage />} />
-                  <Route path="/kitchen" element={<KitchenPageSimple />} />
-                  <Route path="/kitchen-old" element={<KitchenPage />} />
-                  <Route path="/payment" element={<PaymentPage />} />
-                  <Route path="/delivery" element={<DeliveryPage />} />
-                  <Route path="/history" element={<HistoryPage />} />
-                  <Route
-                    path="/product-management"
-                    element={<ProductManagementPage />}
-                  />
-                  <Route
-                    path="/system-settings"
-                    element={<SystemSettingsPage />}
-                  />
-
-                  {/* 🧭 管理者ナビゲーション */}
-                  <Route
-                    path="/admin-navigation"
-                    element={<AdminNavigationPage />}
-                  />
-
-                  {/* 🍳 キッチン画面（認証なし・開発用） */}
-                  <Route
-                    path="/kitchen-simple"
-                    element={<KitchenPageSimple />}
-                  />
-                </Routes>
-              </Box>
+              <AppWithNavBar />
             </Router>
           </SimpleAppProvider>
         </AppProvider>

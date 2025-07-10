@@ -27,7 +27,7 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import AdminNavigationBar from "../components/AdminNavigationBar";
+// ナビゲーションバーはApp.tsxで共通表示
 import {
   Settings as SettingsIcon,
   Notifications as NotificationsIcon,
@@ -471,7 +471,7 @@ function SystemSettingsPage() {
 
   return (
     <Box>
-      <AdminNavigationBar currentPage="システム設定" />
+      {/* ナビゲーションバーはApp.tsxで共通表示 */}
       <Container maxWidth="xl" sx={{ py: 3 }}>
         <Box sx={{ mb: 3 }}>
           <Typography variant="h4" component="h1" gutterBottom color="primary">
@@ -482,198 +482,203 @@ function SystemSettingsPage() {
           </Typography>
         </Box>
 
-      {/* システム操作ボタン */}
-      <Box sx={{ display: "flex", gap: 2, mb: 4, flexWrap: "wrap" }}>
-        <Button
-          variant="outlined"
-          startIcon={<BackupIcon />}
-          onClick={handleDataBackup}
-          color="primary"
-        >
-          データバックアップ
-        </Button>
-        <Button
-          variant="outlined"
-          startIcon={<RestoreIcon />}
-          onClick={handleDataRestore}
-          color="secondary"
-        >
-          データ復元
-        </Button>
-        <Button
-          variant="outlined"
-          startIcon={<RestartIcon />}
-          onClick={handleSystemRestart}
-          color="warning"
-        >
-          システム再起動
-        </Button>
-      </Box>
+        {/* システム操作ボタン */}
+        <Box sx={{ display: "flex", gap: 2, mb: 4, flexWrap: "wrap" }}>
+          <Button
+            variant="outlined"
+            startIcon={<BackupIcon />}
+            onClick={handleDataBackup}
+            color="primary"
+          >
+            データバックアップ
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<RestoreIcon />}
+            onClick={handleDataRestore}
+            color="secondary"
+          >
+            データ復元
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<RestartIcon />}
+            onClick={handleSystemRestart}
+            color="warning"
+          >
+            システム再起動
+          </Button>
+        </Box>
 
-      {/* 設定セクション */}
-      {Object.entries(groupedSettings).map(([category, categorySettings]) => (
-        <Card key={category} sx={{ mb: 3 }}>
+        {/* 設定セクション */}
+        {Object.entries(groupedSettings).map(([category, categorySettings]) => (
+          <Card key={category} sx={{ mb: 3 }}>
+            <CardContent>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                {getCategoryIcon(category)}
+                <Typography variant="h6" sx={{ ml: 1 }}>
+                  {category}
+                </Typography>
+              </Box>
+
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>設定項目</TableCell>
+                      <TableCell>現在の値</TableCell>
+                      <TableCell>説明</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {categorySettings.map((setting) => (
+                      <TableRow key={setting.id}>
+                        <TableCell>
+                          <Typography variant="subtitle2">
+                            {setting.name}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>{renderEditField(setting)}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {setting.description}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              {/* 音声通知テストボタン（通知設定セクションのみ） */}
+              {category === "通知設定" && (
+                <Box sx={{ mt: 3, p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      mb: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
+                    <VolumeIcon />
+                    音声通知テスト
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<PlayIcon />}
+                      onClick={() => handleAudioTest("new_order")}
+                    >
+                      新規注文
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<PlayIcon />}
+                      onClick={() => handleAudioTest("order_ready")}
+                    >
+                      調理完了
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<PlayIcon />}
+                      onClick={() => handleAudioTest("delay_alert")}
+                    >
+                      遅延アラート
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<PlayIcon />}
+                      onClick={() => handleAudioTest("emergency")}
+                      color="error"
+                    >
+                      緊急通知
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+
+        {/* 営業状態表示 */}
+        <Card sx={{ mt: 4 }}>
           <CardContent>
             <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              {getCategoryIcon(category)}
-              <Typography variant="h6" sx={{ ml: 1 }}>
-                {category}
-              </Typography>
+              <ScheduleIcon color="info" sx={{ mr: 1 }} />
+              <Typography variant="h6">現在の営業状態</Typography>
             </Box>
-
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>設定項目</TableCell>
-                    <TableCell>現在の値</TableCell>
-                    <TableCell>説明</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {categorySettings.map((setting) => (
-                    <TableRow key={setting.id}>
-                      <TableCell>
-                        <Typography variant="subtitle2">
-                          {setting.name}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>{renderEditField(setting)}</TableCell>
-                      <TableCell>
-                        <Typography variant="body2" color="text.secondary">
-                          {setting.description}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-
-            {/* 音声通知テストボタン（通知設定セクションのみ） */}
-            {category === "通知設定" && (
-              <Box sx={{ mt: 3, p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
-                <Typography
-                  variant="subtitle1"
-                  sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
-                >
-                  <VolumeIcon />
-                  音声通知テスト
-                </Typography>
-                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<PlayIcon />}
-                    onClick={() => handleAudioTest("new_order")}
-                  >
-                    新規注文
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<PlayIcon />}
-                    onClick={() => handleAudioTest("order_ready")}
-                  >
-                    調理完了
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<PlayIcon />}
-                    onClick={() => handleAudioTest("delay_alert")}
-                  >
-                    遅延アラート
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<PlayIcon />}
-                    onClick={() => handleAudioTest("emergency")}
-                    color="error"
-                  >
-                    緊急通知
-                  </Button>
-                </Box>
-              </Box>
-            )}
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              <Chip
+                label={`営業状態: ${
+                  settings.find((s) => s.name === "営業状態")?.value || "不明"
+                }`}
+                color="primary"
+                variant="filled"
+              />
+              <Chip
+                label={`営業時間: ${
+                  settings.find((s) => s.name === "営業時間（開始）")?.value
+                } - ${
+                  settings.find((s) => s.name === "営業時間（終了）")?.value
+                }`}
+                color="secondary"
+                variant="outlined"
+              />
+              <Chip
+                label={`同時調理数: ${
+                  settings.find((s) => s.name === "同時調理可能数")?.value
+                }件`}
+                color="success"
+                variant="outlined"
+              />
+            </Box>
           </CardContent>
         </Card>
-      ))}
 
-      {/* 営業状態表示 */}
-      <Card sx={{ mt: 4 }}>
-        <CardContent>
-          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-            <ScheduleIcon color="info" sx={{ mr: 1 }} />
-            <Typography variant="h6">現在の営業状態</Typography>
-          </Box>
-          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-            <Chip
-              label={`営業状態: ${
-                settings.find((s) => s.name === "営業状態")?.value || "不明"
-              }`}
-              color="primary"
-              variant="filled"
-            />
-            <Chip
-              label={`営業時間: ${
-                settings.find((s) => s.name === "営業時間（開始）")?.value
-              } - ${
-                settings.find((s) => s.name === "営業時間（終了）")?.value
-              }`}
-              color="secondary"
-              variant="outlined"
-            />
-            <Chip
-              label={`同時調理数: ${
-                settings.find((s) => s.name === "同時調理可能数")?.value
-              }件`}
-              color="success"
-              variant="outlined"
-            />
-          </Box>
-        </CardContent>
-      </Card>
+        {/* 緊急時対応管理 */}
+        <Box sx={{ mt: 4 }}>
+          <EmergencyControl />
+        </Box>
 
-      {/* 緊急時対応管理 */}
-      <Box sx={{ mt: 4 }}>
-        <EmergencyControl />
-      </Box>
+        {/* 確認ダイアログ */}
+        <Dialog
+          open={confirmDialogOpen}
+          onClose={() => setConfirmDialogOpen(false)}
+        >
+          <DialogTitle>操作の確認</DialogTitle>
+          <DialogContent>
+            <Typography>この操作を実行してもよろしいですか？</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmDialogOpen(false)}>
+              キャンセル
+            </Button>
+            <Button onClick={confirmAction} variant="contained" color="warning">
+              実行
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      {/* 確認ダイアログ */}
-      <Dialog
-        open={confirmDialogOpen}
-        onClose={() => setConfirmDialogOpen(false)}
-      >
-        <DialogTitle>操作の確認</DialogTitle>
-        <DialogContent>
-          <Typography>この操作を実行してもよろしいですか？</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmDialogOpen(false)}>
-            キャンセル
-          </Button>
-          <Button onClick={confirmAction} variant="contained" color="warning">
-            実行
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* スナックバー */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={() => setSnackbarOpen(false)}
-      >
-        <Alert
-          severity={snackbarSeverity}
+        {/* スナックバー */}
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={3000}
           onClose={() => setSnackbarOpen(false)}
         >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
-    </Container>
+          <Alert
+            severity={snackbarSeverity}
+            onClose={() => setSnackbarOpen(false)}
+          >
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
+      </Container>
     </Box>
   );
 }

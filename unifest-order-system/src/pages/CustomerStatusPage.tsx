@@ -34,7 +34,7 @@ import {
   Search as SearchIcon,
 } from "@mui/icons-material";
 import MockApi from "../services/mockApi";
-import CustomerNavigationBar from "../components/CustomerNavigationBar";
+// ナビゲーションバーはApp.tsxで共通表示
 // WaitTimeDisplayコンポーネントをインポートしない（AppProvider依存のため）
 // import WaitTimeDisplay from "../components/WaitTimeDisplay";
 import PageLayout from "../components/PageLayout";
@@ -253,7 +253,7 @@ function CustomerStatusPage() {
   if (!order && !loading) {
     return (
       <Box>
-        <CustomerNavigationBar title="注文状況確認" />
+        {/* ナビゲーションバーはApp.tsxで共通表示 */}
         <Container maxWidth="lg" sx={{ py: 3 }}>
           <Box sx={{ textAlign: "center", mb: 3 }}>
             <QrCodeIcon sx={{ fontSize: 64, color: "primary.main", mb: 2 }} />
@@ -314,7 +314,7 @@ function CustomerStatusPage() {
   if (loading) {
     return (
       <Box>
-        <CustomerNavigationBar title="注文状況確認" />
+        {/* ナビゲーションバーはApp.tsxで共通表示 */}
         <Container maxWidth="lg" sx={{ py: 3 }}>
           <Box sx={{ textAlign: "center" }}>
             <LinearProgress sx={{ mb: 2 }} />
@@ -330,7 +330,7 @@ function CustomerStatusPage() {
 
   return (
     <Box>
-      <CustomerNavigationBar title={`注文状況 - ${order.order_number}`} />
+      {/* ナビゲーションバーはApp.tsxで共通表示 */}
       <PageLayout maxWidth="lg">
         <Box sx={{ textAlign: "center", mb: 3 }}>
           <Typography variant="h4" component="h1" gutterBottom color="primary">

@@ -28,7 +28,7 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom"; // ページ移動の道具
 import { useAppContext } from "../hooks/useAppContext"; // カート状態管理
-import CustomerNavigationBar from "../components/CustomerNavigationBar"; // お客さん用ナビバー
+// ナビゲーションバーはApp.tsxで共通表示
 import { OrderService, ApiError } from "../services/apiService"; // 統一API通信サービス
 import type { OrderItemForApi } from "./../services/orderTypes";
 
@@ -191,7 +191,7 @@ const CartPage: React.FC = () => {
 
   return (
     <>
-      <CustomerNavigationBar />
+      {/* ナビゲーションバーはApp.tsxで共通表示 */}
       <Container maxWidth="md" sx={{ py: 4 }}>
         {/* 🎯 ページタイトル */}
         <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>

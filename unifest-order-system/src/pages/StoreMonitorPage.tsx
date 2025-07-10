@@ -35,7 +35,7 @@ import {
   Store as StoreIcon,
   Inventory as InventoryIcon,
 } from "@mui/icons-material";
-import AdminNavigationBar from "../components/AdminNavigationBar";
+// ナビゲーションバーはApp.tsxで共通表示
 import StockManagement from "../components/StockManagement";
 import TakoyakiCookerManagement from "../components/TakoyakiCookerManagement";
 import { useSocket } from "../hooks/useSocket";
@@ -269,7 +269,7 @@ function StoreMonitorPage() {
 
   return (
     <Box>
-      <AdminNavigationBar currentPage="店舗モニター" />
+      {/* ナビゲーションバーはApp.tsxで共通表示 */}
       <Container maxWidth="xl" sx={{ py: 3 }}>
         <AppBar position="static" color="default" sx={{ mb: 3 }}>
           <Toolbar>

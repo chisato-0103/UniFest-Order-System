@@ -11,7 +11,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { CheckCircle as CheckCircleIcon } from "@mui/icons-material";
-import AdminNavigationBar from "../components/AdminNavigationBar";
+// ナビゲーションバーはApp.tsxで共通表示
 import MockApi from "../services/mockApi";
 import type { Order } from "../types";
 
@@ -59,7 +59,7 @@ function HistoryPage() {
 
   return (
     <Box>
-      <AdminNavigationBar currentPage="注文履歴" />
+      {/* ナビゲーションバーはApp.tsxで共通表示 */}
       <Container maxWidth="lg" sx={{ py: 2 }}>
         <Paper elevation={3} sx={{ p: 3 }}>
           <Box sx={{ mb: 3 }}>

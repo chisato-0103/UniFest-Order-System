@@ -36,7 +36,7 @@ import {
   Refresh as RefreshIcon,
 } from "@mui/icons-material";
 import type { Order, PaymentStatus } from "../types";
-import AdminNavigationBar from "../components/AdminNavigationBar";
+// ナビゲーションバーはApp.tsxで共通表示
 import { OrderService, ApiError } from "../services/apiService"; // 統一API通信サービス
 
 function PaymentPage() {
@@ -250,7 +250,7 @@ function PaymentPage() {
 
   return (
     <Box>
-      <AdminNavigationBar currentPage="支払い管理" />
+      {/* ナビゲーションバーはApp.tsxで共通表示 */}
       <Container maxWidth="xl" sx={{ py: 3 }}>
         <AppBar position="static" color="default" sx={{ mb: 3 }}>
           <Toolbar>

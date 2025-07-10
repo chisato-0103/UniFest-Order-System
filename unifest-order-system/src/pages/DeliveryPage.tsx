@@ -26,7 +26,7 @@ import {
   QrCodeScanner as QrIcon,
   Person as PersonIcon,
 } from "@mui/icons-material";
-import AdminNavigationBar from "../components/AdminNavigationBar";
+// ナビゲーションバーはApp.tsxで共通表示
 import type { Order } from "../types";
 import MockApi from "../services/mockApi";
 
@@ -163,7 +163,7 @@ function DeliveryPage() {
 
   return (
     <Box>
-      <AdminNavigationBar currentPage="受け渡し管理" />
+      {/* ナビゲーションバーはApp.tsxで共通表示 */}
       <Container maxWidth="lg" sx={{ py: 2 }}>
         <Paper elevation={3} sx={{ p: 3 }}>
           <Box sx={{ mb: 3 }}>

@@ -1,5 +1,5 @@
 // 🧭 ページの移動とデザインのための道具たち
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; // ページ移動の道具
+import { HashRouter as Router, Routes, Route } from "react-router-dom"; // HashRouterでリロード404対策
 import { ThemeProvider, createTheme } from "@mui/material/styles"; // 見た目のテーマを作る道具
 import { Box } from "@mui/material"; // レイアウト用の箱
 import CssBaseline from "@mui/material/CssBaseline"; // デフォルトスタイルをリセット
@@ -9,7 +9,7 @@ import { AuthProvider } from "./contexts/AuthContext"; // ログイン状態の�
 // import SimpleOrderPage from "./pages/SimpleOrderPage"; // 簡単注文ページ
 
 // 🧩 部品（コンポーネント）
-// import NavigationBar from "./components/NavigationBar";
+import NavigationBar from "./components/NavigationBar";
 import ProtectedRoute from "./components/ProtectedRoute"; // 管理者のみアクセスできるページを守る
 
 // 🏪 お客さん用のページたち
@@ -69,7 +69,7 @@ function App() {
         <AppProvider>
           <SimpleAppProvider>
             <Router>
-              {/* <NavigationBar /> */}
+              <NavigationBar />
               <Box
                 component="main"
                 sx={{

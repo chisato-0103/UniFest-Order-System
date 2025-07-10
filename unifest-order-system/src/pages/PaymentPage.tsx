@@ -66,8 +66,9 @@ function PaymentPage() {
       console.log("[DEBUG] /api/orders response:", ordersData);
       // payment_statusごとの件数も出力
       const statusCount = ordersData.reduce(
-        (acc: Record<string, number>, o: any) => {
-          acc[o.payment_status] = (acc[o.payment_status] || 0) + 1;
+        (acc: Record<string, number>, o) => {
+          const status = o.payment_status ?? "unknown";
+          acc[status] = (acc[status] || 0) + 1;
           return acc;
         },
         {}

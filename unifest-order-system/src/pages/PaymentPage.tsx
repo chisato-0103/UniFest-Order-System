@@ -213,7 +213,10 @@ function PaymentPage() {
   // 未払い注文のみフィルター
   const unpaidOrders = filteredOrders.filter(
     (order) =>
-      order.payment_status === "unpaid" || order.payment_status === "pending"
+      order.payment_status === "unpaid" ||
+      order.payment_status === "pending" ||
+      order.payment_status === "未払い" ||
+      order.payment_status === "支払い中"
   );
 
   const getStatusColor = (status: PaymentStatus) => {

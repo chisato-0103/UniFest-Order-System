@@ -71,9 +71,14 @@ const theme = createTheme({
 function AppWithNavBar() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const isAdminLoginPage =
+    location.pathname === "/admin-login" ||
+    location.pathname === "/admin/login";
   return (
     <>
-      {isAdminRoute ? <AdminNavigationBar /> : <CustomerNavigationBar />}
+      {/* ログイン画面ではナビゲーションバー非表示 */}
+      {!isAdminLoginPage &&
+        (isAdminRoute ? <AdminNavigationBar /> : <CustomerNavigationBar />)}
       <Box
         component="main"
         sx={{

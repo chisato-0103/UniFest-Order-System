@@ -1,6 +1,10 @@
 import React, { useState } from "react";
+import { OrderService } from "../services/apiService";
 import { Box, Typography, Paper, Alert, Button } from "@mui/material";
-import { QrCodeScanner as QrIcon, CheckCircle as CheckIcon } from "@mui/icons-material";
+import {
+  QrCodeScanner as QrIcon,
+  CheckCircle as CheckIcon,
+} from "@mui/icons-material";
 import { useEffect } from "react";
 // QrReaderは動的importで型エラー回避
 import type { Order, OrderItem } from "../types";
@@ -30,7 +34,9 @@ const PickupPage: React.FC = () => {
         setError("");
       } catch {
         setOrderInfo(null);
-        setError("QRコードの内容が不正です。正しい注文QRコードを提示してください。");
+        setError(
+          "QRコードの内容が不正です。正しい注文QRコードを提示してください。"
+        );
       }
     }
   };
@@ -40,14 +46,26 @@ const PickupPage: React.FC = () => {
   };
 
   // 受け渡し確定処理（API連携は後で追加可能）
-  const handleConfirm = () => {
-    setConfirmed(true);
-    // TODO: ここでAPIに受け渡し完了を通知する処理を追加
+  const handleConfirm = async () => {
+    if (!orderInfo?.order_number) return;
+    setConfirmed(false);
+    setError("");
+    try {
+      // サーバーに受け渡し完了を通知（注文ステータスをdeliveredに更新）
+      await OrderService.updateOrderStatus(orderInfo.order_number, "delivered");
+      setConfirmed(true);
+    } catch (err) {
+      setError("受け渡し完了API通信に失敗しました: " + String(err));
+      setConfirmed(false);
+    }
   };
 
   return (
     <Box sx={{ minHeight: "100vh", background: "#f8f9fa", py: 5 }}>
-      <Paper elevation={3} sx={{ maxWidth: 480, mx: "auto", p: 4, borderRadius: 4 }}>
+      <Paper
+        elevation={3}
+        sx={{ maxWidth: 480, mx: "auto", p: 4, borderRadius: 4 }}
+      >
         <Box sx={{ textAlign: "center", mb: 3 }}>
           <QrIcon sx={{ fontSize: 48, color: "primary.main" }} />
           <Typography variant="h4" fontWeight="bold" gutterBottom>
@@ -81,25 +99,36 @@ const PickupPage: React.FC = () => {
               注文番号: {orderInfo.order_number}
             </Typography>
             <Typography variant="body2" gutterBottom>
-              合計金額: {orderInfo.total_amount ? `¥${orderInfo.total_amount}` : "-"}
+              合計金額:{" "}
+              {orderInfo.total_amount ? `¥${orderInfo.total_amount}` : "-"}
             </Typography>
             <Typography variant="body2" gutterBottom>
               商品:
             </Typography>
             <ul>
-              {orderInfo.items && orderInfo.items.map((item: OrderItem, idx: number) => {
-                // product_nameが存在する場合はそれを優先
-                const displayName = typeof item.product_name === "string" && item.product_name.length > 0
-                  ? item.product_name
-                  : item.name;
-                return (
-                  <li key={idx}>
-                    {displayName} × {item.quantity}
-                  </li>
-                );
-              })}
+              {orderInfo.items &&
+                orderInfo.items.map((item: OrderItem, idx: number) => {
+                  // product_nameが存在する場合はそれを優先
+                  const displayName =
+                    typeof item.product_name === "string" &&
+                    item.product_name.length > 0
+                      ? item.product_name
+                      : item.name;
+                  return (
+                    <li key={idx}>
+                      {displayName} × {item.quantity}
+                    </li>
+                  );
+                })}
             </ul>
-            <Button variant="contained" color="success" startIcon={<CheckIcon />} fullWidth sx={{ mt: 2 }} onClick={handleConfirm}>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<CheckIcon />}
+              fullWidth
+              sx={{ mt: 2 }}
+              onClick={handleConfirm}
+            >
               受け渡し完了
             </Button>
           </Box>

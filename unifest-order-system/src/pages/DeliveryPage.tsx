@@ -29,6 +29,7 @@ import {
 // ナビゲーションバーはApp.tsxで共通表示
 import type { Order } from "../types";
 import MockApi from "../services/mockApi";
+import { OrderService } from "../services/apiService";
 
 function DeliveryPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -48,11 +49,18 @@ function DeliveryPage() {
       setError(null);
       setRefreshing(true);
 
-      // モックAPIから注文データを取得
-      const response = await MockApi.getOrders();
-
+      // 本番・開発でAPI切り替え
+      let orders;
+      if (import.meta.env.MODE === "development") {
+        // 開発時はMockApi
+        const response = await MockApi.getOrders();
+        orders = response.data;
+      } else {
+        // 本番はOrderService
+        orders = await OrderService.getOrders();
+      }
       // 調理完了（ready/調理完了/completed）状態の注文のみを表示
-      const readyOrders = response.data.filter(
+      const readyOrders = orders.filter(
         (order) =>
           order.status === "ready" ||
           order.status === "調理完了" ||

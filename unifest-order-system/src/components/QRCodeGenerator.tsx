@@ -22,14 +22,15 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
   const [qrCodeUrl, setQrCodeUrl] = React.useState<string>("");
 
   // 注文情報をJSON化（必須フィールドチェック）
+  const orderNumber = order?.order_number || order?.orderNumber;
   const isOrderValid =
     order &&
-    order.order_number &&
+    orderNumber &&
     Array.isArray(order.items) &&
     order.items.length > 0;
   const orderJson = isOrderValid
     ? JSON.stringify({
-        order_number: order.order_number,
+        order_number: orderNumber,
         items: order.items,
         total: order.total,
         total_amount: order.total_amount,
@@ -89,7 +90,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
           注文情報QRコード
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          注文番号: {order.order_number}
+          注文番号: {orderNumber}
         </Typography>
       </Box>
 

@@ -100,7 +100,7 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
               fontWeight="bold"
               textAlign="center"
             >
-              注文番号: {order.order_number}
+              注文番号: {order.order_number || order.orderNumber}
             </Typography>
           </Box>
 
@@ -209,14 +209,11 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
 
         {/* QRコード（注文情報全体をJSON化して渡す） */}
         <Box sx={{ mb: 2 }}>
-          <QRCodeGenerator
-            order={order}
-            size={180}
-            showDownload={true}
-          />
+          <QRCodeGenerator order={order} size={180} showDownload={true} />
           <Alert severity="info" sx={{ mt: 2 }}>
             <Typography variant="body2">
-              このQRコードをスクリーンショットで保存してください。<br />
+              このQRコードをスクリーンショットで保存してください。
+              <br />
               受け渡し時に提示することでスムーズに受け渡しできます。
             </Typography>
           </Alert>

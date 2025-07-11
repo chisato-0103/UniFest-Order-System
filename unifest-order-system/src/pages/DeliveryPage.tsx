@@ -51,9 +51,12 @@ function DeliveryPage() {
       // モックAPIから注文データを取得
       const response = await MockApi.getOrders();
 
-      // 調理完了（ready）状態の注文のみを表示
+      // 調理完了（ready/調理完了/completed）状態の注文のみを表示
       const readyOrders = response.data.filter(
-        (order) => order.status === "ready"
+        (order) =>
+          order.status === "ready" ||
+          order.status === "調理完了" ||
+          order.status === "completed"
       );
       setOrders(readyOrders);
 

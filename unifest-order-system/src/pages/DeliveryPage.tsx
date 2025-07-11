@@ -26,7 +26,6 @@ import {
   QrCodeScanner as QrIcon,
   Person as PersonIcon,
 } from "@mui/icons-material";
-// ナビゲーションバーはApp.tsxで共通表示
 import type { Order } from "../types";
 import MockApi from "../services/mockApi";
 import { OrderService } from "../services/apiService";
@@ -43,39 +42,25 @@ function DeliveryPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 注文データを取得
+  // 注文データ取得関数
   const fetchOrders = useCallback(async () => {
+    setRefreshing(true);
+    setError(null);
     try {
-      setError(null);
-      setRefreshing(true);
-
-      // 本番・開発でAPI切り替え
-      let orders;
-      if (import.meta.env.MODE === "development") {
-        // 開発時はMockApi
-        const response = await MockApi.getOrders();
-        orders = response.data;
+      // 本番環境かどうかでAPI切り替え
+      if (process.env.NODE_ENV === "production") {
+        const result = await OrderService.getOrders();
+        setOrders(result);
       } else {
-        // 本番はOrderService
-        orders = await OrderService.getOrders();
+        const result = await MockApi.getOrders();
+        setOrders(result.data);
       }
-      // 調理完了（ready/調理完了/completed）状態の注文のみを表示
-      const readyOrders = orders.filter(
-        (order) =>
-          order.status === "ready" ||
-          order.status === "調理完了" ||
-          order.status === "completed"
-      );
-      setOrders(readyOrders);
-
-      console.log(
-        "📦 受け渡し画面: 注文データを更新しました",
-        readyOrders.length,
-        "件"
-      );
-    } catch (err) {
-      console.error("受け渡し画面での注文取得エラー:", err);
-      setError("注文データの取得に失敗しました");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError("注文データの取得に失敗しました: " + err.message);
+      } else {
+        setError("注文データの取得に失敗しました");
+      }
     } finally {
       setRefreshing(false);
     }
@@ -314,14 +299,75 @@ function DeliveryPage() {
             </DialogTitle>
             <DialogContent>
               {selectedOrder && (
-                <Box sx={{ pt: 2 }}>
-                  <Typography variant="h6" gutterBottom>
-                    注文番号: {selectedOrder.orderNumber}
-                  </Typography>
-                  <Typography variant="body1" gutterBottom>
-                    合計金額: ¥{selectedOrder.total?.toLocaleString() || 0}
-                  </Typography>
-
+                <React.Fragment>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      合計金額: ¥{selectedOrder.total?.toLocaleString() || 0}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      注文時刻:{" "}
+                      {selectedOrder.createdAt
+                        ? new Date(selectedOrder.createdAt).toLocaleString()
+                        : ""}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 1 }}
+                    >
+                      <span>
+                        支払い状況:{" "}
+                        {(() => {
+                          switch (selectedOrder.payment_status) {
+                            case "paid":
+                            case "支払い済み":
+                              return (
+                                <Chip
+                                  label="支払い済み"
+                                  color="primary"
+                                  size="small"
+                                />
+                              );
+                            case "pending":
+                            case "支払い中":
+                              return (
+                                <Chip
+                                  label="支払い中"
+                                  color="warning"
+                                  size="small"
+                                />
+                              );
+                            case "unpaid":
+                            case "未払い":
+                              return (
+                                <Chip
+                                  label="未払い"
+                                  color="error"
+                                  size="small"
+                                />
+                              );
+                            case "refunded":
+                            case "返金済み":
+                              return (
+                                <Chip
+                                  label="返金済み"
+                                  color="info"
+                                  size="small"
+                                />
+                              );
+                            default:
+                              return (
+                                <Chip
+                                  label={selectedOrder.payment_status || "不明"}
+                                  color="default"
+                                  size="small"
+                                />
+                              );
+                          }
+                        })()}
+                      </span>
+                    </Typography>
+                  </Box>
                   <TextField
                     label="お客様のお名前"
                     value={customerName}
@@ -329,7 +375,6 @@ function DeliveryPage() {
                     fullWidth
                     sx={{ mb: 2 }}
                   />
-
                   <TextField
                     label="電話番号"
                     value={customerPhone}
@@ -337,7 +382,6 @@ function DeliveryPage() {
                     fullWidth
                     sx={{ mb: 2 }}
                   />
-
                   <FormControl fullWidth sx={{ mb: 2 }}>
                     <InputLabel>確認方法</InputLabel>
                     <Select
@@ -351,7 +395,7 @@ function DeliveryPage() {
                       <MenuItem value="order_number">注文番号</MenuItem>
                     </Select>
                   </FormControl>
-                </Box>
+                </React.Fragment>
               )}
             </DialogContent>
             <DialogActions>

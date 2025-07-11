@@ -169,8 +169,7 @@ const CartPage: React.FC = () => {
         JSON.stringify(orderRequestBody, null, 2)
       );
       const order = await OrderService.createOrder(orderRequestBody);
-
-      console.log("注文完了:", order);
+      console.log("[DEBUG] OrderService.createOrder result:", order);
 
       // カートをクリア
       dispatch({ type: "CLEAR_CART" });

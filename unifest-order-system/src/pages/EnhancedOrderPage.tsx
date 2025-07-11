@@ -232,15 +232,29 @@ const EnhancedOrderPage: React.FC = () => {
 
       console.log("パースされた注文レスポンス:", order);
 
-      // 注文完了
-      setCompletedOrder(order.data || order);
+      // 注文完了（itemsをOrderItem型に変換して渡す）
+      const rawOrder = order.data || order;
+      const convertedOrder = {
+        ...rawOrder,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        items: (rawOrder.items || []).map((item: any) => ({
+          product_name: item.product_name || item.name || "",
+          quantity: item.quantity,
+          unit_price: item.unit_price || item.price || 0,
+          total_price: item.total_price || item.price * item.quantity || 0,
+          toppings: item.toppings || [],
+          cooking_time: item.cooking_time || 0,
+          cooking_instruction: item.cooking_instruction || "",
+        })),
+      };
+      setCompletedOrder(convertedOrder);
       setCart({});
       setIsCartOpen(false);
 
       // グローバル状態を更新
       dispatch({
         type: "ADD_ORDER",
-        payload: order.data || order,
+        payload: convertedOrder,
       });
 
       setError(null); // エラーをクリア

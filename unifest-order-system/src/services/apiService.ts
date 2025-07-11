@@ -1,3 +1,52 @@
+// 型定義は必ずファイル先頭のトップレベルに記述
+interface RawProductData {
+  product_id: number;
+  product_name: string;
+  price: string;
+  category_name?: string;
+  description?: string;
+  status: string;
+  stock_quantity: number;
+  preparation_time?: number;
+}
+
+interface RawToppingData {
+  topping_id: number;
+  topping_name: string;
+  price: number;
+  available?: boolean;
+}
+
+interface RawOrderItemData {
+  product_id: string | number;
+  id?: string | number;
+  product_name?: string;
+  name?: string;
+  unit_price?: string | number;
+  price?: string | number;
+  quantity: string | number;
+  total_price?: string | number;
+  toppings?: RawToppingData[];
+}
+
+interface RawOrderData {
+  order_id?: string | number;
+  id?: string | number;
+  order_number?: string;
+  customer_id?: string | number;
+  order_items?: RawOrderItemData[];
+  items?: RawOrderItemData[];
+  total_amount?: string | number;
+  total_price?: string | number;
+  order_status?: string;
+  status?: string;
+  payment_status?: string;
+  payment_method?: string;
+  special_instructions?: string;
+  created_at?: string;
+  updated_at?: string;
+  estimated_pickup_time?: string;
+}
 // 🌐 統一API通信サービス
 // 全ページで使用する共通のAPI通信ロジックを管理します
 // エラーハンドリング、型変換、ローディング状態を統一します
@@ -17,6 +66,7 @@ import type {
   PaymentStatus, // 支払いステータス型
 } from "../types";
 import type { OrderItemForApi } from "./orderTypes";
+// 型定義を明示的にエクスポート
 
 // 🚫 API通信のエラー種別
 // API通信で発生したエラーを表現する独自エラークラス
@@ -45,6 +95,44 @@ interface ApiResponse<T = unknown> {
 
 // API応答用の具体的な型定義
 // サーバーから返ってくる生データの型
+interface RawOrderData {
+  order_id?: string | number; // 注文ID
+  id?: string | number; // 汎用ID
+  order_number?: string; // 注文番号
+  customer_id?: string | number; // 顧客ID
+  order_items?: RawOrderItemData[]; // 注文商品リスト
+  items?: RawOrderItemData[]; // 注文商品リスト（別名）
+  total_amount?: string | number; // 合計金額
+  total_price?: string | number; // 合計金額（別名）
+  order_status?: string; // 注文ステータス
+  status?: string; // 注文ステータス（別名）
+  payment_status?: string; // 支払いステータス
+  payment_method?: string; // 支払い方法
+  special_instructions?: string; // 特記事項
+  created_at?: string; // 作成日時
+  updated_at?: string; // 更新日時
+  estimated_pickup_time?: string; // 受取予定時刻
+}
+
+// API応答用の具体的な型定義
+// サーバーから返ってくる生データの型
+interface RawProductData {
+  product_id: number; // 商品ID
+  product_name: string; // 商品名
+  price: string; // 価格（文字列）
+  category_name?: string; // カテゴリ名
+  description?: string; // 商品説明
+  status: string; // 商品ステータス
+  stock_quantity: number; // 在庫数
+  preparation_time?: number; // 調理時間
+}
+
+interface RawToppingData {
+  topping_id: number; // トッピングID
+  topping_name: string; // トッピング名
+  price: number; // 価格
+  available?: boolean; // 利用可否
+}
 interface RawProductData {
   product_id: number; // 商品ID
   product_name: string; // 商品名
@@ -64,21 +152,38 @@ interface RawToppingData {
 }
 
 interface RawOrderData {
-  order_id: string | number; // 注文ID
-  order_number?: string; // 注文番号
-  customer_id?: string | number; // 顧客ID
-  order_items?: RawOrderItemData[]; // 注文商品リスト
-  items?: RawOrderItemData[]; // 注文商品リスト（別名）
-  total_amount?: string | number; // 合計金額
-  total_price?: string | number; // 合計金額（別名）
-  order_status?: string; // 注文ステータス
-  status?: string; // 注文ステータス（別名）
-  payment_status?: string; // 支払いステータス
-  payment_method?: string; // 支払い方法
-  special_instructions?: string; // 特記事項
-  created_at?: string; // 作成日時
-  updated_at?: string; // 更新日時
-  estimated_pickup_time?: string; // 受取予定時刻
+  order_id?: string | number;
+  id?: string | number;
+  order_number?: string;
+  customer_id?: string | number;
+  total_amount?: string | number;
+  total_price?: string | number;
+  status?: string;
+  order_status?: string;
+  payment_status?: string;
+  payment_method?: string;
+  special_instructions?: string;
+  created_at?: string;
+  updated_at?: string;
+  estimated_pickup_time?: string;
+}
+// --- 型定義はファイル先頭に移動 ---
+interface RawOrderData {
+  order_id?: string | number;
+  order_number?: string;
+  customer_id?: string | number;
+  order_items?: RawOrderItemData[];
+  items?: RawOrderItemData[];
+  total_amount?: string | number;
+  total_price?: string | number;
+  order_status?: string;
+  status?: string;
+  payment_status?: string;
+  payment_method?: string;
+  special_instructions?: string;
+  created_at?: string;
+  updated_at?: string;
+  estimated_pickup_time?: string;
 }
 
 interface RawOrderItemData {
@@ -455,21 +560,22 @@ export class OrderService {
           ),
       }));
 
+      const data: RawOrderData = (result.data as RawOrderData) || {};
       const order: Order = {
-        id: (result.order_id || result.id || "").toString(), // 注文ID
-        orderNumber: String(result.order_number || ""), // 注文番号
-        customer_id: result.customer_id as string | number | undefined, // 顧客ID
+        id: (data.order_id || data.id || "").toString(), // 注文ID
+        orderNumber: String(data.order_number || ""), // 注文番号
+        customer_id: data.customer_id as string | number | undefined, // 顧客ID
         items: itemsAsCartItem, // 商品リスト（CartItem[]型に変換）
-        total: orderData.totalAmount, // 合計
-        total_amount: orderData.totalAmount, // 合計
-        status: ((result.order_status as string) || "pending") as OrderStatus, // 注文ステータス
-        payment_status: ((result.payment_status as string) ||
+        total: Number(data.total_amount ?? orderData.totalAmount), // 合計
+        total_amount: Number(data.total_amount ?? orderData.totalAmount), // 合計
+        status: ((data.status as string) || "pending") as OrderStatus, // 注文ステータス
+        payment_status: ((data.payment_status as string) ||
           "pending") as PaymentStatus, // 支払いステータス
-        payment_method: String(result.payment_method || "cash"), // 支払い方法
-        notes: String(result.special_instructions || ""), // 特記事項
-        createdAt: new Date(String(result.created_at || new Date())), // 作成日時
-        updatedAt: new Date(String(result.updated_at || new Date())), // 更新日時
-        order_number: String(result.order_number || ""), // 注文番号（別名）
+        payment_method: String(data.payment_method || "cash"), // 支払い方法
+        notes: String(data.special_instructions || ""), // 特記事項
+        createdAt: new Date(String(data.created_at || new Date())), // 作成日時
+        updatedAt: new Date(String(data.updated_at || new Date())), // 更新日時
+        order_number: String(data.order_number || ""), // 注文番号（別名）
         order_items: itemsAsCartItem, // 商品リスト（CartItem[]型に変換）
       };
 

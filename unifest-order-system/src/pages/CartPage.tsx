@@ -3,6 +3,7 @@
 // 商品の追加・削除、合計金額の確認、注文確定ができます
 
 import React, { useState } from "react"; // Reactの基本機能
+import OrderCompletionDialog from "../components/OrderCompletionDialog";
 import {
   Container, // 全体を囲む容器
   Typography, // 文字表示
@@ -39,6 +40,11 @@ const CartPage: React.FC = () => {
   const [isOrdering, setIsOrdering] = useState(false); // 注文処理中かどうか
 
   const cart = state.cart; // カート情報を取得
+
+  // 注文完了ダイアログ表示用
+  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState(null);
+  const [estimatedTime, setEstimatedTime] = useState(10); // 仮: 10分
 
   // 🧪 テスト用：ダミー商品をカートに追加（本番では未使用のため削除）
 
@@ -169,10 +175,9 @@ const CartPage: React.FC = () => {
       // カートをクリア
       dispatch({ type: "CLEAR_CART" });
 
-      alert(`注文が完了しました！\n注文番号: ${order.orderNumber || order.id}`);
-
-      // 支払い画面への自動遷移をやめる（注文完了ダイアログのみ表示）
-      // navigate(`/payment?order=${order.orderNumber || order.id}`);
+      // 注文完了ダイアログ表示
+      setCompletedOrder(order);
+      setOrderDialogOpen(true);
     } catch (error) {
       console.error("注文エラー:", error);
 
@@ -191,6 +196,13 @@ const CartPage: React.FC = () => {
 
   return (
     <>
+      {/* 注文完了ダイアログ（QRコード表示） */}
+      <OrderCompletionDialog
+        open={orderDialogOpen}
+        onClose={() => setOrderDialogOpen(false)}
+        order={completedOrder}
+        estimatedTime={estimatedTime}
+      />
       {/* ナビゲーションバーはApp.tsxで共通表示 */}
       <Container maxWidth="md" sx={{ py: 4 }}>
         {/* 🎯 ページタイトル */}

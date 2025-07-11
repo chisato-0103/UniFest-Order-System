@@ -20,7 +20,7 @@ import CustomerNavigationBar from "./components/CustomerNavigationBar";
 import AdminNavigationBar from "./components/AdminNavigationBar";
 
 // 🏪 お客さん用のページたち
-import EnhancedOrderPage from "./pages/EnhancedOrderPage"; // 注文ページ（新）
+import OrderPage from "./pages/OrderPage"; // 注文ページ
 import CustomerStatusPage from "./pages/CustomerStatusPage"; // お客さんの注文状況ページ
 import AdminLoginPage from "./pages/AdminLoginPage"; // 管理者ログインページ
 import AdminDashboard from "./pages/AdminDashboard"; // 管理者ダッシュボード
@@ -91,7 +91,7 @@ function AppWithNavBar() {
           <Route path="/" element={<NavigationPage />} />
 
           {/* お客様向け画面 - 統一された注文ページ */}
-          <Route path="/order" element={<EnhancedOrderPage />} />
+          <Route path="/order" element={<OrderPage />} />
           {/* <Route path="/simple-order" element={<SimpleOrderPage />} /> */}
 
           {/* 🛍️ お客様向けその他のページ */}
@@ -99,7 +99,7 @@ function AppWithNavBar() {
           <Route path="/customer-status" element={<CustomerStatusPage />} />
 
           {/* 🎮 開発・デモ用（比較用） */}
-          <Route path="/order-demo" element={<EnhancedOrderPage />} />
+          <Route path="/order-demo" element={<OrderPage />} />
 
           {/* 🔐 管理者ログイン */}
           <Route path="/admin-login" element={<AdminLoginPage />} />

@@ -413,6 +413,7 @@ export class OrderService {
       });
 
       const result = await handleApiResponse<unknown>(response); // レスポンス共通処理
+      console.log("[DEBUG] APIレスポンス result:", result);
 
       const duration = Date.now() - startTime; // 所要時間
       apiLogger.logApiSuccess(

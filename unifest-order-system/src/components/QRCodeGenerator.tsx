@@ -1,3 +1,4 @@
+
 import React from "react";
 import QRCode from "qrcode";
 import { Box, Paper, Typography, Button } from "@mui/material";
@@ -6,28 +7,37 @@ import {
   Download as DownloadIcon,
 } from "@mui/icons-material";
 
+import type { Order } from "../types";
+
 interface QRCodeGeneratorProps {
-  orderNumber: string;
-  baseUrl?: string;
+  order: Order;
   size?: number;
   showDownload?: boolean;
 }
 
 const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
-  orderNumber,
-  baseUrl = window.location.origin,
+  order,
   size = 200,
   showDownload = true,
 }) => {
   const [qrCodeUrl, setQrCodeUrl] = React.useState<string>("");
 
-  // 顧客状況確認ページのURL
-  const statusUrl = `${baseUrl}/customer-status?order=${orderNumber}`;
+  // 注文情報をJSON化
+  const orderJson = JSON.stringify({
+    order_number: order.order_number,
+    items: order.items,
+    total: order.total,
+    total_amount: order.total_amount,
+    payment_method: order.payment_method,
+    createdAt: order.createdAt,
+    customer_id: order.customer_id,
+    notes: order.notes,
+  });
 
   React.useEffect(() => {
     const generateQRCode = async () => {
       try {
-        const url = await QRCode.toDataURL(statusUrl, {
+        const url = await QRCode.toDataURL(orderJson, {
           width: size,
           margin: 2,
           color: {
@@ -40,15 +50,14 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
         console.error("QRコード生成エラー:", error);
       }
     };
-
     generateQRCode();
-  }, [statusUrl, size]);
+  }, [orderJson, size]);
 
   const handleDownload = () => {
     if (qrCodeUrl) {
       const link = document.createElement("a");
       link.href = qrCodeUrl;
-      link.download = `order-${orderNumber}-qr.png`;
+      link.download = `order-${order.order_number}-qr.png`;
       link.click();
     }
   };
@@ -66,10 +75,10 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
       <Box sx={{ mb: 2 }}>
         <QrIcon sx={{ fontSize: 32, color: "primary.main", mb: 1 }} />
         <Typography variant="h6" color="primary" gutterBottom>
-          注文状況確認QRコード
+          注文情報QRコード
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          注文番号: {orderNumber}
+          注文番号: {order.order_number}
         </Typography>
       </Box>
 
@@ -77,7 +86,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
         <Box sx={{ mb: 2 }}>
           <img
             src={qrCodeUrl}
-            alt={`注文番号 ${orderNumber} の状況確認QRコード`}
+            alt={`注文番号 ${order.order_number} の注文情報QRコード`}
             style={{
               border: "1px solid #e0e0e0",
               borderRadius: "8px",
@@ -87,7 +96,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
       )}
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        QRコードをスキャンして注文状況を確認できます
+        QRコードをスキャンして注文情報を確認できます
       </Typography>
 
       {showDownload && qrCodeUrl && (

@@ -1,7 +1,6 @@
-
 import React from "react";
 import QRCode from "qrcode";
-import { Box, Paper, Typography, Button } from "@mui/material";
+import { Box, Paper, Typography, Button, Alert } from "@mui/material";
 import {
   QrCodeScanner as QrIcon,
   Download as DownloadIcon,
@@ -22,20 +21,31 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
 }) => {
   const [qrCodeUrl, setQrCodeUrl] = React.useState<string>("");
 
-  // 注文情報をJSON化
-  const orderJson = JSON.stringify({
-    order_number: order.order_number,
-    items: order.items,
-    total: order.total,
-    total_amount: order.total_amount,
-    payment_method: order.payment_method,
-    createdAt: order.createdAt,
-    customer_id: order.customer_id,
-    notes: order.notes,
-  });
+  // 注文情報をJSON化（必須フィールドチェック）
+  const isOrderValid =
+    order &&
+    order.order_number &&
+    Array.isArray(order.items) &&
+    order.items.length > 0;
+  const orderJson = isOrderValid
+    ? JSON.stringify({
+        order_number: order.order_number,
+        items: order.items,
+        total: order.total,
+        total_amount: order.total_amount,
+        payment_method: order.payment_method,
+        createdAt: order.createdAt,
+        customer_id: order.customer_id,
+        notes: order.notes,
+      })
+    : "";
 
   React.useEffect(() => {
     const generateQRCode = async () => {
+      if (!isOrderValid) {
+        setQrCodeUrl("");
+        return;
+      }
       try {
         const url = await QRCode.toDataURL(orderJson, {
           width: size,
@@ -48,10 +58,11 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
         setQrCodeUrl(url);
       } catch (error) {
         console.error("QRコード生成エラー:", error);
+        setQrCodeUrl("");
       }
     };
     generateQRCode();
-  }, [orderJson, size]);
+  }, [orderJson, size, isOrderValid]);
 
   const handleDownload = () => {
     if (qrCodeUrl) {
@@ -82,7 +93,7 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
         </Typography>
       </Box>
 
-      {qrCodeUrl && (
+      {qrCodeUrl ? (
         <Box sx={{ mb: 2 }}>
           <img
             src={qrCodeUrl}
@@ -93,6 +104,12 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
             }}
           />
         </Box>
+      ) : (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          注文情報が不正なためQRコードを生成できません。
+          <br />
+          店舗スタッフにお声かけください。
+        </Alert>
       )}
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

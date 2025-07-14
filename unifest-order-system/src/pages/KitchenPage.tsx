@@ -507,40 +507,73 @@ function KitchenPage() {
       <Card
         key={order.order_id}
         sx={{
-          mb: 2,
+          mb: { xs: 1.5, sm: 2 },
           border: isUrgent ? "2px solid" : "1px solid",
           borderColor: isUrgent ? "error.main" : "divider",
           boxShadow: isUrgent ? 3 : 1,
         }}
       >
-        <CardContent>
+        <CardContent sx={{ p: { xs: 1, sm: 2 } }}>
           <Box
             sx={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              mb: 2,
+              mb: { xs: 1, sm: 2 },
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Typography variant="h6" component="h3">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: { xs: 0.5, sm: 1 },
+              }}
+            >
+              <Typography
+                variant="subtitle1"
+                component="h3"
+                sx={{
+                  fontSize: { xs: "1rem", sm: "1.15rem" },
+                  fontWeight: 600,
+                }}
+              >
                 注文番号: {order.order_number}
               </Typography>
               {isUrgent && (
-                <Badge badgeContent={<WarningIcon />} color="error">
-                  <Chip label="緊急" color="error" size="small" />
+                <Badge
+                  badgeContent={
+                    <WarningIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
+                  }
+                  color="error"
+                >
+                  <Chip
+                    label="緊急"
+                    color="error"
+                    size="small"
+                    sx={{
+                      fontSize: { xs: "0.85rem", sm: "1rem" },
+                      height: { xs: 22, sm: 28 },
+                    }}
+                  />
                 </Badge>
               )}
             </Box>
-
-            {/* 待ち時間表示（コンパクト表示） */}
-            <Box sx={{ my: 1 }}>
-              {/* <WaitTimeDisplay orderId={order.order_id} compact={true} /> */}
-              <Typography variant="caption" color="text.secondary">
+            <Box sx={{ my: { xs: 0.5, sm: 1 } }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}
+              >
                 待ち時間表示（一時的に無効化）
               </Typography>
             </Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: { xs: 0.5, sm: 1 },
+              }}
+            >
               <Chip
                 label={order.status}
                 color={
@@ -553,8 +586,16 @@ function KitchenPage() {
                     : "default"
                 }
                 variant="filled"
+                sx={{
+                  fontSize: { xs: "0.85rem", sm: "1rem" },
+                  height: { xs: 22, sm: 28 },
+                }}
               />
-              <Typography variant="body2" color="text.secondary">
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}
+              >
                 {elapsedTime}分経過
               </Typography>
             </Box>
@@ -582,56 +623,117 @@ function KitchenPage() {
           {/* 注文アイテム */}
           <List dense>
             {order.order_items.map((item) => (
-              <ListItem key={item.order_item_id} divider>
+              <ListItem
+                key={item.order_item_id}
+                divider
+                sx={{
+                  py: { xs: 0.3, sm: 0.7 },
+                  px: { xs: 0.5, sm: 1.5 },
+                  minHeight: { xs: 38, sm: 48 },
+                }}
+              >
                 <ListItemAvatar>
-                  <Avatar sx={{ bgcolor: "orange.light" }}>
-                    <RestaurantIcon />
+                  <Avatar
+                    sx={{
+                      bgcolor: "orange.light",
+                      width: { xs: 28, sm: 40 },
+                      height: { xs: 28, sm: 40 },
+                      fontSize: { xs: "0.95rem", sm: "1.2rem" },
+                    }}
+                  >
+                    <RestaurantIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary={`${item.product_name} × ${item.quantity}`}
+                  primary={
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontSize: { xs: "0.9rem", sm: "1.05rem" },
+                        fontWeight: 500,
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {item.product_name} × {item.quantity}
+                    </Typography>
+                  }
                   secondary={
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        調理時間: {item.cooking_time}分
-                      </Typography>
-                      {item.toppings.length > 0 && (
-                        <Box sx={{ mt: 0.5 }}>
-                          {item.toppings.map((topping) => (
-                            <Chip
-                              key={topping.topping_id}
-                              label={topping.topping_name}
-                              size="small"
-                              sx={{ mr: 0.5, mb: 0.5 }}
-                            />
-                          ))}
-                        </Box>
-                      )}
-                    </Box>
+                    item.toppings && item.toppings.length > 0 ? (
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.3 }}>
+                        {item.toppings.map((topping) => (
+                          <Chip
+                            key={topping.topping_id}
+                            label={topping.topping_name}
+                            size="small"
+                            sx={{
+                              fontSize: { xs: "0.75rem", sm: "0.9rem" },
+                              height: { xs: 18, sm: 24 },
+                              px: { xs: 0.7, sm: 1.2 },
+                              mr: 0.3,
+                            }}
+                          />
+                        ))}
+                      </Box>
+                    ) : null
                   }
                 />
+                <Box sx={{ ml: { xs: 0.5, sm: 1 } }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      fontSize: { xs: "0.75rem", sm: "0.9rem" },
+                      fontWeight: 400,
+                    }}
+                  >
+                    ¥{item.total_price}
+                  </Typography>
+                </Box>
               </ListItem>
             ))}
           </List>
 
-          {/* 特別な指示 */}
+          {/* 注文メモ・特記事項 */}
           {order.special_instructions && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              <Typography variant="body2">
-                特別な指示: {order.special_instructions}
-              </Typography>
-            </Alert>
+            <Box sx={{ mt: { xs: 0.5, sm: 1 } }}>
+              <Chip
+                icon={<WarningIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />}
+                label={order.special_instructions}
+                color="warning"
+                size="small"
+                sx={{
+                  fontSize: { xs: "0.8rem", sm: "0.95rem" },
+                  height: { xs: 22, sm: 28 },
+                }}
+              />
+            </Box>
           )}
 
-          {/* アクション */}
+          {/* アクションボタン */}
           {showActions && (
-            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: { xs: 0.7, sm: 2 },
+                mt: { xs: 0.7, sm: 2 },
+                flexWrap: "wrap",
+              }}
+            >
               {(order.status === "注文受付" || order.status === "調理待ち") && (
                 <Button
                   variant="contained"
-                  startIcon={<PlayArrowIcon />}
+                  startIcon={
+                    <PlayArrowIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
+                  }
                   onClick={() => updateOrderStatus(order.order_id, "調理中")}
-                  sx={{ bgcolor: "info.main" }}
+                  color="info"
+                  size="small"
+                  sx={{
+                    fontSize: { xs: "0.85rem", sm: "1rem" },
+                    py: { xs: 0.4, sm: 1 },
+                    minWidth: { xs: 70, sm: 120 },
+                    height: { xs: 32, sm: 40 },
+                  }}
                 >
                   調理開始
                 </Button>
@@ -639,9 +741,18 @@ function KitchenPage() {
               {order.status === "調理中" && (
                 <Button
                   variant="contained"
-                  startIcon={<CheckCircleIcon />}
+                  startIcon={
+                    <CheckCircleIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
+                  }
                   onClick={() => updateOrderStatus(order.order_id, "調理完了")}
                   color="success"
+                  size="small"
+                  sx={{
+                    fontSize: { xs: "0.85rem", sm: "1rem" },
+                    py: { xs: 0.4, sm: 1 },
+                    minWidth: { xs: 70, sm: 120 },
+                    height: { xs: 32, sm: 40 },
+                  }}
                 >
                   調理完了
                 </Button>
@@ -649,9 +760,18 @@ function KitchenPage() {
               {order.status === "調理完了" && (
                 <Button
                   variant="outlined"
-                  startIcon={<RefreshIcon />}
-                  onClick={() => updateOrderStatus(order.order_id, "cooking")}
+                  startIcon={
+                    <RefreshIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
+                  }
+                  onClick={() => updateOrderStatus(order.order_id, "調理中")}
                   color="warning"
+                  size="small"
+                  sx={{
+                    fontSize: { xs: "0.85rem", sm: "1rem" },
+                    py: { xs: 0.4, sm: 1 },
+                    minWidth: { xs: 70, sm: 120 },
+                    height: { xs: 32, sm: 40 },
+                  }}
                 >
                   調理に戻す
                 </Button>
@@ -739,21 +859,71 @@ function KitchenPage() {
           <Tabs
             value={selectedTab}
             onChange={(_, newValue) => setSelectedTab(newValue)}
+            variant="fullWidth"
+            sx={{
+              minHeight: { xs: 36, sm: 48 },
+              ".MuiTabs-indicator": { height: { xs: 2, sm: 3 } },
+            }}
           >
             <Tab
-              label={`調理待ち (${waitingOrders.length})`}
-              icon={<TimerIcon />}
+              label={
+                <span
+                  style={{
+                    fontSize: "clamp(0.85rem, 2vw, 1.05rem)",
+                    fontWeight: 500,
+                  }}
+                >
+                  調理待ち ({waitingOrders.length})
+                </span>
+              }
+              icon={<TimerIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />}
               iconPosition="start"
+              sx={{
+                minHeight: { xs: 36, sm: 48 },
+                px: { xs: 0.5, sm: 2 },
+                fontSize: { xs: "0.85rem", sm: "1rem" },
+                gap: { xs: 0.5, sm: 1 },
+              }}
             />
             <Tab
-              label={`調理中 (${cookingOrders.length})`}
-              icon={<FireIcon />}
+              label={
+                <span
+                  style={{
+                    fontSize: "clamp(0.85rem, 2vw, 1.05rem)",
+                    fontWeight: 500,
+                  }}
+                >
+                  調理中 ({cookingOrders.length})
+                </span>
+              }
+              icon={<FireIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />}
               iconPosition="start"
+              sx={{
+                minHeight: { xs: 36, sm: 48 },
+                px: { xs: 0.5, sm: 2 },
+                fontSize: { xs: "0.85rem", sm: "1rem" },
+                gap: { xs: 0.5, sm: 1 },
+              }}
             />
             <Tab
-              label={`調理完了 (${completedOrders.length})`}
-              icon={<CheckCircleIcon />}
+              label={
+                <span
+                  style={{
+                    fontSize: "clamp(0.85rem, 2vw, 1.05rem)",
+                    fontWeight: 500,
+                  }}
+                >
+                  調理完了 ({completedOrders.length})
+                </span>
+              }
+              icon={<CheckCircleIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />}
               iconPosition="start"
+              sx={{
+                minHeight: { xs: 36, sm: 48 },
+                px: { xs: 0.5, sm: 2 },
+                fontSize: { xs: "0.85rem", sm: "1rem" },
+                gap: { xs: 0.5, sm: 1 },
+              }}
             />
           </Tabs>
         </Box>
@@ -798,22 +968,38 @@ function KitchenPage() {
         onClose={() => setShowDebug(false)}
         maxWidth="md"
         fullWidth
+        sx={{
+          ".MuiDialog-paper": {
+            p: { xs: 1, sm: 2 },
+            borderRadius: 2,
+          },
+        }}
       >
-        <DialogTitle>
+        <DialogTitle
+          sx={{ p: { xs: 1, sm: 2 }, fontSize: { xs: "1rem", sm: "1.2rem" } }}
+        >
           <Box
             display="flex"
             justifyContent="space-between"
             alignItems="center"
           >
             デバッグ情報
-            <IconButton onClick={() => setShowDebug(false)} size="small">
-              <CloseIcon />
+            <IconButton
+              onClick={() => setShowDebug(false)}
+              size="small"
+              sx={{ ml: 1 }}
+            >
+              <CloseIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
             </IconButton>
           </Box>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: { xs: 1, sm: 2 } }}>
           <Box>
-            <Typography variant="h6" gutterBottom>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ fontSize: { xs: "1rem", sm: "1.15rem" } }}
+            >
               API統計 (過去1時間)
             </Typography>
             {(() => {
@@ -823,9 +1009,9 @@ function KitchenPage() {
                   component="pre"
                   sx={{
                     backgroundColor: "#f5f5f5",
-                    p: 2,
+                    p: { xs: 1, sm: 2 },
                     borderRadius: 1,
-                    fontSize: "0.875rem",
+                    fontSize: { xs: "0.8rem", sm: "0.875rem" },
                     overflow: "auto",
                     mb: 2,
                   }}
@@ -835,20 +1021,24 @@ function KitchenPage() {
               );
             })()}
 
-            <Divider sx={{ my: 2 }} />
+            <Divider sx={{ my: { xs: 1, sm: 2 } }} />
 
-            <Typography variant="h6" gutterBottom>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ fontSize: { xs: "1rem", sm: "1.15rem" } }}
+            >
               最新ログ (最新10件)
             </Typography>
             <Box
               component="pre"
               sx={{
                 backgroundColor: "#f5f5f5",
-                p: 2,
+                p: { xs: 1, sm: 2 },
                 borderRadius: 1,
-                fontSize: "0.875rem",
+                fontSize: { xs: "0.8rem", sm: "0.875rem" },
                 overflow: "auto",
-                maxHeight: 300,
+                maxHeight: { xs: 180, sm: 300 },
               }}
             >
               {apiLogger
@@ -866,11 +1056,28 @@ function KitchenPage() {
             </Box>
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => apiLogger.clearLogs()} color="warning">
+        <DialogActions sx={{ p: { xs: 1, sm: 2 }, gap: { xs: 1, sm: 2 } }}>
+          <Button
+            onClick={() => apiLogger.clearLogs()}
+            color="warning"
+            sx={{
+              fontSize: { xs: "0.85rem", sm: "1rem" },
+              minWidth: { xs: 70, sm: 120 },
+              height: { xs: 32, sm: 40 },
+            }}
+          >
             ログクリア
           </Button>
-          <Button onClick={() => setShowDebug(false)}>閉じる</Button>
+          <Button
+            onClick={() => setShowDebug(false)}
+            sx={{
+              fontSize: { xs: "0.85rem", sm: "1rem" },
+              minWidth: { xs: 70, sm: 120 },
+              height: { xs: 32, sm: 40 },
+            }}
+          >
+            閉じる
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>

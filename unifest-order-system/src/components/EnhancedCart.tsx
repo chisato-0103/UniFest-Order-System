@@ -75,11 +75,14 @@ const EnhancedCart: React.FC<EnhancedCartProps> = ({
         onClick={onOpen}
         sx={{
           position: "fixed",
-          bottom: 24,
-          right: 24,
+          bottom: { xs: 12, sm: 24 },
+          right: { xs: 12, sm: 24 },
           zIndex: 1000,
+          width: { xs: 48, sm: 56 },
+          height: { xs: 48, sm: 56 },
+          minHeight: { xs: 48, sm: 56 },
           background: "linear-gradient(45deg, #FF6B35, #F7931E)",
-          boxShadow: "0 8px 25px rgba(255, 107, 53, 0.4)",
+          boxShadow: "0 4px 12px rgba(255, 107, 53, 0.25)",
           transition: "all 0.3s ease",
           "&:hover": {
             background: "linear-gradient(45deg, #E55A2B, #E6841A)",
@@ -94,13 +97,15 @@ const EnhancedCart: React.FC<EnhancedCartProps> = ({
               backgroundColor: "#4ECDC4",
               color: "white",
               fontWeight: 600,
-              fontSize: "0.8rem",
-              minWidth: 24,
-              height: 24,
+              fontSize: { xs: "0.7rem", sm: "0.8rem" },
+              minWidth: { xs: 18, sm: 24 },
+              height: { xs: 18, sm: 24 },
+              top: 6,
+              right: 6,
             },
           }}
         >
-          <CartIcon />
+          <CartIcon sx={{ fontSize: { xs: 24, sm: 28 } }} />
         </Badge>
       </Fab>
 
@@ -108,13 +113,14 @@ const EnhancedCart: React.FC<EnhancedCartProps> = ({
       <Dialog
         open={isOpen}
         onClose={onClose}
-        maxWidth="sm"
+        maxWidth="xs"
         fullWidth
         TransitionComponent={Transition}
         PaperProps={{
           sx: {
-            borderRadius: 3,
-            maxHeight: "90vh",
+            borderRadius: { xs: 2, sm: 3 },
+            maxHeight: { xs: "80vh", sm: "90vh" },
+            m: { xs: 1, sm: 2 },
           },
         }}
       >
@@ -125,44 +131,57 @@ const EnhancedCart: React.FC<EnhancedCartProps> = ({
             position: "relative",
             textAlign: "center",
             fontWeight: 600,
+            py: { xs: 1.5, sm: 2 },
+            fontSize: { xs: "1.1rem", sm: "1.25rem" },
           }}
         >
-          <Typography variant="h5" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: 600, fontSize: { xs: "1rem", sm: "1.25rem" } }}
+          >
             🛒 注文内容
           </Typography>
           <IconButton
             onClick={onClose}
             sx={{
               position: "absolute",
-              right: 8,
-              top: 8,
+              right: { xs: 4, sm: 8 },
+              top: { xs: 4, sm: 8 },
               color: "white",
+              p: { xs: 0.5, sm: 1 },
               "&:hover": {
                 backgroundColor: "rgba(255, 255, 255, 0.1)",
               },
             }}
           >
-            <CloseIcon />
+            <CloseIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ p: 0 }}>
+        <DialogContent sx={{ p: { xs: 0, sm: 0 } }}>
           {cartItems.length === 0 ? (
-            <Box sx={{ p: 4, textAlign: "center" }}>
-              <Typography variant="h6" color="textSecondary">
+            <Box sx={{ p: { xs: 2, sm: 4 }, textAlign: "center" }}>
+              <Typography
+                variant="subtitle1"
+                color="textSecondary"
+                sx={{ fontSize: { xs: "0.95rem", sm: "1.1rem" } }}
+              >
                 カートに商品がありません
               </Typography>
-              <Typography variant="body2" sx={{ mt: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{ mt: 1, fontSize: { xs: "0.85rem", sm: "1rem" } }}
+              >
                 商品を選んでカートに追加してください
               </Typography>
             </Box>
           ) : (
-            <List sx={{ py: 0 }}>
+            <List sx={{ py: { xs: 0, sm: 0 } }}>
               {cartItems.map((item, index) => (
                 <React.Fragment key={item.id}>
                   <ListItem
                     sx={{
-                      py: 2,
+                      py: { xs: 1, sm: 2 },
                       "&:hover": {
                         backgroundColor: "#f8f9fa",
                       },
@@ -171,21 +190,32 @@ const EnhancedCart: React.FC<EnhancedCartProps> = ({
                     <ListItemText
                       primary={
                         <Typography
-                          variant="subtitle1"
-                          sx={{ fontWeight: 600 }}
+                          variant="subtitle2"
+                          sx={{
+                            fontWeight: 600,
+                            fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                          }}
                         >
                           {item.name}
                         </Typography>
                       }
                       secondary={
-                        <Typography variant="body2" color="textSecondary">
+                        <Typography
+                          variant="body2"
+                          color="textSecondary"
+                          sx={{ fontSize: { xs: "0.85rem", sm: "1rem" } }}
+                        >
                           ¥{item.price.toLocaleString()} × {item.quantity}個
                         </Typography>
                       }
                     />
                     <ListItemSecondaryAction>
                       <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: { xs: 0.5, sm: 1 },
+                        }}
                       >
                         <IconButton
                           onClick={() => onRemoveFromCart(item.id)}
@@ -193,19 +223,21 @@ const EnhancedCart: React.FC<EnhancedCartProps> = ({
                           sx={{
                             backgroundColor: "#FF6B35",
                             color: "white",
+                            p: { xs: 0.5, sm: 1 },
                             "&:hover": {
                               backgroundColor: "#E55A2B",
                             },
                           }}
                         >
-                          <RemoveIcon />
+                          <RemoveIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
                         </IconButton>
                         <Typography
-                          variant="body1"
+                          variant="body2"
                           sx={{
                             fontWeight: 600,
-                            minWidth: 30,
+                            minWidth: { xs: 22, sm: 30 },
                             textAlign: "center",
+                            fontSize: { xs: "0.95rem", sm: "1.1rem" },
                           }}
                         >
                           {item.quantity}
@@ -216,17 +248,20 @@ const EnhancedCart: React.FC<EnhancedCartProps> = ({
                           sx={{
                             backgroundColor: "#4ECDC4",
                             color: "white",
+                            p: { xs: 0.5, sm: 1 },
                             "&:hover": {
                               backgroundColor: "#3BA59F",
                             },
                           }}
                         >
-                          <AddIcon />
+                          <AddIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
                         </IconButton>
                       </Box>
                     </ListItemSecondaryAction>
                   </ListItem>
-                  {index < cartItems.length - 1 && <Divider />}
+                  {index < cartItems.length - 1 && (
+                    <Divider sx={{ my: { xs: 0.5, sm: 1 } }} />
+                  )}
                 </React.Fragment>
               ))}
             </List>
@@ -237,7 +272,7 @@ const EnhancedCart: React.FC<EnhancedCartProps> = ({
             <Paper
               elevation={0}
               sx={{
-                p: 3,
+                p: { xs: 1.5, sm: 3 },
                 backgroundColor: "#f8f9fa",
                 borderTop: "1px solid #e9ecef",
               }}
@@ -247,13 +282,25 @@ const EnhancedCart: React.FC<EnhancedCartProps> = ({
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  mb: 2,
+                  mb: { xs: 1, sm: 2 },
                 }}
               >
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: { xs: "1rem", sm: "1.15rem" },
+                  }}
+                >
                   小計
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: { xs: "1rem", sm: "1.15rem" },
+                  }}
+                >
                   ¥{totalPrice.toLocaleString()}
                 </Typography>
               </Box>
@@ -262,13 +309,21 @@ const EnhancedCart: React.FC<EnhancedCartProps> = ({
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  mb: 2,
+                  mb: { xs: 1, sm: 2 },
                 }}
               >
-                <Typography variant="body2" color="textSecondary">
+                <Typography
+                  variant="body2"
+                  color="textSecondary"
+                  sx={{ fontSize: { xs: "0.85rem", sm: "1rem" } }}
+                >
                   商品数量: {totalItems}個
                 </Typography>
-                <Typography variant="body2" color="textSecondary">
+                <Typography
+                  variant="body2"
+                  color="textSecondary"
+                  sx={{ fontSize: { xs: "0.85rem", sm: "1rem" } }}
+                >
                   税込価格
                 </Typography>
               </Box>
@@ -276,13 +331,16 @@ const EnhancedCart: React.FC<EnhancedCartProps> = ({
           )}
         </DialogContent>
 
-        <DialogActions sx={{ p: 3, pt: 0 }}>
+        <DialogActions sx={{ p: { xs: 1, sm: 3 }, pt: 0 }}>
           <Button
             onClick={onClose}
             variant="outlined"
             sx={{
               borderColor: "#ccc",
               color: "#666",
+              fontSize: { xs: "0.95rem", sm: "1.05rem" },
+              py: { xs: 0.7, sm: 1.5 },
+              px: { xs: 1.5, sm: 3 },
               "&:hover": {
                 borderColor: "#999",
                 backgroundColor: "#f8f9fa",
@@ -296,17 +354,18 @@ const EnhancedCart: React.FC<EnhancedCartProps> = ({
             variant="contained"
             disabled={cartItems.length === 0 || isOrderLoading}
             sx={{
-              ml: 2,
+              ml: { xs: 1, sm: 2 },
               background: "linear-gradient(45deg, #FF6B35, #F7931E)",
+              fontSize: { xs: "0.95rem", sm: "1.05rem" },
+              py: { xs: 0.7, sm: 1.5 },
+              px: { xs: 2, sm: 4 },
+              fontWeight: 600,
               "&:hover": {
                 background: "linear-gradient(45deg, #E55A2B, #E6841A)",
               },
               "&:disabled": {
                 background: "#ccc",
               },
-              fontWeight: 600,
-              py: 1.5,
-              px: 4,
             }}
           >
             {isOrderLoading ? "注文処理中..." : "注文する"}

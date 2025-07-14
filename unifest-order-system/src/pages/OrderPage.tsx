@@ -323,7 +323,7 @@ const OrderPage: React.FC = () => {
     quantity: number,
     toppings: Topping[]
   ) => {
-    // 商品IDが空文字・null・NaNの場合はカート追加不可
+    // 商品IDが空文字・inull・NaNの場合はカート追加不可
     if (!product.id || isNaN(Number(product.id))) {
       alert(
         "商品IDが不正なためカートに追加できません。管理者にご連絡ください。"

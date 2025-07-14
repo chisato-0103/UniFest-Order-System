@@ -52,34 +52,43 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="xs"
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: { xs: 2, sm: 5 },
+          borderRadius: { xs: 1.5, sm: 3 },
           overflow: "visible",
-          boxShadow: "0 8px 40px rgba(80,80,180,0.18)",
+          boxShadow: "0 4px 24px rgba(80,80,180,0.12)",
           background: "linear-gradient(135deg, #fff 0%, #f8f9fa 100%)",
-          p: { xs: 1, sm: 3 },
-          m: { xs: 1, sm: 3 },
-          width: { xs: "95vw", sm: "auto" },
-          maxWidth: { xs: "95vw", sm: 520 },
+          p: { xs: 0.5, sm: 1.5 },
+          m: { xs: 0.5, sm: 1.5 },
+          width: { xs: "92vw", sm: "auto" },
+          maxWidth: { xs: "92vw", sm: 400 },
         },
       }}
     >
-      <DialogTitle sx={{ textAlign: "center", pb: 1 }}>
-        <CheckIcon sx={{ fontSize: 48, color: "success.main", mb: 1 }} />
-        <Typography variant="h5" component="div" fontWeight="bold">
+      <DialogTitle sx={{ textAlign: "center", pb: 0.5 }}>
+        <CheckIcon sx={{ fontSize: 36, color: "success.main", mb: 0.5 }} />
+        <Typography
+          variant="h6"
+          component="div"
+          fontWeight="bold"
+          sx={{ fontSize: { xs: "1.05rem", sm: "1.15rem" } }}
+        >
           ご注文ありがとうございます！
         </Typography>
       </DialogTitle>
 
-      <DialogContent sx={{ px: 3 }}>
+      <DialogContent sx={{ px: { xs: 1, sm: 2 } }}>
         {/* 注文情報 */}
-        <Box sx={{ mb: 3 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-            <ReceiptIcon color="primary" />
-            <Typography variant="h6" fontWeight="bold">
+        <Box sx={{ mb: { xs: 1.2, sm: 2 } }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.7, mb: 1 }}>
+            <ReceiptIcon color="primary" sx={{ fontSize: 22 }} />
+            <Typography
+              variant="subtitle1"
+              fontWeight="bold"
+              sx={{ fontSize: { xs: "1rem", sm: "1.08rem" } }}
+            >
               注文詳細
             </Typography>
           </Box>
@@ -87,24 +96,25 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
           <Box
             sx={{
               bgcolor: "grey.50",
-              p: 2,
-              borderRadius: 2,
+              p: 1,
+              borderRadius: 1.2,
               border: "1px solid",
               borderColor: "grey.300",
-              mb: 2,
+              mb: 1.2,
             }}
           >
             <Typography
-              variant="h4"
+              variant="subtitle1"
               color="primary"
               fontWeight="bold"
               textAlign="center"
+              sx={{ fontSize: { xs: "1rem", sm: "1.08rem" } }}
             >
               注文番号: {order.order_number || order.orderNumber}
             </Typography>
           </Box>
 
-          <List dense>
+          <List dense sx={{ mb: 0.5 }}>
             {order.items.map((item: OrderItem, index) => (
               <ListItem key={index} sx={{ px: 0 }}>
                 <ListItemText
@@ -116,7 +126,11 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
                         alignItems: "center",
                       }}
                     >
-                      <Typography variant="body1" fontWeight="medium">
+                      <Typography
+                        variant="body2"
+                        fontWeight="medium"
+                        sx={{ fontSize: { xs: "0.95rem", sm: "1rem" } }}
+                      >
                         {(
                           item as unknown as {
                             product_name?: string;
@@ -125,7 +139,11 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
                         ).product_name || (item as OrderItem).name}{" "}
                         × {item.quantity}
                       </Typography>
-                      <Typography variant="body1" fontWeight="bold">
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        sx={{ fontSize: { xs: "0.95rem", sm: "1rem" } }}
+                      >
                         {formatPrice(
                           (
                             item as unknown as {
@@ -140,7 +158,11 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
                   secondary={
                     item.toppings &&
                     item.toppings.length > 0 && (
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
+                      >
                         トッピング:{" "}
                         {item.toppings
                           .map(
@@ -162,7 +184,7 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
             ))}
           </List>
 
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ my: { xs: 0.7, sm: 1.2 } }} />
 
           <Box
             sx={{
@@ -171,24 +193,40 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
               alignItems: "center",
             }}
           >
-            <Typography variant="h6" fontWeight="bold">
+            <Typography
+              variant="body2"
+              fontWeight="bold"
+              sx={{ fontSize: { xs: "0.95rem", sm: "1rem" } }}
+            >
               合計金額
             </Typography>
-            <Typography variant="h6" fontWeight="bold" color="primary">
+            <Typography
+              variant="body2"
+              fontWeight="bold"
+              color="primary"
+              sx={{ fontSize: { xs: "0.95rem", sm: "1rem" } }}
+            >
               {formatPrice(order.total_amount)}
             </Typography>
           </Box>
         </Box>
 
         {/* 予想時間 */}
-        <Alert severity="info" sx={{ mb: 3 }}>
+        <Alert severity="info" sx={{ mb: { xs: 1, sm: 1.5 } }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <TimeIcon />
             <Box>
-              <Typography variant="body1" fontWeight="medium">
+              <Typography
+                variant="body2"
+                fontWeight="medium"
+                sx={{ fontSize: { xs: "0.95rem", sm: "1rem" } }}
+              >
                 お渡し予定時刻: {getEstimatedReadyTime()}
               </Typography>
-              <Typography variant="body2">
+              <Typography
+                variant="body2"
+                sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
+              >
                 約{estimatedTime}分でお渡し予定です
               </Typography>
             </Box>
@@ -196,8 +234,11 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
         </Alert>
 
         {/* 注意事項 */}
-        <Alert severity="warning" sx={{ mb: 3 }}>
-          <Typography variant="body2">
+        <Alert severity="warning" sx={{ mb: { xs: 1, sm: 1.5 } }}>
+          <Typography
+            variant="body2"
+            sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
+          >
             <strong>⚠️ 注意事項</strong>
             <br />
             • 商品は熱々の状態でお渡しします。やけどにご注意ください
@@ -208,10 +249,13 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
         </Alert>
 
         {/* QRコード（注文情報全体をJSON化して渡す） */}
-        <Box sx={{ mb: 2 }}>
-          <QRCodeGenerator order={order} size={180} showDownload={true} />
-          <Alert severity="info" sx={{ mt: 2 }}>
-            <Typography variant="body2">
+        <Box sx={{ mb: 1 }}>
+          <QRCodeGenerator order={order} size={120} showDownload={true} />
+          <Alert severity="info" sx={{ mt: 1 }}>
+            <Typography
+              variant="body2"
+              sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
+            >
               このQRコードをスクリーンショットで保存してください。
               <br />
               受け渡し時に提示することでスムーズに受け渡しできます。
@@ -220,25 +264,29 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
         </Box>
 
         {/* ステータス */}
-        <Box sx={{ textAlign: "center" }}>
+        <Box sx={{ textAlign: "center", mt: 0.5 }}>
           <Chip
             label={order.status}
             color="info"
-            size="medium"
-            sx={{ fontWeight: "bold", px: 2 }}
+            size="small"
+            sx={{
+              fontWeight: "bold",
+              px: 1.2,
+              fontSize: { xs: "0.85rem", sm: "0.95rem" },
+            }}
           />
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ p: 3, pt: 1 }}>
+      <DialogActions sx={{ p: { xs: 1, sm: 2 }, pt: 0.5 }}>
         <Button
           onClick={onClose}
           variant="contained"
           fullWidth
-          size="large"
+          size="medium"
           sx={{
-            py: 1.5,
-            fontSize: "1.1rem",
+            py: { xs: 0.7, sm: 1 },
+            fontSize: { xs: "0.95rem", sm: "1.05rem" },
             fontWeight: "bold",
           }}
         >

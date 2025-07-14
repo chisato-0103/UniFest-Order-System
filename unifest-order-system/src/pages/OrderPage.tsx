@@ -97,51 +97,95 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        opacity: product.available ? 1 : 0.6, // 売り切れ時は薄く表示
+        opacity: product.available ? 1 : 0.6,
+        p: { xs: 0.7, sm: 2 },
+        mb: { xs: 1, sm: 2 },
+        borderRadius: { xs: 2, sm: 3 },
+        boxShadow: { xs: 1, sm: 3 },
       }}
     >
-      <CardContent sx={{ flexGrow: 1 }}>
+      <CardContent sx={{ flexGrow: 1, p: { xs: 0.7, sm: 2 } }}>
         {/* 商品名・売り切れ表示 */}
         <Box
           display="flex"
           justifyContent="space-between"
           alignItems="start"
-          mb={1}
+          mb={{ xs: 0.5, sm: 1 }}
         >
-          <Typography variant="h6" component="h3" gutterBottom>
+          <Typography
+            variant="subtitle1"
+            component="h3"
+            gutterBottom
+            sx={{ fontSize: { xs: "1rem", sm: "1.25rem" }, fontWeight: 600 }}
+          >
             {product.name}
           </Typography>
           {/* 売り切れラベル */}
           {!product.available && (
-            <Chip label="売り切れ" color="error" size="small" />
+            <Chip
+              label="売り切れ"
+              color="error"
+              size="small"
+              sx={{
+                fontSize: { xs: "0.8rem", sm: "0.95rem" },
+                height: { xs: 20, sm: 24 },
+                px: { xs: 1, sm: 2 },
+              }}
+            />
           )}
         </Box>
 
         {/* 商品説明 */}
-        <Typography variant="body2" color="text.secondary" gutterBottom>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          gutterBottom
+          sx={{
+            fontSize: { xs: "0.85rem", sm: "1rem" },
+            lineHeight: 1.5,
+            mb: { xs: 0.5, sm: 1 },
+          }}
+        >
           {product.description}
         </Typography>
 
         {/* 価格・調理時間 */}
-        <Box display="flex" alignItems="center" gap={1} mb={2}>
-          <Typography variant="h6" color="primary">
+        <Box display="flex" alignItems="center" gap={1} mb={{ xs: 1, sm: 2 }}>
+          <Typography
+            variant="subtitle1"
+            color="primary"
+            sx={{ fontSize: { xs: "1rem", sm: "1.15rem" }, fontWeight: 600 }}
+          >
             ¥{product.price.toLocaleString()}
           </Typography>
           <Chip
-            icon={<AccessTime />}
+            icon={<AccessTime sx={{ fontSize: { xs: 16, sm: 20 } }} />}
             label={`${product.preparationTime || 10}分`}
             size="small"
             variant="outlined"
+            sx={{
+              fontSize: { xs: "0.8rem", sm: "0.95rem" },
+              height: { xs: 20, sm: 24 },
+              px: { xs: 1, sm: 2 },
+            }}
           />
         </Box>
 
         {/* トッピング選択欄（トッピングが存在する場合のみ） */}
         {toppings.length > 0 && (
-          <Box mb={2}>
-            <Typography variant="subtitle2" gutterBottom>
+          <Box mb={{ xs: 1, sm: 2 }}>
+            <Typography
+              variant="subtitle2"
+              gutterBottom
+              sx={{
+                fontSize: { xs: "0.9rem", sm: "1rem" },
+                fontWeight: 500,
+                mb: { xs: 0.5, sm: 1 },
+              }}
+            >
               トッピング
             </Typography>
-            <Box display="flex" flexWrap="wrap" gap={1}>
+            <Box display="flex" flexWrap="wrap" gap={{ xs: 0.5, sm: 1 }}>
               {toppings.map((topping) => (
                 <Chip
                   key={topping.id}
@@ -161,6 +205,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
                   onClick={() => handleToppingToggle(topping)}
                   disabled={!product.available || !topping.available}
                   size="small"
+                  sx={{
+                    fontSize: { xs: "0.8rem", sm: "0.95rem" },
+                    height: { xs: 20, sm: 24 },
+                    px: { xs: 1, sm: 2 },
+                  }}
                 />
               ))}
             </Box>
@@ -172,9 +221,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           display="flex"
           alignItems="center"
           justifyContent="space-between"
-          mb={2}
+          mb={{ xs: 1, sm: 2 }}
         >
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box display="flex" alignItems="center" gap={{ xs: 0.5, sm: 1 }}>
             {/* 数量減ボタン */}
             <Button
               size="small"
@@ -185,8 +234,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
             </Button>
             {/* 数量表示 */}
             <Typography
-              variant="body1"
-              sx={{ minWidth: "2ch", textAlign: "center" }}
+              variant="body2"
+              sx={{
+                minWidth: "2ch",
+                textAlign: "center",
+                fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                fontWeight: 600,
+                px: { xs: 0.5, sm: 1 },
+              }}
             >
               {quantity}
             </Typography>
@@ -201,7 +256,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           </Box>
 
           {/* 合計金額表示 */}
-          <Typography variant="h6" color="primary">
+          <Typography
+            variant="subtitle1"
+            color="primary"
+            sx={{ fontSize: { xs: "1rem", sm: "1.15rem" }, fontWeight: 600 }}
+          >
             ¥{getTotalPrice().toLocaleString()}
           </Typography>
         </Box>
@@ -210,9 +269,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
         <Button
           variant="contained"
           fullWidth
-          startIcon={<ShoppingCart />}
+          startIcon={<ShoppingCart sx={{ fontSize: { xs: 18, sm: 22 } }} />}
           onClick={handleAddToCart}
           disabled={!product.available}
+          sx={{
+            py: { xs: 0.5, sm: 1 },
+            fontSize: { xs: "0.9rem", sm: "1rem" },
+            fontWeight: 600,
+            borderRadius: { xs: 2, sm: 3 },
+          }}
         >
           カートに追加
         </Button>
@@ -279,14 +344,14 @@ const OrderPage: React.FC = () => {
   // ローディング中はスピナー表示
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
         <Box
           display="flex"
           justifyContent="center"
           alignItems="center"
-          minHeight="50vh"
+          minHeight={{ xs: "40vh", sm: "50vh" }}
         >
-          <CircularProgress />
+          <CircularProgress size={32} />
         </Box>
       </Container>
     );
@@ -294,27 +359,73 @@ const OrderPage: React.FC = () => {
 
   // メインUI
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       {/* ヘッダー部分（タイトル・カートボタン） */}
-      <Paper elevation={1} sx={{ p: 3, mb: 4 }}>
+      <Paper
+        elevation={2}
+        sx={{
+          p: { xs: 1, sm: 2 },
+          mb: { xs: 1.5, sm: 3 },
+          borderRadius: { xs: 2, sm: 3 },
+        }}
+      >
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-              <Restaurant sx={{ mr: 1, verticalAlign: "middle" }} />
+            <Typography
+              variant="h5"
+              component="h1"
+              gutterBottom
+              sx={{
+                fontSize: { xs: "1.1rem", sm: "1.7rem" },
+                fontWeight: 700,
+                mb: { xs: 0.5, sm: 1 },
+              }}
+            >
+              <Restaurant
+                sx={{
+                  mr: 1,
+                  verticalAlign: "middle",
+                  fontSize: { xs: 18, sm: 28 },
+                }}
+              />
               メニュー
             </Typography>
-            <Typography variant="body1" color="text.secondary">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                fontSize: { xs: "0.9rem", sm: "1rem" },
+                mb: { xs: 0.5, sm: 1 },
+              }}
+            >
               お好みの商品をお選びください
             </Typography>
           </Box>
           {/* カートボタン（バッジで個数表示） */}
-          <Badge badgeContent={getCartItemCount()} color="primary">
+          <Badge
+            badgeContent={getCartItemCount()}
+            color="primary"
+            sx={{
+              "& .MuiBadge-badge": {
+                fontSize: { xs: "0.8rem", sm: "1rem" },
+                minWidth: { xs: 18, sm: 22 },
+                height: { xs: 18, sm: 22 },
+              },
+            }}
+          >
             <Button
               component={RouterLink}
               to="/cart"
               variant="outlined"
-              startIcon={<ShoppingCart />}
-              size="large"
+              startIcon={<ShoppingCart sx={{ fontSize: { xs: 16, sm: 22 } }} />}
+              size="small"
+              sx={{
+                py: { xs: 0.4, sm: 0.8 },
+                px: { xs: 1, sm: 2 },
+                fontSize: { xs: "0.85rem", sm: "1rem" },
+                fontWeight: 600,
+                borderRadius: { xs: 2, sm: 3 },
+              }}
             >
               カート
             </Button>
@@ -324,7 +435,17 @@ const OrderPage: React.FC = () => {
 
       {/* エラー表示（API失敗時） */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert
+          severity="error"
+          sx={{
+            mb: { xs: 1.5, sm: 2.5 },
+            fontSize: { xs: "0.9rem", sm: "1rem" },
+            py: { xs: 0.7, sm: 1.2 },
+            px: { xs: 1, sm: 2 },
+            alignItems: "center",
+            icon: { fontSize: { xs: 20, sm: 24 } },
+          }}
+        >
           {error}
         </Alert>
       )}
@@ -337,7 +458,7 @@ const OrderPage: React.FC = () => {
           sm: "repeat(2, 1fr)",
           md: "repeat(3, 1fr)",
         }}
-        gap={3}
+        sx={{ gap: { xs: 1, sm: 2 }, mb: { xs: 1, sm: 2 } }}
       >
         {products.map((product) => (
           <ProductCard
@@ -350,8 +471,12 @@ const OrderPage: React.FC = () => {
 
       {/* 商品が0件の場合のメッセージ */}
       {!loading && products.length === 0 && (
-        <Box textAlign="center" py={8}>
-          <Typography variant="h6" color="text.secondary">
+        <Box textAlign="center" py={{ xs: 2, sm: 4 }}>
+          <Typography
+            variant="subtitle1"
+            color="text.secondary"
+            sx={{ fontSize: { xs: "0.95rem", sm: "1.1rem" }, fontWeight: 500 }}
+          >
             現在利用できる商品がありません
           </Typography>
         </Box>

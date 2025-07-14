@@ -203,13 +203,31 @@ const CartPage: React.FC = () => {
         estimatedTime={estimatedTime}
       />
       {/* ナビゲーションバーはApp.tsxで共通表示 */}
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth="md" sx={{ py: { xs: 2, sm: 4 } }}>
         {/* 🎯 ページタイトル */}
-        <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
-          <IconButton onClick={() => navigate("/order")} color="primary">
-            <BackIcon />
+        <Box
+          sx={{
+            mb: { xs: 1.5, sm: 3 },
+            display: "flex",
+            alignItems: "center",
+            gap: { xs: 1, sm: 2 },
+          }}
+        >
+          <IconButton
+            onClick={() => navigate("/order")}
+            color="primary"
+            sx={{ p: { xs: 0.5, sm: 1 } }}
+          >
+            <BackIcon sx={{ fontSize: { xs: 22, sm: 28 } }} />
           </IconButton>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: "bold" }}>
+          <Typography
+            variant="h6"
+            component="h1"
+            sx={{
+              fontWeight: "bold",
+              fontSize: { xs: "1.1rem", sm: "1.5rem" },
+            }}
+          >
             🛒 カート
           </Typography>
           {/* 🧪 テスト用ボタン（本番では非表示） */}
@@ -227,18 +245,38 @@ const CartPage: React.FC = () => {
         {cart.items.length === 0 ? (
           // 🈳 カートが空の場合
           <Card>
-            <CardContent sx={{ textAlign: "center", py: 6 }}>
-              <CartIcon sx={{ fontSize: 64, color: "grey.300", mb: 2 }} />
-              <Typography variant="h6" color="textSecondary" gutterBottom>
+            <CardContent sx={{ textAlign: "center", py: { xs: 3, sm: 6 } }}>
+              <CartIcon
+                sx={{ fontSize: { xs: 36, sm: 64 }, color: "grey.300", mb: 2 }}
+              />
+              <Typography
+                variant="subtitle1"
+                color="textSecondary"
+                gutterBottom
+                sx={{ fontSize: { xs: "1rem", sm: "1.2rem" } }}
+              >
                 カートは空です
               </Typography>
-              <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                sx={{
+                  mb: { xs: 2, sm: 3 },
+                  fontSize: { xs: "0.95rem", sm: "1rem" },
+                }}
+              >
                 商品を選んでカートに追加してください
               </Typography>
               <Button
                 variant="contained"
                 onClick={() => navigate("/order")}
-                size="large"
+                size="medium"
+                sx={{
+                  py: { xs: 0.7, sm: 1.2 },
+                  px: { xs: 2, sm: 4 },
+                  fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                  fontWeight: 600,
+                }}
               >
                 商品を選ぶ
               </Button>
@@ -247,12 +285,19 @@ const CartPage: React.FC = () => {
         ) : (
           // 🛍️ カートに商品がある場合
           <>
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
+            <Card sx={{ mb: { xs: 1.5, sm: 3 } }}>
+              <CardContent sx={{ p: { xs: 1, sm: 2 } }}>
+                <Typography
+                  variant="subtitle1"
+                  gutterBottom
+                  sx={{
+                    fontSize: { xs: "1rem", sm: "1.15rem" },
+                    fontWeight: 600,
+                  }}
+                >
                   注文内容（{cart.items.length}品目）
                 </Typography>
-                <List>
+                <List sx={{ py: { xs: 0, sm: 0 } }}>
                   {cart.items.map((item, index) => (
                     <React.Fragment key={index}>
                       <ListItem>
@@ -265,25 +310,42 @@ const CartPage: React.FC = () => {
                                 gap: 1,
                               }}
                             >
-                              <Typography variant="subtitle1" fontWeight="bold">
+                              <Typography
+                                variant="body2"
+                                fontWeight="bold"
+                                sx={{
+                                  fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                                }}
+                              >
                                 {item.name}
                               </Typography>
                               <Chip
                                 label={`${item.quantity}個`}
                                 size="small"
                                 color="primary"
+                                sx={{
+                                  fontSize: { xs: "0.85rem", sm: "1rem" },
+                                  height: { xs: 22, sm: 28 },
+                                }}
                               />
                             </Box>
                           }
                           secondary={
                             <Box>
-                              <Typography variant="body2" color="textSecondary">
+                              <Typography
+                                variant="body2"
+                                color="textSecondary"
+                                sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}
+                              >
                                 単価: ¥{item.price.toLocaleString()}
                               </Typography>
                               {item.toppings && item.toppings.length > 0 && (
                                 <Typography
                                   variant="body2"
                                   color="textSecondary"
+                                  sx={{
+                                    fontSize: { xs: "0.9rem", sm: "1rem" },
+                                  }}
                                 >
                                   トッピング:{" "}
                                   {item.toppings.map((t) => t.name).join(", ")}
@@ -298,6 +360,9 @@ const CartPage: React.FC = () => {
                                 variant="subtitle2"
                                 color="primary"
                                 fontWeight="bold"
+                                sx={{
+                                  fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                                }}
                               >
                                 小計: ¥
                                 {(
@@ -317,7 +382,7 @@ const CartPage: React.FC = () => {
                             sx={{
                               display: "flex",
                               alignItems: "center",
-                              gap: 1,
+                              gap: { xs: 0.5, sm: 1 },
                             }}
                           >
                             {/* 数量変更ボタン */}
@@ -330,11 +395,19 @@ const CartPage: React.FC = () => {
                                 )
                               }
                               disabled={item.quantity <= 1}
+                              sx={{ p: { xs: 0.5, sm: 1 } }}
                             >
-                              <RemoveIcon />
+                              <RemoveIcon
+                                sx={{ fontSize: { xs: 18, sm: 22 } }}
+                              />
                             </IconButton>
                             <Typography
-                              sx={{ minWidth: 30, textAlign: "center" }}
+                              sx={{
+                                minWidth: { xs: 22, sm: 30 },
+                                textAlign: "center",
+                                fontSize: { xs: "0.95rem", sm: "1.1rem" },
+                                fontWeight: 600,
+                              }}
                             >
                               {item.quantity}
                             </Typography>
@@ -343,22 +416,30 @@ const CartPage: React.FC = () => {
                               onClick={() =>
                                 updateCartItemQuantity(index, item.quantity + 1)
                               }
+                              sx={{ p: { xs: 0.5, sm: 1 } }}
                             >
-                              <AddIcon />
+                              <AddIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
                             </IconButton>
                             {/* 削除ボタン */}
                             <IconButton
                               size="small"
                               color="error"
                               onClick={() => removeFromCart(index)}
-                              sx={{ ml: 1 }}
+                              sx={{
+                                ml: { xs: 0.5, sm: 1 },
+                                p: { xs: 0.5, sm: 1 },
+                              }}
                             >
-                              <DeleteIcon />
+                              <DeleteIcon
+                                sx={{ fontSize: { xs: 18, sm: 22 } }}
+                              />
                             </IconButton>
                           </Box>
                         </ListItemSecondaryAction>
                       </ListItem>
-                      {index < cart.items.length - 1 && <Divider />}
+                      {index < cart.items.length - 1 && (
+                        <Divider sx={{ my: { xs: 0.5, sm: 1 } }} />
+                      )}
                     </React.Fragment>
                   ))}
                 </List>
@@ -366,12 +447,19 @@ const CartPage: React.FC = () => {
             </Card>
 
             {/* 💰 合計金額 */}
-            <Paper sx={{ p: 3, mb: 3, bgcolor: "primary.50" }}>
+            <Paper
+              sx={{
+                p: { xs: 1.5, sm: 3 },
+                mb: { xs: 1.5, sm: 3 },
+                bgcolor: "primary.50",
+              }}
+            >
               <Typography
-                variant="h5"
+                variant="subtitle1"
                 align="center"
                 fontWeight="bold"
                 color="primary"
+                sx={{ fontSize: { xs: "1.1rem", sm: "1.3rem" } }}
               >
                 合計: ¥{calculateTotal().toLocaleString()}
               </Typography>
@@ -379,32 +467,54 @@ const CartPage: React.FC = () => {
 
             {/* 🎮 操作ボタン */}
             <Box
-              sx={{ display: "flex", gap: 2, justifyContent: "space-between" }}
+              sx={{
+                display: "flex",
+                gap: { xs: 1, sm: 2 },
+                justifyContent: "space-between",
+                flexDirection: { xs: "column", sm: "row" },
+              }}
             >
               <Button
                 variant="outlined"
                 color="error"
                 onClick={clearCart}
                 disabled={isOrdering}
+                sx={{
+                  py: { xs: 0.7, sm: 1.2 },
+                  px: { xs: 2, sm: 4 },
+                  fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                  fontWeight: 600,
+                }}
               >
                 カートを空にする
               </Button>
 
-              <Box sx={{ display: "flex", gap: 2 }}>
+              <Box sx={{ display: "flex", gap: { xs: 1, sm: 2 } }}>
                 <Button
                   variant="outlined"
                   onClick={() => navigate("/order")}
                   disabled={isOrdering}
+                  sx={{
+                    py: { xs: 0.7, sm: 1.2 },
+                    px: { xs: 2, sm: 4 },
+                    fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                    fontWeight: 600,
+                  }}
                 >
                   買い物を続ける
                 </Button>
 
                 <Button
                   variant="contained"
-                  size="large"
+                  size="medium"
                   onClick={handlePlaceOrder}
                   disabled={isOrdering}
-                  sx={{ px: 4 }}
+                  sx={{
+                    px: { xs: 2, sm: 4 },
+                    py: { xs: 0.7, sm: 1.2 },
+                    fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                    fontWeight: 600,
+                  }}
                 >
                   {isOrdering ? "注文中..." : "注文確定"}
                 </Button>

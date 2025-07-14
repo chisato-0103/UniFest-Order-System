@@ -251,26 +251,52 @@ function PaymentPage() {
   return (
     <Box>
       {/* ナビゲーションバーはApp.tsxで共通表示 */}
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <AppBar position="static" color="default" sx={{ mb: 3 }}>
-          <Toolbar>
-            <PaymentIcon sx={{ mr: 2 }} />
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+      <Container maxWidth="xl" sx={{ py: { xs: 1.5, sm: 3 } }}>
+        <AppBar
+          position="static"
+          color="default"
+          sx={{ mb: { xs: 1.5, sm: 3 } }}
+        >
+          <Toolbar sx={{ minHeight: { xs: 44, sm: 56 } }}>
+            <PaymentIcon
+              sx={{ mr: { xs: 1, sm: 2 }, fontSize: { xs: 22, sm: 28 } }}
+            />
+            <Typography
+              variant="subtitle1"
+              component="div"
+              sx={{
+                flexGrow: 1,
+                fontSize: { xs: "1.1rem", sm: "1.3rem" },
+                fontWeight: 700,
+              }}
+            >
               支払い管理
             </Typography>
             <Badge
               badgeContent={unpaidOrders.length}
               color="error"
-              sx={{ mr: 2 }}
+              sx={{ mr: { xs: 1, sm: 2 } }}
             >
-              <Chip label="未払い" />
+              <Chip
+                label="未払い"
+                sx={{
+                  fontSize: { xs: "0.85rem", sm: "1rem" },
+                  height: { xs: 22, sm: 28 },
+                }}
+              />
             </Badge>
             <Button
               variant="outlined"
-              startIcon={<RefreshIcon />}
+              startIcon={<RefreshIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />}
               onClick={fetchOrders}
               disabled={loading}
               size="small"
+              sx={{
+                py: { xs: 0.5, sm: 1 },
+                px: { xs: 1.5, sm: 2 },
+                fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                fontWeight: 600,
+              }}
             >
               更新
             </Button>
@@ -317,8 +343,8 @@ function PaymentPage() {
         )}
 
         {/* 検索フィールド */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
+        <Card sx={{ mb: { xs: 1.5, sm: 3 } }}>
+          <CardContent sx={{ p: { xs: 1, sm: 2 } }}>
             <TextField
               fullWidth
               placeholder="注文番号や商品名で検索..."
@@ -327,25 +353,70 @@ function PaymentPage() {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon />
+                    <SearchIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
                   </InputAdornment>
                 ),
               }}
+              sx={{ fontSize: { xs: "0.95rem", sm: "1.05rem" } }}
             />
           </CardContent>
         </Card>
 
         {/* 注文テーブル */}
-        <TableContainer component={Paper}>
-          <Table>
+        <TableContainer component={Paper} sx={{ mb: { xs: 1.5, sm: 3 } }}>
+          <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>注文番号</TableCell>
-                <TableCell>商品</TableCell>
-                <TableCell align="right">金額</TableCell>
-                <TableCell>支払い状況</TableCell>
-                <TableCell>注文時刻</TableCell>
-                <TableCell align="center">操作</TableCell>
+                <TableCell
+                  sx={{
+                    fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                    py: { xs: 0.5, sm: 1 },
+                  }}
+                >
+                  注文番号
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                    py: { xs: 0.5, sm: 1 },
+                  }}
+                >
+                  商品
+                </TableCell>
+                <TableCell
+                  align="right"
+                  sx={{
+                    fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                    py: { xs: 0.5, sm: 1 },
+                  }}
+                >
+                  金額
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                    py: { xs: 0.5, sm: 1 },
+                  }}
+                >
+                  支払い状況
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                    py: { xs: 0.5, sm: 1 },
+                  }}
+                >
+                  注文時刻
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{
+                    fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                    py: { xs: 0.5, sm: 1 },
+                  }}
+                >
+                  操作
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -361,7 +432,6 @@ function PaymentPage() {
                   <TableRow
                     key={order.order_id}
                     sx={{
-                      // 🌟 強調表示のスタイル
                       backgroundColor: isHighlighted ? "primary.50" : "inherit",
                       border: isHighlighted ? 2 : 0,
                       borderColor: isHighlighted
@@ -374,36 +444,58 @@ function PaymentPage() {
                       },
                     }}
                   >
-                    <TableCell>
+                    <TableCell sx={{ py: { xs: 0.5, sm: 1 } }}>
                       <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: { xs: 0.5, sm: 1 },
+                        }}
                       >
-                        <Typography variant="body2" fontWeight="bold">
+                        <Typography
+                          variant="body2"
+                          fontWeight="bold"
+                          sx={{ fontSize: { xs: "0.95rem", sm: "1.05rem" } }}
+                        >
                           {order.order_number}
                         </Typography>
-                        {/* 🔥 新しい注文にはバッジを表示 */}
                         {isHighlighted && (
                           <Chip
                             label="新規"
                             size="small"
                             color="primary"
                             variant="filled"
+                            sx={{
+                              fontSize: { xs: "0.85rem", sm: "1rem" },
+                              height: { xs: 22, sm: 28 },
+                            }}
                           />
                         )}
                       </Box>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ py: { xs: 0.5, sm: 1 } }}>
                       <Box>
                         {order.items.map((item, index) => (
-                          <Typography key={index} variant="body2">
+                          <Typography
+                            key={index}
+                            variant="body2"
+                            sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}
+                          >
                             {item.product_name || item.name || "商品名不明"} ×{" "}
                             {item.quantity}
                           </Typography>
                         ))}
                       </Box>
                     </TableCell>
-                    <TableCell align="right">
-                      <Typography variant="h6" color="primary">
+                    <TableCell align="right" sx={{ py: { xs: 0.5, sm: 1 } }}>
+                      <Typography
+                        variant="subtitle1"
+                        color="primary"
+                        sx={{
+                          fontSize: { xs: "1rem", sm: "1.15rem" },
+                          fontWeight: 600,
+                        }}
+                      >
                         ¥
                         {(
                           order.total_amount ||
@@ -412,26 +504,41 @@ function PaymentPage() {
                         ).toLocaleString()}
                       </Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ py: { xs: 0.5, sm: 1 } }}>
                       <Chip
                         label={getStatusText(order.payment_status)}
                         color={getStatusColor(order.payment_status)}
                         size="small"
+                        sx={{
+                          fontSize: { xs: "0.85rem", sm: "1rem" },
+                          height: { xs: 22, sm: 28 },
+                        }}
                       />
                     </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
+                    <TableCell sx={{ py: { xs: 0.5, sm: 1 } }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}
+                      >
                         {new Date(order.created_at).toLocaleString()}
                       </Typography>
                     </TableCell>
-                    <TableCell align="center">
+                    <TableCell align="center" sx={{ py: { xs: 0.5, sm: 1 } }}>
                       <Button
                         variant="contained"
                         color="primary"
-                        startIcon={<MoneyIcon />}
+                        startIcon={
+                          <MoneyIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
+                        }
                         onClick={() => openPaymentDialog(order)}
                         disabled={order.payment_status === "paid"}
                         size="small"
+                        sx={{
+                          py: { xs: 0.5, sm: 1 },
+                          px: { xs: 1.5, sm: 2 },
+                          fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                          fontWeight: 600,
+                        }}
                       >
                         支払い
                       </Button>
@@ -443,9 +550,12 @@ function PaymentPage() {
                 <TableRow>
                   <TableCell colSpan={6} align="center">
                     <Typography
-                      variant="body1"
+                      variant="body2"
                       color="text.secondary"
-                      sx={{ py: 4 }}
+                      sx={{
+                        py: { xs: 2, sm: 4 },
+                        fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                      }}
                     >
                       {searchTerm
                         ? "検索条件に一致する未払い注文がありません"
@@ -462,30 +572,59 @@ function PaymentPage() {
         <Dialog
           open={paymentDialogOpen}
           onClose={() => setPaymentDialogOpen(false)}
-          maxWidth="sm"
+          maxWidth="xs"
           fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: { xs: 2, sm: 3 },
+              maxHeight: { xs: "80vh", sm: "90vh" },
+              m: { xs: 1, sm: 2 },
+            },
+          }}
         >
-          <DialogTitle>
+          <DialogTitle
+            sx={{
+              py: { xs: 1, sm: 2 },
+              fontSize: { xs: "1.1rem", sm: "1.25rem" },
+            }}
+          >
             <Box display="flex" alignItems="center">
-              <PaymentIcon sx={{ mr: 1 }} />
+              <PaymentIcon
+                sx={{ mr: { xs: 0.5, sm: 1 }, fontSize: { xs: 20, sm: 24 } }}
+              />
               支払い処理
             </Box>
           </DialogTitle>
-          <DialogContent>
+          <DialogContent sx={{ p: { xs: 1, sm: 2 } }}>
             {selectedOrder && (
               <Box>
-                <Typography variant="h6" gutterBottom>
+                <Typography
+                  variant="subtitle1"
+                  gutterBottom
+                  sx={{
+                    fontSize: { xs: "1rem", sm: "1.15rem" },
+                    fontWeight: 600,
+                  }}
+                >
                   注文番号: {selectedOrder.order_number}
                 </Typography>
 
-                <Divider sx={{ my: 2 }} />
+                <Divider sx={{ my: { xs: 1, sm: 2 } }} />
 
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle1" gutterBottom>
+                <Box sx={{ mb: { xs: 1, sm: 2 } }}>
+                  <Typography
+                    variant="body2"
+                    gutterBottom
+                    sx={{ fontSize: { xs: "0.95rem", sm: "1.05rem" } }}
+                  >
                     注文内容:
                   </Typography>
                   {selectedOrder.items.map((item, index) => (
-                    <Typography key={index} variant="body2">
+                    <Typography
+                      key={index}
+                      variant="body2"
+                      sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}
+                    >
                       {item.product_name || item.name || "商品名不明"} ×{" "}
                       {item.quantity} = ¥
                       {item.total_price || item.totalPrice || 0}
@@ -493,8 +632,15 @@ function PaymentPage() {
                   ))}
                 </Box>
 
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="h6" color="primary">
+                <Box sx={{ mb: { xs: 1, sm: 2 } }}>
+                  <Typography
+                    variant="subtitle1"
+                    color="primary"
+                    sx={{
+                      fontSize: { xs: "1rem", sm: "1.15rem" },
+                      fontWeight: 600,
+                    }}
+                  >
                     合計金額: ¥{selectedOrder.total_amount.toLocaleString()}
                   </Typography>
                 </Box>
@@ -513,19 +659,37 @@ function PaymentPage() {
                       <InputAdornment position="start">¥</InputAdornment>
                     ),
                   }}
-                  sx={{ mb: 2 }}
+                  sx={{
+                    mb: { xs: 1, sm: 2 },
+                    fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                  }}
                 />
 
                 {change > 0 && (
-                  <Typography variant="h6" color="success.main">
+                  <Typography
+                    variant="subtitle1"
+                    color="success.main"
+                    sx={{
+                      fontSize: { xs: "1rem", sm: "1.15rem" },
+                      fontWeight: 600,
+                    }}
+                  >
                     おつり: ¥{change.toLocaleString()}
                   </Typography>
                 )}
               </Box>
             )}
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setPaymentDialogOpen(false)}>
+          <DialogActions sx={{ p: { xs: 1, sm: 2 } }}>
+            <Button
+              onClick={() => setPaymentDialogOpen(false)}
+              sx={{
+                fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                py: { xs: 0.7, sm: 1.2 },
+                px: { xs: 1.5, sm: 3 },
+                fontWeight: 600,
+              }}
+            >
               キャンセル
             </Button>
             <Button
@@ -535,6 +699,12 @@ function PaymentPage() {
                 !paymentAmount ||
                 parseFloat(paymentAmount) < (selectedOrder?.total_amount || 0)
               }
+              sx={{
+                fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                py: { xs: 0.7, sm: 1.2 },
+                px: { xs: 2, sm: 4 },
+                fontWeight: 600,
+              }}
             >
               支払い完了
             </Button>

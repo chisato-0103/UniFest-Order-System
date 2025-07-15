@@ -13,6 +13,10 @@ export interface Product {
   status?: string; // 状態（例：人気商品）
   image?: string; // 商品の写真のファイル名
   preparationTime?: number; // 作るのにかかる時間（分）
+  
+  // 🔄 在庫管理フィールド
+  is_available?: boolean; // 在庫ありかどうか（availableの別名）
+  stock_quantity?: number; // 在庫数
 
   // 🔄 API互換性フィールド（削除予定）
   product_id?: string;

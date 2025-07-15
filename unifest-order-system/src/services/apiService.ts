@@ -114,89 +114,9 @@ interface RawOrderData {
   estimated_pickup_time?: string; // 受取予定時刻
 }
 
-// API応答用の具体的な型定義
-// サーバーから返ってくる生データの型
-interface RawProductData {
-  product_id: number; // 商品ID
-  product_name: string; // 商品名
-  price: string; // 価格（文字列）
-  category_name?: string; // カテゴリ名
-  description?: string; // 商品説明
-  status: string; // 商品ステータス
-  stock_quantity: number; // 在庫数
-  preparation_time?: number; // 調理時間
-}
+// API応答用の具体的な型定義は上記で定義済み
 
-interface RawToppingData {
-  topping_id: number; // トッピングID
-  topping_name: string; // トッピング名
-  price: number; // 価格
-  available?: boolean; // 利用可否
-}
-interface RawProductData {
-  product_id: number; // 商品ID
-  product_name: string; // 商品名
-  price: string; // 価格（文字列）
-  category_name?: string; // カテゴリ名
-  description?: string; // 商品説明
-  status: string; // 商品ステータス
-  stock_quantity: number; // 在庫数
-  preparation_time?: number; // 調理時間
-}
-
-interface RawToppingData {
-  topping_id: number; // トッピングID
-  topping_name: string; // トッピング名
-  price: number; // 価格
-  available?: boolean; // 利用可否
-}
-
-interface RawOrderData {
-  order_id?: string | number;
-  id?: string | number;
-  order_number?: string;
-  customer_id?: string | number;
-  total_amount?: string | number;
-  total_price?: string | number;
-  status?: string;
-  order_status?: string;
-  payment_status?: string;
-  payment_method?: string;
-  special_instructions?: string;
-  created_at?: string;
-  updated_at?: string;
-  estimated_pickup_time?: string;
-}
-// --- 型定義はファイル先頭に移動 ---
-interface RawOrderData {
-  order_id?: string | number;
-  order_number?: string;
-  customer_id?: string | number;
-  order_items?: RawOrderItemData[];
-  items?: RawOrderItemData[];
-  total_amount?: string | number;
-  total_price?: string | number;
-  order_status?: string;
-  status?: string;
-  payment_status?: string;
-  payment_method?: string;
-  special_instructions?: string;
-  created_at?: string;
-  updated_at?: string;
-  estimated_pickup_time?: string;
-}
-
-interface RawOrderItemData {
-  product_id: string | number; // 商品ID
-  id?: string | number; // 商品ID（別名）
-  product_name?: string; // 商品名
-  name?: string; // 商品名（別名）
-  unit_price?: string | number; // 単価
-  price?: string | number; // 単価（別名）
-  quantity: string | number; // 数量
-  total_price?: string | number; // 小計
-  toppings?: RawToppingData[]; // トッピングリスト
-}
+// 重複したインターフェース定義を削除（上記で定義済み）
 
 // ⏱️ タイムアウト付きfetch
 // fetchにタイムアウト機能を付与したラッパー関数

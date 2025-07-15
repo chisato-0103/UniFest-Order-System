@@ -44,7 +44,7 @@ const CartPage: React.FC = () => {
   // 注文完了ダイアログ表示用
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
   const [completedOrder, setCompletedOrder] = useState(null);
-  const [estimatedTime, setEstimatedTime] = useState(10); // 仮: 10分
+  const [estimatedTime] = useState(10); // 仮: 10分
 
   // 🧪 テスト用：ダミー商品をカートに追加（本番では未使用のため削除）
 

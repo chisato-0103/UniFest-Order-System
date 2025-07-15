@@ -14,7 +14,6 @@ import {
   Alert,
   Chip,
   Paper,
-  Grid,
   Divider,
   CircularProgress,
 } from "@mui/material";
@@ -27,7 +26,7 @@ import {
   LocalShipping as DeliveryIcon,
   Refresh as RefreshIcon,
 } from "@mui/icons-material";
-import QRCode from "qrcode";
+import * as QRCode from "qrcode";
 import type { Order } from "../types";
 import { OrderService } from "../services/apiService";
 
@@ -51,9 +50,14 @@ function CustomerStatusPage() {
     const orderParam = urlParams.get("order");
     if (orderParam) {
       setOrderNumber(orderParam);
-      handleSearch(orderParam);
+      // handleSearchを直接呼び出す代わりに、setOrderNumberと同時に検索処理を実行
+      const searchOrder = async () => {
+        await handleSearch(orderParam);
+      };
+      searchOrder();
     }
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 初回のみ実行
 
   // 注文検索
   const handleSearch = async (searchOrderNumber?: string) => {
@@ -255,9 +259,15 @@ function CustomerStatusPage() {
 
       {/* 注文情報表示 */}
       {order && (
-        <Grid container spacing={{ xs: 2, sm: 3 }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+            gap: { xs: 2, sm: 3 },
+          }}
+        >
           {/* QRコード表示 */}
-          <Grid item xs={12} md={6}>
+          <Box>
             <Card>
               <CardContent sx={{ p: { xs: 2, sm: 3 }, textAlign: "center" }}>
                 <Typography
@@ -311,10 +321,10 @@ function CustomerStatusPage() {
                 </Alert>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* 注文詳細情報 */}
-          <Grid item xs={12} md={6}>
+          <Box>
             <Card>
               <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                 <Box
@@ -353,9 +363,9 @@ function CustomerStatusPage() {
                     調理状況
                   </Typography>
                   <Chip
-                    label={getStatusInfo(order.status).text}
-                    color={getStatusInfo(order.status).color as any}
-                    icon={getStatusInfo(order.status).icon}
+                    label={getStatusInfo(order.status || "").text}
+                    color={getStatusInfo(order.status || "").color as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
+                    icon={getStatusInfo(order.status || "").icon}
                     sx={{
                       fontSize: { xs: "0.9rem", sm: "1rem" },
                       height: { xs: 32, sm: 36 },
@@ -374,8 +384,8 @@ function CustomerStatusPage() {
                     支払い状況
                   </Typography>
                   <Chip
-                    label={getPaymentInfo(order.payment_status).text}
-                    color={getPaymentInfo(order.payment_status).color as any}
+                    label={getPaymentInfo(order.payment_status || "").text}
+                    color={getPaymentInfo(order.payment_status || "").color as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                     icon={<PaymentIcon />}
                     sx={{
                       fontSize: { xs: "0.9rem", sm: "1rem" },
@@ -427,13 +437,13 @@ function CustomerStatusPage() {
                     color="text.secondary"
                     sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
                   >
-                    注文日時: {new Date(order.created_at).toLocaleString()}
+                    注文日時: {order.created_at ? new Date(order.created_at).toLocaleString() : "不明"}
                   </Typography>
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       )}
 
       {/* 使い方ガイド */}

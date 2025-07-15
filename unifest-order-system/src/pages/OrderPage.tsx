@@ -291,7 +291,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
 // 商品一覧の取得・表示、カートへの追加、エラー表示など全体の制御を行う
 const OrderPage: React.FC = () => {
   // グローバル状態（カート等）
-  const { state, dispatch } = useContext(AppContext);
+  const contextValue = useContext(AppContext);
+  if (!contextValue) {
+    throw new Error("OrderPage must be used within AppProvider");
+  }
+  const { state, dispatch } = contextValue;
   // 商品一覧
   const [products, setProducts] = useState<Product[]>([]);
   // ローディング状態

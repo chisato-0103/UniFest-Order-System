@@ -51,7 +51,7 @@ export const getProducts = async (
       LEFT JOIN categories c ON p.category_id = c.category_id
       LEFT JOIN toppings t ON t.is_active = true
         AND p.product_id = ANY(t.target_product_ids)
-      WHERE p.status = '有効'
+      WHERE p.status IN ('有効', '売り切れ')
         AND p.deleted_flag = false
         AND c.is_active = true
       GROUP BY p.product_id, c.category_name, c.display_order

@@ -14,7 +14,7 @@ export interface Product {
   product_name: string;
   price: number;
   category_id: number;
-  status: "ユ効" | "無効" | "売り切れ";
+  status: "有効" | "無効" | "売り切れ";
   image_url?: string;
   description?: string;
   allergy_info?: string;
@@ -47,14 +47,14 @@ export interface Order {
   order_number: string;
   total_amount: number;
   status:
-    | "ユ文受付"
+    | "注文受付"
     | "調理待ち"
     | "調理中"
     | "調理完了"
     | "受け取り済み"
     | "キャンセル";
   payment_status: "未払い" | "支払済み";
-  payment_method: "縁金" | "クレジットカード" | "PayPay" | "その他";
+  payment_method: "現金" | "クレジットカード" | "PayPay" | "その他";
   estimated_pickup_time?: string;
   actual_pickup_time?: string;
   special_instructions?: string;
@@ -105,7 +105,7 @@ export interface SystemSetting {
 export interface StockHistory {
   history_id: number;
   product_id: number;
-  change_type: "入荷" | "ユ文減少" | "手動調整" | "初期設定";
+  change_type: "入荷" | "注文減少" | "手動調整" | "初期設定";
   quantity_before: number;
   quantity_after: number;
   change_amount: number;

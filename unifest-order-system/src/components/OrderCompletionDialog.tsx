@@ -251,16 +251,45 @@ const OrderCompletionDialog: React.FC<OrderCompletionDialogProps> = ({
         {/* QRコード（注文情報全体をJSON化して渡す） */}
         <Box sx={{ mb: 1 }}>
           <QRCodeGenerator order={order} size={120} showDownload={true} />
-          <Alert severity="info" sx={{ mt: 1 }}>
+          <Alert severity="success" sx={{ mt: 1 }}>
             <Typography
               variant="body2"
               sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
             >
-              このQRコードをスクリーンショットで保存してください。
+              <strong>📱 いつでも確認できます！</strong>
               <br />
-              受け渡し時に提示することでスムーズに受け渡しできます。
+              下記リンクから注文状況とQRコードをいつでも確認できます。
+              <br />
+              ブックマークの保存をおすすめします。
             </Typography>
           </Alert>
+          
+          {/* お客様専用ページへのリンク */}
+          <Box sx={{ mt: 1.5, textAlign: "center" }}>
+            <Button
+              variant="outlined"
+              color="primary"
+              href={`/customer-status?order=${order.order_number}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              fullWidth
+              sx={{
+                py: { xs: 1, sm: 1.2 },
+                fontSize: { xs: "0.9rem", sm: "1rem" },
+                fontWeight: 600,
+                mb: 1,
+              }}
+            >
+              🔗 注文状況・QRコード確認ページ
+            </Button>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}
+            >
+              注文番号: <strong>{order.order_number}</strong>
+            </Typography>
+          </Box>
         </Box>
 
         {/* ステータス */}

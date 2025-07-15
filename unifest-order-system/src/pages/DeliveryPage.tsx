@@ -14,12 +14,7 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
 } from "@mui/material";
-import type { SelectChangeEvent } from "@mui/material";
 import {
   CheckCircle as CheckCircleIcon,
   Refresh as RefreshIcon,
@@ -36,9 +31,7 @@ function DeliveryPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [deliveryDialogOpen, setDeliveryDialogOpen] = useState(false);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [verificationMethod, setVerificationMethod] = useState("");
+  const [orderNumberInput, setOrderNumberInput] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -100,9 +93,7 @@ function DeliveryPage() {
       setOrders((prev) => prev.filter((order) => order.id !== orderId));
       setDeliveryDialogOpen(false);
       setSelectedOrder(null);
-      setCustomerName("");
-      setCustomerPhone("");
-      setVerificationMethod("");
+      setOrderNumberInput("");
     } catch (error) {
       console.error("受け渡し処理エラー:", error);
     } finally {
@@ -372,7 +363,7 @@ function DeliveryPage() {
                           }}
                           onClick={() => handleManualVerification(order)}
                         >
-                          手動確認
+                          注文番号確認
                         </Button>
                       </Box>
                     </CardContent>
@@ -407,7 +398,7 @@ function DeliveryPage() {
               }}
             >
               <PersonIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
-              手動本人確認
+              手動注文番号確認
             </DialogTitle>
             <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
               {selectedOrder && (
@@ -517,65 +508,56 @@ function DeliveryPage() {
                       </span>
                     </Typography>
                   </Box>
-                  <TextField
-                    label="お客様のお名前"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    fullWidth
+                  <Typography 
+                    variant="body1" 
+                    gutterBottom
                     sx={{ 
-                      mb: { xs: 1.5, sm: 2 },
+                      fontSize: { xs: '1rem', sm: '1.1rem' },
+                      fontWeight: 600,
+                      color: 'primary.main',
+                      mb: { xs: 2, sm: 3 }
+                    }}
+                  >
+                    お客様に注文番号の確認をお願いします
+                  </Typography>
+                  
+                  <TextField
+                    label="注文番号（4桁）"
+                    value={orderNumberInput}
+                    onChange={(e) => setOrderNumberInput(e.target.value)}
+                    fullWidth
+                    placeholder="例: 0001"
+                    inputProps={{
+                      maxLength: 4,
+                      pattern: "[0-9]*"
+                    }}
+                    sx={{ 
+                      mb: { xs: 2, sm: 3 },
                       '& .MuiInputBase-input': {
-                        fontSize: { xs: '0.95rem', sm: '1rem' }
+                        fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                        textAlign: 'center',
+                        letterSpacing: '0.2em'
+                      },
+                      '& .MuiInputLabel-root': {
+                        fontSize: { xs: '1rem', sm: '1.1rem' }
                       }
                     }}
                   />
-                  <TextField
-                    label="電話番号"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    fullWidth
+
+                  <Alert 
+                    severity="info" 
                     sx={{ 
                       mb: { xs: 1.5, sm: 2 },
-                      '& .MuiInputBase-input': {
-                        fontSize: { xs: '0.95rem', sm: '1rem' }
-                      }
+                      fontSize: { xs: '0.9rem', sm: '1rem' }
                     }}
-                  />
-                  <FormControl fullWidth sx={{ mb: { xs: 1.5, sm: 2 } }}>
-                    <InputLabel sx={{ fontSize: { xs: '0.95rem', sm: '1rem' } }}>
-                      確認方法
-                    </InputLabel>
-                    <Select
-                      value={verificationMethod}
-                      onChange={(e: SelectChangeEvent) =>
-                        setVerificationMethod(e.target.value)
-                      }
-                      sx={{
-                        '& .MuiSelect-select': {
-                          fontSize: { xs: '0.95rem', sm: '1rem' }
-                        }
-                      }}
-                    >
-                      <MenuItem 
-                        value="name"
-                        sx={{ fontSize: { xs: '0.95rem', sm: '1rem' } }}
-                      >
-                        お名前
-                      </MenuItem>
-                      <MenuItem 
-                        value="phone"
-                        sx={{ fontSize: { xs: '0.95rem', sm: '1rem' } }}
-                      >
-                        電話番号
-                      </MenuItem>
-                      <MenuItem 
-                        value="order_number"
-                        sx={{ fontSize: { xs: '0.95rem', sm: '1rem' } }}
-                      >
-                        注文番号
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
+                  >
+                    <Typography variant="body2" sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+                      <strong>確認手順:</strong><br />
+                      1. お客様に注文番号を口頭で確認<br />
+                      2. 上記に注文番号を入力<br />
+                      3. 「受け渡し完了」ボタンを押して完了
+                    </Typography>
+                  </Alert>
                 </React.Fragment>
               )}
             </DialogContent>
@@ -605,9 +587,9 @@ function DeliveryPage() {
                 }
                 disabled={
                   loading ||
-                  !customerName ||
-                  !customerPhone ||
-                  !verificationMethod
+                  !orderNumberInput ||
+                  orderNumberInput.length !== 4 ||
+                  orderNumberInput !== selectedOrder?.orderNumber
                 }
                 sx={{
                   py: { xs: 1, sm: 1.2 },

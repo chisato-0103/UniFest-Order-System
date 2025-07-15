@@ -18,6 +18,7 @@ import { AuthProvider } from "./contexts/AuthContext"; // ログイン状態の�
 import ProtectedRoute from "./components/ProtectedRoute"; // 管理者のみアクセスできるページを守る
 import CustomerNavigationBar from "./components/CustomerNavigationBar";
 import AdminNavigationBar from "./components/AdminNavigationBar";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // 🏪 お客さん用のページたち
 import OrderPage from "./pages/OrderPage"; // 注文ページ
@@ -199,18 +200,20 @@ function AppWithNavBar() {
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
-        <AppProvider>
-          <SimpleAppProvider>
-            <Router>
-              <AppWithNavBar />
-            </Router>
-          </SimpleAppProvider>
-        </AppProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AuthProvider>
+          <AppProvider>
+            <SimpleAppProvider>
+              <Router>
+                <AppWithNavBar />
+              </Router>
+            </SimpleAppProvider>
+          </AppProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

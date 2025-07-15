@@ -306,7 +306,16 @@ const OrderPage: React.FC = () => {
         setLoading(true);
         setError(null);
         const productsData = await ProductService.getProducts();
-        setProducts(productsData);
+        
+        // 在庫情報を含む商品データを取得し、利用可能な商品のみフィルタリング
+        const availableProducts = productsData.filter(product => {
+          // 商品が有効で在庫がある場合のみ表示
+          return product.status === "active" && 
+                 product.is_available !== false && 
+                 (product.stock_quantity === undefined || product.stock_quantity > 0);
+        });
+        
+        setProducts(availableProducts);
       } catch (err) {
         console.error("商品読み込みエラー:", err);
         setError("商品の読み込みに失敗しました");
@@ -315,6 +324,11 @@ const OrderPage: React.FC = () => {
       }
     };
     loadProducts();
+    
+    // 30秒ごとに商品情報を更新（在庫状況の変化を反映）
+    const interval = setInterval(loadProducts, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   // カート追加時の処理（AppContext経由でグローバルに反映）

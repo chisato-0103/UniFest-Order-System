@@ -160,28 +160,51 @@ function DeliveryPage() {
   return (
     <Box>
       {/* ナビゲーションバーはApp.tsxで共通表示 */}
-      <Container maxWidth="lg" sx={{ py: 2 }}>
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h4" gutterBottom>
+      <Container maxWidth="xl" sx={{ py: { xs: 1.5, sm: 2 } }}>
+        <Paper elevation={3} sx={{ p: { xs: 2, sm: 3 } }}>
+          <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+            <Typography 
+              variant="h4" 
+              gutterBottom
+              sx={{ 
+                fontSize: { xs: '1.5rem', sm: '2rem' },
+                fontWeight: { xs: 600, sm: 400 }
+              }}
+            >
               受け渡し管理
             </Typography>
-            <Typography variant="body1" color="text.secondary">
+            <Typography 
+              variant="body1" 
+              color="text.secondary"
+              sx={{ fontSize: { xs: '0.95rem', sm: '1rem' } }}
+            >
               調理完了した注文の受け渡しを管理します
             </Typography>
           </Box>
 
           {/* 統計情報 */}
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: { xs: 2, sm: 3 } }}>
             <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
+              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                <Typography 
+                  variant="h6" 
+                  gutterBottom
+                  sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}
+                >
                   受け渡し待ち
                 </Typography>
-                <Typography variant="h4" color="primary">
+                <Typography 
+                  variant="h4" 
+                  color="primary"
+                  sx={{ fontSize: { xs: '2rem', sm: '2.5rem' } }}
+                >
                   {orders.length}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}
+                >
                   件
                 </Typography>
               </CardContent>
@@ -190,64 +213,122 @@ function DeliveryPage() {
 
           {/* エラー表示 */}
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert 
+              severity="error" 
+              sx={{ 
+                mb: { xs: 1.5, sm: 2 },
+                fontSize: { xs: '0.9rem', sm: '1rem' }
+              }}
+            >
               {error}
             </Alert>
           )}
 
           {/* 受け渡し待ち注文一覧 */}
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: { xs: 2, sm: 3 } }}>
             <Box
               sx={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                mb: 2,
+                mb: { xs: 1.5, sm: 2 },
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: { xs: 1, sm: 0 }
               }}
             >
-              <Typography variant="h6">受け渡し待ち注文</Typography>
+              <Typography 
+                variant="h6"
+                sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}
+              >
+                受け渡し待ち注文
+              </Typography>
               <Button
                 variant="outlined"
-                startIcon={<RefreshIcon />}
+                startIcon={<RefreshIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />}
                 onClick={handleRefresh}
                 disabled={refreshing}
+                sx={{
+                  py: { xs: 0.7, sm: 1 },
+                  px: { xs: 2, sm: 3 },
+                  fontSize: { xs: '0.95rem', sm: '1rem' },
+                  minHeight: { xs: 40, sm: 48 },
+                  width: { xs: '100%', sm: 'auto' }
+                }}
               >
                 更新
               </Button>
             </Box>
 
             {orders.length === 0 ? (
-              <Alert severity="info" sx={{ mb: 2 }}>
+              <Alert 
+                severity="info" 
+                sx={{ 
+                  mb: { xs: 1.5, sm: 2 },
+                  fontSize: { xs: '0.9rem', sm: '1rem' }
+                }}
+              >
                 現在、受け渡し待ちの注文はありません。
               </Alert>
             ) : (
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <Box 
+                sx={{ 
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    lg: "repeat(2, 1fr)",
+                  },
+                  gap: { xs: 1.5, sm: 2 },
+                }}
+              >
                 {orders.map((order) => (
                   <Card key={order.id}>
-                    <CardContent>
+                    <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                       <Box
                         sx={{
                           display: "flex",
                           justifyContent: "space-between",
                           alignItems: "center",
-                          mb: 2,
+                          mb: { xs: 1.5, sm: 2 },
+                          flexDirection: { xs: 'column', sm: 'row' },
+                          gap: { xs: 1, sm: 0 }
                         }}
                       >
-                        <Typography variant="h6">
+                        <Typography 
+                          variant="h6"
+                          sx={{ 
+                            fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                            textAlign: { xs: 'center', sm: 'left' }
+                          }}
+                        >
                           注文番号: {order.orderNumber}
                         </Typography>
                         <Chip
                           label="受け渡し待ち"
                           color="success"
-                          icon={<CheckCircleIcon />}
+                          icon={<CheckCircleIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />}
+                          sx={{
+                            fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                            height: { xs: 28, sm: 32 }
+                          }}
                         />
                       </Box>
 
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" color="text.secondary">
+                      <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary"
+                          sx={{ 
+                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                            mb: { xs: 0.5, sm: 0 }
+                          }}
+                        >
                           合計金額: ¥{order.total?.toLocaleString() || 0}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary"
+                          sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}
+                        >
                           注文時刻:{" "}
                           {order.createdAt
                             ? new Date(order.createdAt).toLocaleString()
@@ -255,12 +336,23 @@ function DeliveryPage() {
                         </Typography>
                       </Box>
 
-                      <Box sx={{ display: "flex", gap: 1 }}>
+                      <Box 
+                        sx={{ 
+                          display: "flex", 
+                          gap: { xs: 1, sm: 2 },
+                          flexDirection: { xs: 'column', sm: 'row' }
+                        }}
+                      >
                         <Button
                           variant="contained"
                           color="primary"
-                          startIcon={<QrIcon />}
-                          sx={{ flex: 1 }}
+                          startIcon={<QrIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />}
+                          sx={{ 
+                            flex: 1,
+                            py: { xs: 1, sm: 1.2 },
+                            fontSize: { xs: '0.95rem', sm: '1rem' },
+                            minHeight: { xs: 44, sm: 48 }
+                          }}
                           onClick={() => {
                             setSelectedOrder(order);
                             setQrScannerOpen(true);
@@ -271,8 +363,13 @@ function DeliveryPage() {
                         <Button
                           variant="outlined"
                           color="primary"
-                          startIcon={<PersonIcon />}
-                          sx={{ flex: 1 }}
+                          startIcon={<PersonIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />}
+                          sx={{ 
+                            flex: 1,
+                            py: { xs: 1, sm: 1.2 },
+                            fontSize: { xs: '0.95rem', sm: '1rem' },
+                            minHeight: { xs: 44, sm: 48 }
+                          }}
                           onClick={() => handleManualVerification(order)}
                         >
                           手動確認
@@ -290,21 +387,50 @@ function DeliveryPage() {
           <Dialog
             open={deliveryDialogOpen}
             onClose={() => setDeliveryDialogOpen(false)}
-            maxWidth="md"
+            maxWidth="sm"
             fullWidth
+            PaperProps={{
+              sx: {
+                borderRadius: { xs: 2, sm: 3 },
+                maxHeight: { xs: "85vh", sm: "90vh" },
+                m: { xs: 1, sm: 2 },
+              },
+            }}
           >
-            <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <PersonIcon />
+            <DialogTitle 
+              sx={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: { xs: 0.5, sm: 1 },
+                py: { xs: 1.5, sm: 2 },
+                fontSize: { xs: '1.1rem', sm: '1.25rem' }
+              }}
+            >
+              <PersonIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
               手動本人確認
             </DialogTitle>
-            <DialogContent>
+            <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
               {selectedOrder && (
                 <React.Fragment>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary">
+                  <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ 
+                        fontSize: { xs: '0.9rem', sm: '1rem' },
+                        mb: { xs: 0.5, sm: 0 }
+                      }}
+                    >
                       合計金額: ¥{selectedOrder.total?.toLocaleString() || 0}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ 
+                        fontSize: { xs: '0.9rem', sm: '1rem' },
+                        mb: { xs: 0.5, sm: 0 }
+                      }}
+                    >
                       注文時刻:{" "}
                       {selectedOrder.createdAt
                         ? new Date(selectedOrder.createdAt).toLocaleString()
@@ -313,7 +439,10 @@ function DeliveryPage() {
                     <Typography
                       variant="body2"
                       color="text.secondary"
-                      sx={{ mt: 1 }}
+                      sx={{ 
+                        mt: { xs: 0.5, sm: 1 },
+                        fontSize: { xs: '0.9rem', sm: '1rem' }
+                      }}
                     >
                       <span>
                         支払い状況:{" "}
@@ -326,6 +455,10 @@ function DeliveryPage() {
                                   label="支払い済み"
                                   color="primary"
                                   size="small"
+                                  sx={{
+                                    fontSize: { xs: '0.75rem', sm: '0.85rem' },
+                                    height: { xs: 24, sm: 28 }
+                                  }}
                                 />
                               );
                             case "pending":
@@ -335,6 +468,10 @@ function DeliveryPage() {
                                   label="支払い中"
                                   color="warning"
                                   size="small"
+                                  sx={{
+                                    fontSize: { xs: '0.75rem', sm: '0.85rem' },
+                                    height: { xs: 24, sm: 28 }
+                                  }}
                                 />
                               );
                             case "unpaid":
@@ -344,6 +481,10 @@ function DeliveryPage() {
                                   label="未払い"
                                   color="error"
                                   size="small"
+                                  sx={{
+                                    fontSize: { xs: '0.75rem', sm: '0.85rem' },
+                                    height: { xs: 24, sm: 28 }
+                                  }}
                                 />
                               );
                             case "refunded":
@@ -353,6 +494,10 @@ function DeliveryPage() {
                                   label="返金済み"
                                   color="info"
                                   size="small"
+                                  sx={{
+                                    fontSize: { xs: '0.75rem', sm: '0.85rem' },
+                                    height: { xs: 24, sm: 28 }
+                                  }}
                                 />
                               );
                             default:
@@ -361,6 +506,10 @@ function DeliveryPage() {
                                   label={selectedOrder.payment_status || "不明"}
                                   color="default"
                                   size="small"
+                                  sx={{
+                                    fontSize: { xs: '0.75rem', sm: '0.85rem' },
+                                    height: { xs: 24, sm: 28 }
+                                  }}
                                 />
                               );
                           }
@@ -373,33 +522,80 @@ function DeliveryPage() {
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     fullWidth
-                    sx={{ mb: 2 }}
+                    sx={{ 
+                      mb: { xs: 1.5, sm: 2 },
+                      '& .MuiInputBase-input': {
+                        fontSize: { xs: '0.95rem', sm: '1rem' }
+                      }
+                    }}
                   />
                   <TextField
                     label="電話番号"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     fullWidth
-                    sx={{ mb: 2 }}
+                    sx={{ 
+                      mb: { xs: 1.5, sm: 2 },
+                      '& .MuiInputBase-input': {
+                        fontSize: { xs: '0.95rem', sm: '1rem' }
+                      }
+                    }}
                   />
-                  <FormControl fullWidth sx={{ mb: 2 }}>
-                    <InputLabel>確認方法</InputLabel>
+                  <FormControl fullWidth sx={{ mb: { xs: 1.5, sm: 2 } }}>
+                    <InputLabel sx={{ fontSize: { xs: '0.95rem', sm: '1rem' } }}>
+                      確認方法
+                    </InputLabel>
                     <Select
                       value={verificationMethod}
                       onChange={(e: SelectChangeEvent) =>
                         setVerificationMethod(e.target.value)
                       }
+                      sx={{
+                        '& .MuiSelect-select': {
+                          fontSize: { xs: '0.95rem', sm: '1rem' }
+                        }
+                      }}
                     >
-                      <MenuItem value="name">お名前</MenuItem>
-                      <MenuItem value="phone">電話番号</MenuItem>
-                      <MenuItem value="order_number">注文番号</MenuItem>
+                      <MenuItem 
+                        value="name"
+                        sx={{ fontSize: { xs: '0.95rem', sm: '1rem' } }}
+                      >
+                        お名前
+                      </MenuItem>
+                      <MenuItem 
+                        value="phone"
+                        sx={{ fontSize: { xs: '0.95rem', sm: '1rem' } }}
+                      >
+                        電話番号
+                      </MenuItem>
+                      <MenuItem 
+                        value="order_number"
+                        sx={{ fontSize: { xs: '0.95rem', sm: '1rem' } }}
+                      >
+                        注文番号
+                      </MenuItem>
                     </Select>
                   </FormControl>
                 </React.Fragment>
               )}
             </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setDeliveryDialogOpen(false)}>
+            <DialogActions 
+              sx={{ 
+                p: { xs: 2, sm: 3 },
+                gap: { xs: 1, sm: 2 },
+                flexDirection: { xs: 'column', sm: 'row' }
+              }}
+            >
+              <Button 
+                onClick={() => setDeliveryDialogOpen(false)}
+                sx={{
+                  py: { xs: 1, sm: 1.2 },
+                  px: { xs: 3, sm: 4 },
+                  fontSize: { xs: '0.95rem', sm: '1rem' },
+                  minHeight: { xs: 44, sm: 48 },
+                  width: { xs: '100%', sm: 'auto' }
+                }}
+              >
                 キャンセル
               </Button>
               <Button
@@ -413,6 +609,13 @@ function DeliveryPage() {
                   !customerPhone ||
                   !verificationMethod
                 }
+                sx={{
+                  py: { xs: 1, sm: 1.2 },
+                  px: { xs: 3, sm: 4 },
+                  fontSize: { xs: '0.95rem', sm: '1rem' },
+                  minHeight: { xs: 44, sm: 48 },
+                  width: { xs: '100%', sm: 'auto' }
+                }}
               >
                 受け渡し完了
               </Button>
@@ -425,34 +628,62 @@ function DeliveryPage() {
             onClose={() => setQrScannerOpen(false)}
             maxWidth="sm"
             fullWidth
+            PaperProps={{
+              sx: {
+                borderRadius: { xs: 2, sm: 3 },
+                maxHeight: { xs: "85vh", sm: "90vh" },
+                m: { xs: 1, sm: 2 },
+              },
+            }}
           >
-            <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <QrIcon />
+            <DialogTitle 
+              sx={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: { xs: 0.5, sm: 1 },
+                py: { xs: 1.5, sm: 2 },
+                fontSize: { xs: '1.1rem', sm: '1.25rem' }
+              }}
+            >
+              <QrIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
               QRコードスキャン
             </DialogTitle>
-            <DialogContent>
-              <Box sx={{ textAlign: "center", py: 3 }}>
+            <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Box sx={{ textAlign: "center", py: { xs: 2, sm: 3 } }}>
                 <Paper
                   elevation={3}
                   sx={{
-                    p: 4,
-                    mb: 3,
+                    p: { xs: 3, sm: 4 },
+                    mb: { xs: 2, sm: 3 },
                     bgcolor: "grey.50",
-                    minHeight: 200,
+                    minHeight: { xs: 150, sm: 200 },
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <QrIcon sx={{ fontSize: 80, color: "primary.main", mb: 2 }} />
-                  <Typography variant="h6" gutterBottom>
+                  <QrIcon 
+                    sx={{ 
+                      fontSize: { xs: 60, sm: 80 }, 
+                      color: "primary.main", 
+                      mb: { xs: 1.5, sm: 2 } 
+                    }} 
+                  />
+                  <Typography 
+                    variant="h6" 
+                    gutterBottom
+                    sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}
+                  >
                     QRコードをスキャン
                   </Typography>
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ mb: 3 }}
+                    sx={{ 
+                      mb: { xs: 2, sm: 3 },
+                      fontSize: { xs: '0.9rem', sm: '1rem' }
+                    }}
                   >
                     お客様のQRコードをカメラに向けてください
                   </Typography>
@@ -469,13 +700,28 @@ function DeliveryPage() {
                         setQrScannerOpen(false);
                       }
                     }}
+                    sx={{
+                      py: { xs: 1, sm: 1.2 },
+                      px: { xs: 3, sm: 4 },
+                      fontSize: { xs: '0.95rem', sm: '1rem' },
+                      minHeight: { xs: 44, sm: 48 }
+                    }}
                   >
                     テスト入力
                   </Button>
                 </Paper>
 
-                <Alert severity="info" sx={{ textAlign: "left" }}>
-                  <Typography variant="body2">
+                <Alert 
+                  severity="info" 
+                  sx={{ 
+                    textAlign: "left",
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }}
+                >
+                  <Typography 
+                    variant="body2"
+                    sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}
+                  >
                     <strong>使用方法:</strong>
                     <br />
                     1. お客様にQRコードを表示してもらう
@@ -487,8 +733,17 @@ function DeliveryPage() {
                 </Alert>
               </Box>
             </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setQrScannerOpen(false)}>
+            <DialogActions sx={{ p: { xs: 2, sm: 3 } }}>
+              <Button 
+                onClick={() => setQrScannerOpen(false)}
+                sx={{
+                  py: { xs: 1, sm: 1.2 },
+                  px: { xs: 3, sm: 4 },
+                  fontSize: { xs: '0.95rem', sm: '1rem' },
+                  minHeight: { xs: 44, sm: 48 },
+                  width: { xs: '100%', sm: 'auto' }
+                }}
+              >
                 キャンセル
               </Button>
             </DialogActions>

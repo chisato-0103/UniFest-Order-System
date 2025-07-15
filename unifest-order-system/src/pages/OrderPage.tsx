@@ -344,7 +344,7 @@ const OrderPage: React.FC = () => {
   // ローディング中はスピナー表示
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
+      <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 4 } }}>
         <Box
           display="flex"
           justifyContent="center"
@@ -359,7 +359,7 @@ const OrderPage: React.FC = () => {
 
   // メインUI
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 4 } }}>
       {/* ヘッダー部分（タイトル・カートボタン） */}
       <Paper
         elevation={2}
@@ -376,7 +376,7 @@ const OrderPage: React.FC = () => {
               component="h1"
               gutterBottom
               sx={{
-                fontSize: { xs: "1.1rem", sm: "1.7rem" },
+                fontSize: { xs: "1.1rem", sm: "1.7rem", lg: "2rem" },
                 fontWeight: 700,
                 mb: { xs: 0.5, sm: 1 },
               }}
@@ -385,7 +385,7 @@ const OrderPage: React.FC = () => {
                 sx={{
                   mr: 1,
                   verticalAlign: "middle",
-                  fontSize: { xs: 18, sm: 28 },
+                  fontSize: { xs: 18, sm: 28, lg: 32 },
                 }}
               />
               メニュー
@@ -457,6 +457,8 @@ const OrderPage: React.FC = () => {
           xs: "1fr",
           sm: "repeat(2, 1fr)",
           md: "repeat(3, 1fr)",
+          lg: "repeat(4, 1fr)",
+          xl: "repeat(5, 1fr)",
         }}
         sx={{ gap: { xs: 1, sm: 2 }, mb: { xs: 1, sm: 2 } }}
       >

@@ -935,7 +935,18 @@ function KitchenPage() {
           {waitingOrders.length === 0 ? (
             <Alert severity="info">調理待ちの注文はありません</Alert>
           ) : (
-            waitingOrders.map((order) => renderOrderCard(order))
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  lg: "repeat(2, 1fr)",
+                },
+                gap: { xs: 1.5, sm: 2 },
+              }}
+            >
+              {waitingOrders.map((order) => renderOrderCard(order))}
+            </Box>
           )}
         </TabPanel>
 
@@ -946,7 +957,18 @@ function KitchenPage() {
           {cookingOrders.length === 0 ? (
             <Alert severity="info">調理中の注文はありません</Alert>
           ) : (
-            cookingOrders.map((order) => renderOrderCard(order))
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  lg: "repeat(2, 1fr)",
+                },
+                gap: { xs: 1.5, sm: 2 },
+              }}
+            >
+              {cookingOrders.map((order) => renderOrderCard(order))}
+            </Box>
           )}
         </TabPanel>
 
@@ -957,7 +979,18 @@ function KitchenPage() {
           {completedOrders.length === 0 ? (
             <Alert severity="info">調理完了の注文はありません</Alert>
           ) : (
-            completedOrders.map((order) => renderOrderCard(order))
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  lg: "repeat(2, 1fr)",
+                },
+                gap: { xs: 1.5, sm: 2 },
+              }}
+            >
+              {completedOrders.map((order) => renderOrderCard(order))}
+            </Box>
           )}
         </TabPanel>
       </Box>

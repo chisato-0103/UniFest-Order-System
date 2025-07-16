@@ -5,8 +5,7 @@ import {
   QrCodeScanner as QrIcon,
   CheckCircle as CheckIcon,
 } from "@mui/icons-material";
-import { useEffect } from "react";
-// QrReaderは動的importで型エラー回避
+import QRScanner from "../components/QRScanner";
 import type { Order, OrderItem } from "../types";
 
 // 受け渡し管理画面（QRコード読み取り→注文受け渡し）
@@ -14,50 +13,48 @@ const PickupPage: React.FC = () => {
   const [orderInfo, setOrderInfo] = useState<Order | null>(null);
   const [error, setError] = useState<string>("");
   const [confirmed, setConfirmed] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [QrReader, setQrReader] = useState<any>(null);
-
-  useEffect(() => {
-    import("react-qr-reader").then((mod) => setQrReader(mod.default));
-  }, []);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   // QRコード読み取り時の処理
-  const handleScan = (data: string | null) => {
-    if (data) {
-      try {
-        const info: Order = JSON.parse(data);
-        // order_number必須チェック
-        if (!info.order_number || !info.items) {
-          throw new Error("注文情報が不正です");
-        }
-        setOrderInfo(info);
-        setError("");
-      } catch {
-        setOrderInfo(null);
-        setError(
-          "QRコードの内容が不正です。正しい注文QRコードを提示してください。"
-        );
+  const handleScan = (data: string) => {
+    try {
+      const info: Order = JSON.parse(data);
+      // order_number必須チェック
+      if (!info.order_number || !info.items) {
+        throw new Error("注文情報が不正です");
       }
+      setOrderInfo(info);
+      setError("");
+      setScannerOpen(false);
+    } catch {
+      setOrderInfo(null);
+      setError(
+        "QRコードの内容が不正です。正しい注文QRコードを提示してください。"
+      );
     }
   };
 
-  const handleError = (err: unknown) => {
-    setError("QRコードの読み取りに失敗しました: " + String(err));
-  };
-
-  // 受け渡し確定処理（API連携は後で追加可能）
+  // 受け渡し確定処理
   const handleConfirm = async () => {
     if (!orderInfo?.order_number) return;
     setConfirmed(false);
     setError("");
     try {
-      // サーバーに受け渡し完了を通知（注文ステータスをdeliveredに更新）
-      await OrderService.updateOrderStatus(orderInfo.order_number, "delivered");
+      // サーバーに受け渡し完了を通知（注文ステータスを「受け取り済み」に更新）
+      await OrderService.updateOrderStatus(orderInfo.order_number, "受け取り済み");
       setConfirmed(true);
     } catch (err) {
       setError("受け渡し完了API通信に失敗しました: " + String(err));
       setConfirmed(false);
     }
+  };
+
+  // 新しいスキャンを開始
+  const handleStartScan = () => {
+    setOrderInfo(null);
+    setError("");
+    setConfirmed(false);
+    setScannerOpen(true);
   };
 
   return (
@@ -76,14 +73,18 @@ const PickupPage: React.FC = () => {
           </Typography>
         </Box>
 
-        {!orderInfo && !confirmed && QrReader && (
-          <Box sx={{ mb: 2 }}>
-            <QrReader
-              delay={300}
-              onError={handleError}
-              onScan={handleScan}
-              style={{ width: "100%" }}
-            />
+        {/* QRスキャナー開始ボタン */}
+        {!orderInfo && !confirmed && (
+          <Box sx={{ mb: 2, textAlign: "center" }}>
+            <Button
+              variant="contained"
+              startIcon={<QrIcon />}
+              onClick={handleStartScan}
+              size="large"
+              sx={{ py: 1.5, px: 3 }}
+            >
+              QRコードをスキャン
+            </Button>
           </Box>
         )}
 
@@ -135,11 +136,28 @@ const PickupPage: React.FC = () => {
         )}
 
         {confirmed && (
-          <Alert severity="success" sx={{ mt: 3 }}>
-            <CheckIcon sx={{ mr: 1 }} />
-            受け渡し処理が完了しました！
-          </Alert>
+          <Box sx={{ textAlign: "center" }}>
+            <Alert severity="success" sx={{ mb: 2 }}>
+              <CheckIcon sx={{ mr: 1 }} />
+              受け渡し処理が完了しました！
+            </Alert>
+            <Button
+              variant="outlined"
+              onClick={handleStartScan}
+              startIcon={<QrIcon />}
+            >
+              次の注文をスキャン
+            </Button>
+          </Box>
         )}
+
+        {/* QRスキャナーコンポーネント */}
+        <QRScanner
+          open={scannerOpen}
+          onClose={() => setScannerOpen(false)}
+          onScan={handleScan}
+          title="注文QRコードをスキャン"
+        />
       </Paper>
     </Box>
   );

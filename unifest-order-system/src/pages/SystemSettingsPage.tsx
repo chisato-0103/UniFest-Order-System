@@ -5,49 +5,49 @@
 
 import { useState, useEffect } from "react"; // Reactの状態管理フック
 import {
-  Container,      // ページ全体を囲むコンテナ
-  Typography,     // テキスト表示コンポーネント
-  Box,           // レイアウト用コンテナ
-  Card,          // カード表示コンポーネント
-  CardContent,   // カード内のコンテンツ
-  Button,        // ボタンコンポーネント
-  IconButton,    // アイコン付きボタン
-  TextField,     // テキスト入力欄
-  FormControl,   // フォーム要素のコンテナ
-  Select,        // セレクトボックス（選択肢）
-  MenuItem,      // セレクトボックスの項目
-  Switch,        // オン/オフ切り替えスイッチ
-  Alert,         // 警告メッセージ表示
-  Snackbar,      // 画面下部に表示される通知
-  Dialog,        // ポップアップダイアログ
-  DialogTitle,   // ダイアログのタイトル
+  Container, // ページ全体を囲むコンテナ
+  Typography, // テキスト表示コンポーネント
+  Box, // レイアウト用コンテナ
+  Card, // カード表示コンポーネント
+  CardContent, // カード内のコンテンツ
+  Button, // ボタンコンポーネント
+  IconButton, // アイコン付きボタン
+  TextField, // テキスト入力欄
+  FormControl, // フォーム要素のコンテナ
+  Select, // セレクトボックス（選択肢）
+  MenuItem, // セレクトボックスの項目
+  Switch, // オン/オフ切り替えスイッチ
+  Alert, // 警告メッセージ表示
+  Snackbar, // 画面下部に表示される通知
+  Dialog, // ポップアップダイアログ
+  DialogTitle, // ダイアログのタイトル
   DialogContent, // ダイアログのメインコンテンツ
   DialogActions, // ダイアログのボタンエリア
-  Tooltip,       // ホバー時のツールチップ
-  Chip,          // ステータス表示用タグ
-  Table,         // テーブル表示コンポーネント
-  TableBody,     // テーブルの本体部分
-  TableCell,     // テーブルのセル
-  TableContainer,// テーブルを囲むコンテナ
-  TableHead,     // テーブルのヘッダー部分
-  TableRow,      // テーブルの行
+  Tooltip, // ホバー時のツールチップ
+  Chip, // ステータス表示用タグ
+  Table, // テーブル表示コンポーネント
+  TableBody, // テーブルの本体部分
+  TableCell, // テーブルのセル
+  TableContainer, // テーブルを囲むコンテナ
+  TableHead, // テーブルのヘッダー部分
+  TableRow, // テーブルの行
 } from "@mui/material";
 // ナビゲーションバーはApp.tsxで共通表示
 import {
-  Settings as SettingsIcon,             // 設定アイコン
-  Notifications as NotificationsIcon,   // 通知アイコン
-  Security as SecurityIcon,             // セキュリティアイコン
-  Schedule as ScheduleIcon,             // スケジュールアイコン
-  Payment as PaymentIcon,               // 支払いアイコン
-  Restaurant as RestaurantIcon,         // レストランアイコン
-  Edit as EditIcon,                     // 編集アイコン
-  Save as SaveIcon,                     // 保存アイコン
-  Cancel as CancelIcon,                 // キャンセルアイコン
-  RestartAlt as RestartIcon,            // リスタートアイコン
-  Backup as BackupIcon,                 // バックアップアイコン
-  CloudDownload as RestoreIcon,         // 復元アイコン
-  VolumeUp as VolumeIcon,               // 音量アイコン
-  PlayArrow as PlayIcon,                // 再生アイコン
+  Settings as SettingsIcon, // 設定アイコン
+  Notifications as NotificationsIcon, // 通知アイコン
+  Security as SecurityIcon, // セキュリティアイコン
+  Schedule as ScheduleIcon, // スケジュールアイコン
+  Payment as PaymentIcon, // 支払いアイコン
+  Restaurant as RestaurantIcon, // レストランアイコン
+  Edit as EditIcon, // 編集アイコン
+  Save as SaveIcon, // 保存アイコン
+  Cancel as CancelIcon, // キャンセルアイコン
+  RestartAlt as RestartIcon, // リスタートアイコン
+  Backup as BackupIcon, // バックアップアイコン
+  CloudDownload as RestoreIcon, // 復元アイコン
+  VolumeUp as VolumeIcon, // 音量アイコン
+  PlayArrow as PlayIcon, // 再生アイコン
 } from "@mui/icons-material";
 import { audioNotificationService } from "../utils/audioNotification"; // 音声通知サービス
 import EmergencyControl from "../components/EmergencyControl"; // 緊急時対応コンポーネント
@@ -55,48 +55,48 @@ import EmergencyControl from "../components/EmergencyControl"; // 緊急時対�
 // ⚙️ システム設定項目の型定義
 // 目的: 各設定項目の情報を管理するためのデータ構造
 interface SystemSetting {
-  id: string;                                    // 設定項目の一意識別子
-  category: string;                              // カテゴリ（例: "基本設定"、"通知設定"）
-  name: string;                                  // 設定項目名（例: "店舗名"、"営業時間"）
-  value: string | number | boolean;             // 設定値（文字列、数値、ブール値）
+  id: string; // 設定項目の一意識別子
+  category: string; // カテゴリ（例: "基本設定"、"通知設定"）
+  name: string; // 設定項目名（例: "店舗名"、"営業時間"）
+  value: string | number | boolean; // 設定値（文字列、数値、ブール値）
   type: "string" | "number" | "boolean" | "select"; // 入力タイプ（テキスト、数値、スイッチ、選択）
-  description: string;                           // 設定の説明文
-  options?: string[];                            // 選択タイプの場合の選択肢
+  description: string; // 設定の説明文
+  options?: string[]; // 選択タイプの場合の選択肢
 }
 
 function SystemSettingsPage() {
   // 🔄 設定項目の状態管理
   // 目的: 全ての設定項目を配列として管理し、画面表示と編集機能を実現
   const [settings, setSettings] = useState<SystemSetting[]>([]);
-  
+
   // ✏️ 編集モード管理
   // 目的: 現在編集中の設定項目のIDを記録（nullは編集中でない状態）
   const [editingSettingId, setEditingSettingId] = useState<string | null>(null);
-  
+
   // 📝 編集中の値を一時保存
   // 目的: 編集中の新しい値を保存し、保存時に設定に反映する
   const [editingValue, setEditingValue] = useState<string | number | boolean>(
     ""
   );
-  
+
   // 🔔 通知バー（スナックバー）の表示制御
   // 目的: 設定保存完了やエラーメッセージを画面下部に表示
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  
+
   // 💬 通知メッセージの内容
   // 目的: スナックバーに表示するメッセージテキストを管理
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  
+
   // 🎨 通知の種類（成功/エラー/警告）
   // 目的: 通知の色とアイコンを決定する（緑=成功、赤=エラー、黄=警告）
   const [snackbarSeverity, setSnackbarSeverity] = useState<
     "success" | "error" | "warning"
   >("success");
-  
+
   // 🔒 確認ダイアログの表示制御
   // 目的: 危険な操作（データ復元、システム再起動）の確認画面を表示
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  
+
   // ⚡ 確認後に実行する処理
   // 目的: 「実行」ボタンが押された時に実行される関数を保存
   const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
@@ -294,16 +294,16 @@ function SystemSettingsPage() {
   // 目的: 設定項目の編集ボタンが押された時の処理
   // 処理: 編集対象のIDを記録し、現在の値を編集用の状態に保存
   const handleEditStart = (setting: SystemSetting) => {
-    setEditingSettingId(setting.id);     // 編集中の設定項目を記録
-    setEditingValue(setting.value);      // 現在の値を編集フィールドに表示
+    setEditingSettingId(setting.id); // 編集中の設定項目を記録
+    setEditingValue(setting.value); // 現在の値を編集フィールドに表示
   };
 
   // ❌ 編集キャンセル処理
   // 目的: 編集を取り消し、元の表示状態に戻す
   // 処理: 編集状態をクリアし、変更内容を破棄
   const handleEditCancel = () => {
-    setEditingSettingId(null);   // 編集中の項目をクリア
-    setEditingValue("");         // 編集中の値をクリア
+    setEditingSettingId(null); // 編集中の項目をクリア
+    setEditingValue(""); // 編集中の値をクリア
   };
 
   // 💾 設定値保存処理
@@ -312,21 +312,22 @@ function SystemSettingsPage() {
   const handleEditSave = (settingId: string) => {
     // 設定配列を更新（該当IDの項目のみ値を変更）
     setSettings((prev) =>
-      prev.map((setting) =>
-        setting.id === settingId 
-          ? { ...setting, value: editingValue }  // 編集中の値で更新
-          : setting                               // 他の項目はそのまま
+      prev.map(
+        (setting) =>
+          setting.id === settingId
+            ? { ...setting, value: editingValue } // 編集中の値で更新
+            : setting // 他の項目はそのまま
       )
     );
-    
+
     // 編集モードを終了
-    setEditingSettingId(null);   // 編集中の項目をクリア
-    setEditingValue("");         // 編集中の値をクリア
-    
+    setEditingSettingId(null); // 編集中の項目をクリア
+    setEditingValue(""); // 編集中の値をクリア
+
     // 保存完了の通知を表示
     setSnackbarMessage("設定を保存しました");
-    setSnackbarSeverity("success");    // 成功の緑色通知
-    setSnackbarOpen(true);              // 通知バーを表示
+    setSnackbarSeverity("success"); // 成功の緑色通知
+    setSnackbarOpen(true); // 通知バーを表示
   };
 
   // 🔊 音声通知テスト機能
@@ -362,20 +363,20 @@ function SystemSettingsPage() {
           // カスタム通知音をテスト（700Hz、2秒間）
           await audioNotificationService.playCustomNotification(
             "テスト通知です",
-            700,    // 周波数（Hz）
-            2       // 再生時間（秒）
+            700, // 周波数（Hz）
+            2 // 再生時間（秒）
           );
       }
 
       // ✅ テスト成功時の通知表示
       setSnackbarMessage(`${testType}の音声通知をテストしました`);
-      setSnackbarSeverity("success");  // 成功の緑色通知
+      setSnackbarSeverity("success"); // 成功の緑色通知
       setSnackbarOpen(true);
     } catch (error) {
       // ❌ テスト失敗時のエラー処理
       console.error("音声通知テストエラー:", error);
       setSnackbarMessage("音声通知のテストに失敗しました");
-      setSnackbarSeverity("error");    // エラーの赤色通知
+      setSnackbarSeverity("error"); // エラーの赤色通知
       setSnackbarOpen(true);
     }
   };
@@ -388,13 +389,13 @@ function SystemSettingsPage() {
     setConfirmAction(() => () => {
       // 再起動処理中の通知を表示
       setSnackbarMessage("システムを再起動しています...");
-      setSnackbarSeverity("warning");      // 警告の黄色通知
+      setSnackbarSeverity("warning"); // 警告の黄色通知
       setSnackbarOpen(true);
-      setConfirmDialogOpen(false);         // 確認ダイアログを閉じる
-      
+      setConfirmDialogOpen(false); // 確認ダイアログを閉じる
+
       // 実際のシステムでは、ここでサーバーに再起動リクエストを送信
     });
-    
+
     // 確認ダイアログを表示
     setConfirmDialogOpen(true);
   };
@@ -405,10 +406,10 @@ function SystemSettingsPage() {
   const handleDataBackup = () => {
     // 実際のシステムでは、ここでAPIにバックアップリクエストを送信
     // 設定データ、注文履歴、メニュー情報などを外部ストレージに保存
-    
+
     // バックアップ完了の通知を表示
     setSnackbarMessage("データをバックアップしました");
-    setSnackbarSeverity("success");    // 成功の緑色通知
+    setSnackbarSeverity("success"); // 成功の緑色通知
     setSnackbarOpen(true);
   };
 
@@ -420,14 +421,14 @@ function SystemSettingsPage() {
     setConfirmAction(() => () => {
       // 実際のシステムでは、ここでAPIに復元リクエストを送信
       // バックアップファイルから設定データを読み込み、現在の設定を置き換え
-      
+
       // 復元完了の通知を表示
       setSnackbarMessage("データを復元しました");
-      setSnackbarSeverity("success");    // 成功の緑色通知
+      setSnackbarSeverity("success"); // 成功の緑色通知
       setSnackbarOpen(true);
-      setConfirmDialogOpen(false);       // 確認ダイアログを閉じる
+      setConfirmDialogOpen(false); // 確認ダイアログを閉じる
     });
-    
+
     // 確認ダイアログを表示
     setConfirmDialogOpen(true);
   };
@@ -442,11 +443,12 @@ function SystemSettingsPage() {
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           {/* 現在の設定値を表示（型に応じて表示形式を変更） */}
           <Typography variant="body1">
-            {setting.type === "boolean"
-              ? setting.value
-                ? "有効"     // true の場合
-                : "無効"     // false の場合
-              : setting.value.toString()  // 文字列・数値の場合
+            {
+              setting.type === "boolean"
+                ? setting.value
+                  ? "有効" // true の場合
+                  : "無効" // false の場合
+                : setting.value.toString() // 文字列・数値の場合
             }
           </Typography>
           {/* 編集開始ボタン */}
@@ -520,11 +522,11 @@ function SystemSettingsPage() {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {/* 数値入力フィールド */}
             <TextField
-              type="number"                              // 数値のみ入力可能
+              type="number" // 数値のみ入力可能
               size="small"
               value={editingValue}
-              onChange={(e) => setEditingValue(Number(e.target.value))}  // 文字列を数値に変換
-              sx={{ width: 100 }}                      // 幅を固定
+              onChange={(e) => setEditingValue(Number(e.target.value))} // 文字列を数値に変換
+              sx={{ width: 100 }} // 幅を固定
             />
             {/* 保存ボタン */}
             <IconButton size="small" onClick={() => handleEditSave(setting.id)}>
@@ -545,8 +547,8 @@ function SystemSettingsPage() {
             <TextField
               size="small"
               value={editingValue}
-              onChange={(e) => setEditingValue(e.target.value)}  // 入力値をそのまま設定
-              sx={{ width: 200 }}                              // 幅を固定
+              onChange={(e) => setEditingValue(e.target.value)} // 入力値をそのまま設定
+              sx={{ width: 200 }} // 幅を固定
             />
             {/* 保存ボタン */}
             <IconButton size="small" onClick={() => handleEditSave(setting.id)}>
@@ -567,17 +569,17 @@ function SystemSettingsPage() {
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case "基本設定":
-        return <SettingsIcon color="primary" />;        // 歯車アイコン（青色）
+        return <SettingsIcon color="primary" />; // 歯車アイコン（青色）
       case "注文設定":
-        return <RestaurantIcon color="secondary" />;    // レストランアイコン（紫色）
+        return <RestaurantIcon color="secondary" />; // レストランアイコン（紫色）
       case "支払い設定":
-        return <PaymentIcon color="success" />;         // 支払いアイコン（緑色）
+        return <PaymentIcon color="success" />; // 支払いアイコン（緑色）
       case "通知設定":
-        return <NotificationsIcon color="warning" />;   // 通知アイコン（黄色）
+        return <NotificationsIcon color="warning" />; // 通知アイコン（黄色）
       case "システム設定":
-        return <SecurityIcon color="error" />;          // セキュリティアイコン（赤色）
+        return <SecurityIcon color="error" />; // セキュリティアイコン（赤色）
       default:
-        return <SettingsIcon />;                        // デフォルトアイコン（グレー）
+        return <SettingsIcon />; // デフォルトアイコン（グレー）
     }
   };
 
@@ -585,13 +587,14 @@ function SystemSettingsPage() {
   // 目的: 設定項目を「基本設定」「注文設定」などのカテゴリごとに分類
   // 効果: 関連する設定を一箇所にまとめて表示し、管理しやすくする
   const groupedSettings = settings.reduce((groups, setting) => {
-    const category = setting.category;           // 設定項目のカテゴリを取得
-    if (!groups[category]) {                     // そのカテゴリが初出の場合
-      groups[category] = [];                     // 空の配列を作成
+    const category = setting.category; // 設定項目のカテゴリを取得
+    if (!groups[category]) {
+      // そのカテゴリが初出の場合
+      groups[category] = []; // 空の配列を作成
     }
-    groups[category].push(setting);              // カテゴリの配列に設定項目を追加
-    return groups;                               // グループ化されたオブジェクトを返す
-  }, {} as Record<string, SystemSetting[]>);     // 初期値は空のオブジェクト
+    groups[category].push(setting); // カテゴリの配列に設定項目を追加
+    return groups; // グループ化されたオブジェクトを返す
+  }, {} as Record<string, SystemSetting[]>); // 初期値は空のオブジェクト
 
   return (
     <Box>
@@ -618,7 +621,7 @@ function SystemSettingsPage() {
           >
             データバックアップ
           </Button>
-          
+
           {/* 🔄 データ復元ボタン */}
           <Button
             variant="outlined"
@@ -628,7 +631,7 @@ function SystemSettingsPage() {
           >
             データ復元
           </Button>
-          
+
           {/* 🔄 システム再起動ボタン */}
           <Button
             variant="outlined"
@@ -647,9 +650,9 @@ function SystemSettingsPage() {
             <CardContent>
               {/* カテゴリヘッダー（アイコン + タイトル） */}
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                {getCategoryIcon(category)}        {/* カテゴリ別アイコン */}
+                {getCategoryIcon(category)} {/* カテゴリ別アイコン */}
                 <Typography variant="h6" sx={{ ml: 1 }}>
-                  {category}                       {/* カテゴリ名 */}
+                  {category} {/* カテゴリ名 */}
                 </Typography>
               </Box>
 
@@ -660,12 +663,12 @@ function SystemSettingsPage() {
                   {/* テーブルヘッダー */}
                   <TableHead>
                     <TableRow>
-                      <TableCell>設定項目</TableCell>      {/* 設定の名前 */}
-                      <TableCell>現在の値</TableCell>      {/* 現在の設定値 */}
-                      <TableCell>説明</TableCell>          {/* 設定の説明 */}
+                      <TableCell>設定項目</TableCell> {/* 設定の名前 */}
+                      <TableCell>現在の値</TableCell> {/* 現在の設定値 */}
+                      <TableCell>説明</TableCell> {/* 設定の説明 */}
                     </TableRow>
                   </TableHead>
-                  
+
                   {/* テーブル本体 */}
                   <TableBody>
                     {/* カテゴリ内の各設定項目をループ表示 */}
@@ -677,10 +680,10 @@ function SystemSettingsPage() {
                             {setting.name}
                           </Typography>
                         </TableCell>
-                        
+
                         {/* 設定値（編集可能フィールド） */}
                         <TableCell>{renderEditField(setting)}</TableCell>
-                        
+
                         {/* 設定の説明 */}
                         <TableCell>
                           <Typography variant="body2" color="text.secondary">
@@ -710,7 +713,7 @@ function SystemSettingsPage() {
                     <VolumeIcon />
                     音声通知テスト
                   </Typography>
-                  
+
                   {/* テストボタン群 */}
                   <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                     {/* 新規注文通知テスト */}
@@ -722,7 +725,7 @@ function SystemSettingsPage() {
                     >
                       新規注文
                     </Button>
-                    
+
                     {/* 調理完了通知テスト */}
                     <Button
                       size="small"
@@ -732,7 +735,7 @@ function SystemSettingsPage() {
                     >
                       調理完了
                     </Button>
-                    
+
                     {/* 遅延アラート通知テスト */}
                     <Button
                       size="small"
@@ -742,14 +745,15 @@ function SystemSettingsPage() {
                     >
                       遅延アラート
                     </Button>
-                    
+
                     {/* 緊急通知テスト */}
                     <Button
                       size="small"
                       variant="outlined"
                       startIcon={<PlayIcon />}
                       onClick={() => handleAudioTest("emergency")}
-                      color="error"                     {/* 緊急時は赤色で強調 */}
+                      color="error"
+                      // 緊急時は赤色で強調
                     >
                       緊急通知
                     </Button>
@@ -769,7 +773,7 @@ function SystemSettingsPage() {
               <ScheduleIcon color="info" sx={{ mr: 1 }} />
               <Typography variant="h6">現在の営業状態</Typography>
             </Box>
-            
+
             {/* 営業情報をチップ形式で表示 */}
             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
               {/* 営業状態チップ */}
@@ -778,9 +782,10 @@ function SystemSettingsPage() {
                   settings.find((s) => s.name === "営業状態")?.value || "不明"
                 }`}
                 color="primary"
-                variant="filled"         {/* 塗りつぶし表示で強調 */}
+                variant="filled"
+                // 塗りつぶし表示で強調
               />
-              
+
               {/* 営業時間チップ */}
               <Chip
                 label={`営業時間: ${
@@ -789,16 +794,18 @@ function SystemSettingsPage() {
                   settings.find((s) => s.name === "営業時間（終了）")?.value
                 }`}
                 color="secondary"
-                variant="outlined"       {/* 枠線表示 */}
+                variant="outlined"
+                // 枠線表示
               />
-              
+
               {/* 同時調理数チップ */}
               <Chip
                 label={`同時調理数: ${
                   settings.find((s) => s.name === "同時調理可能数")?.value
                 }件`}
                 color="success"
-                variant="outlined"       {/* 枠線表示 */}
+                variant="outlined"
+                // 枠線表示
               />
             </Box>
           </CardContent>
@@ -820,19 +827,19 @@ function SystemSettingsPage() {
         >
           {/* ダイアログタイトル */}
           <DialogTitle>操作の確認</DialogTitle>
-          
+
           {/* ダイアログメッセージ */}
           <DialogContent>
             <Typography>この操作を実行してもよろしいですか？</Typography>
           </DialogContent>
-          
+
           {/* ダイアログボタン */}
           <DialogActions>
             {/* キャンセルボタン */}
             <Button onClick={() => setConfirmDialogOpen(false)}>
               キャンセル
             </Button>
-            
+
             {/* 実行ボタン（警告色で危険性を表現） */}
             <Button onClick={confirmAction} variant="contained" color="warning">
               実行
@@ -845,14 +852,14 @@ function SystemSettingsPage() {
         {/* 効果: 操作の成功/失敗をユーザーに分かりやすく通知 */}
         <Snackbar
           open={snackbarOpen}
-          autoHideDuration={3000}                        // 3秒後に自動で消える
+          autoHideDuration={3000} // 3秒後に自動で消える
           onClose={() => setSnackbarOpen(false)}
         >
           <Alert
-            severity={snackbarSeverity}                  // 通知の種類（成功/エラー/警告）
+            severity={snackbarSeverity} // 通知の種類（成功/エラー/警告）
             onClose={() => setSnackbarOpen(false)}
           >
-            {snackbarMessage}                            // 通知メッセージ
+            {snackbarMessage} // 通知メッセージ
           </Alert>
         </Snackbar>
       </Container>

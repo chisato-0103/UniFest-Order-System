@@ -41,6 +41,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
     ) => void;
     clear: () => void;
   } | null>(null);
+  const scannerId = `qr-scanner-${Date.now()}`;
 
   const stopScanning = useCallback(() => {
     setIsScanning(false);
@@ -61,18 +62,25 @@ const QRScanner: React.FC<QRScannerProps> = ({
       setIsScanning(true);
       setHasPermission(true);
 
+      // 少し待ってからスキャナーを初期化（DOM要素が確実に存在するように）
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // html5-qrcode を動的にインポートして使用
       const { Html5QrcodeScanner } = await import("html5-qrcode");
 
-      if (scannerRef.current && !html5QrCodeScannerRef.current) {
+      const scannerElement = document.getElementById(scannerId);
+      if (scannerElement && !html5QrCodeScannerRef.current) {
         const config = {
           fps: 10,
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0,
+          experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true
+          }
         };
 
         html5QrCodeScannerRef.current = new Html5QrcodeScanner(
-          "qr-scanner-container",
+          scannerId,
           config,
           false
         );
@@ -196,7 +204,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
                 }}
               >
                 <div
-                  id="qr-scanner-container"
+                  id={scannerId}
                   ref={scannerRef}
                   style={{ width: "100%", maxWidth: "400px" }}
                 />

@@ -8,6 +8,7 @@ import {
   getCookingOrders,
   getReadyOrders,
   getSalesStats,
+  resetOrderHistory,
 } from "../controllers/orderController";
 
 const router = Router();
@@ -24,6 +25,9 @@ router.get("/", getAllOrders);
 
 // 売上統計取得（管理者向け）
 router.get("/admin/stats", getSalesStats);
+
+// 注文履歴リセット（管理者専用）
+router.post("/admin/reset", resetOrderHistory);
 
 // 調理中の注文一覧（厨房向け）
 router.get("/cooking", getCookingOrders);

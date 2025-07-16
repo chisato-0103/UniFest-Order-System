@@ -803,3 +803,64 @@ export const getSalesStats = async (
     });
   }
 };
+
+// 注文履歴をリセット（管理者専用）
+export const resetOrderHistory = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    console.log("📝 注文履歴リセット開始");
+
+    const client = await db.getClient();
+    
+    try {
+      await client.query("BEGIN");
+
+      // 注文関連テーブルをクリア（外部キー制約を考慮した順序）
+      console.log("🗑️ 注文アイテムを削除中...");
+      const deleteItemsResult = await client.query("DELETE FROM order_items");
+      
+      console.log("🗑️ 注文を削除中...");
+      const deleteOrdersResult = await client.query("DELETE FROM orders");
+
+      // シーケンス（auto increment）をリセット
+      console.log("🔢 IDシーケンスをリセット中...");
+      await client.query("ALTER SEQUENCE IF EXISTS orders_order_id_seq RESTART WITH 1");
+      await client.query("ALTER SEQUENCE IF EXISTS order_items_order_item_id_seq RESTART WITH 1");
+
+      await client.query("COMMIT");
+
+      console.log(`✅ 注文履歴リセット完了: 注文${deleteOrdersResult.rowCount}件、アイテム${deleteItemsResult.rowCount}件を削除`);
+
+      // 確認用のカウント取得
+      const orderCount = await client.query("SELECT COUNT(*) FROM orders");
+      const itemCount = await client.query("SELECT COUNT(*) FROM order_items");
+      const productCount = await client.query("SELECT COUNT(*) FROM products");
+
+      res.json({
+        success: true,
+        message: "注文履歴のリセットが完了しました",
+        data: {
+          deletedOrders: deleteOrdersResult.rowCount,
+          deletedItems: deleteItemsResult.rowCount,
+          remainingOrders: parseInt(orderCount.rows[0].count),
+          remainingItems: parseInt(itemCount.rows[0].count),
+          preservedProducts: parseInt(productCount.rows[0].count),
+        },
+      });
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error("❌ 注文履歴リセットエラー:", error);
+    res.status(500).json({
+      success: false,
+      message: "注文履歴のリセットに失敗しました",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};

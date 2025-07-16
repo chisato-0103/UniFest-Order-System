@@ -1,3 +1,7 @@
+// 🛒 ショッピングカートコンポーネント
+// 目的: お客さんが選んだ商品をまとめて表示し、注文処理を行う
+// 機能: 商品の追加・削除、合計金額表示、注文確定ボタン
+// 表示: 右下のフローティングボタンとして表示、タップで詳細を開く
 import React from "react";
 import {
   Fab,
@@ -26,26 +30,31 @@ import {
 } from "@mui/icons-material";
 import type { TransitionProps } from "@mui/material/transitions";
 
+// 🛒 カートアイテムのデータ形式
+// カートに入っている商品の情報を表す
 interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
+  id: string;       // 商品の一意識別子
+  name: string;     // 商品名（例: たこ焼き8個セット）
+  price: number;    // 単価（円）
+  quantity: number; // 数量（個）
 }
 
+// 🛒 カートコンポーネントのプロパティーズ（親コンポーネントから受け取るデータ）
 interface EnhancedCartProps {
-  cartItems: CartItem[];
-  isOpen: boolean;
-  onOpen: () => void;
-  onClose: () => void;
-  onAddToCart: (productId: string) => void;
-  onRemoveFromCart: (productId: string) => void;
-  onOrder: () => void;
-  totalItems: number;
-  totalPrice: number;
-  isOrderLoading?: boolean;
+  cartItems: CartItem[];                       // カート内の商品リスト
+  isOpen: boolean;                            // カートを開いているかどうか
+  onOpen: () => void;                         // カートを開く処理
+  onClose: () => void;                        // カートを閉じる処理
+  onAddToCart: (productId: string) => void;   // 商品を追加する処理
+  onRemoveFromCart: (productId: string) => void; // 商品を削除する処理
+  onOrder: () => void;                        // 注文を確定する処理
+  totalItems: number;                         // カート内の商品総数
+  totalPrice: number;                         // カート内の合計金額
+  isOrderLoading?: boolean;                   // 注文処理中かどうか
 }
 
+// 🎨 カートダイアログのアニメーション設定
+// 下から上にスライドしてカートが現れるようにする
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
     children: React.ReactElement;
@@ -55,21 +64,23 @@ const Transition = React.forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
+// 🛒 メインカートコンポーネント
+// 受け取ったプロパティーズを使ってカートのUIを描画する
 const EnhancedCart: React.FC<EnhancedCartProps> = ({
-  cartItems,
-  isOpen,
-  onOpen,
-  onClose,
-  onAddToCart,
-  onRemoveFromCart,
-  onOrder,
-  totalItems,
-  totalPrice,
-  isOrderLoading = false,
+  cartItems,          // カート内の商品リスト
+  isOpen,            // カートが開いているか
+  onOpen,            // カートを開く関数
+  onClose,           // カートを閉じる関数
+  onAddToCart,       // 商品追加関数
+  onRemoveFromCart,  // 商品削除関数
+  onOrder,           // 注文確定関数
+  totalItems,        // 商品総数
+  totalPrice,        // 合計金額
+  isOrderLoading = false, // 注文処理中フラグ
 }) => {
   return (
     <>
-      {/* カートボタン */}
+      {/* 🛒 カートボタン - 右下に固定表示されるフローティングボタン */}
       <Fab
         color="primary"
         onClick={onOpen}

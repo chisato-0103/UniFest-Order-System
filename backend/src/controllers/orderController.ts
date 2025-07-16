@@ -1,9 +1,11 @@
-// 支払い処理API
+// 💳 支払い処理API
+// 目的: お客さんが商品代金を支払う時の処理
+// 使用場面: 支払い画面で「支払い完了」ボタンが押された時
 export const processOrderPayment = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  // ルート到達確認ログ
+  // ルート到達確認ログ（デバッグ用）
   console.log("processOrderPayment called", req.params.id);
   try {
     const orderId = parseInt(req.params.id, 10);
@@ -52,29 +54,40 @@ import QRCode from "qrcode";
 import { Server } from "socket.io";
 
 /**
- * 注文管理コントローラー
- * 注文の作成、更新、状態管理を行う
- * Socket.io リアルタイム通信と連携
+ * 📋 注文管理コントローラー
+ * 目的: 注文に関する全ての処理を管理する「司令塔」
+ * 機能: 注文の作成、更新、状態管理を行う
+ * 特徴: Socket.io リアルタイム通信と連携（画面が自動更新される）
+ * 初心者向け説明: このファイルは「注文の取り扱い説明書」のようなもので、
+ *                お客さんが注文してから商品を受け取るまでの全ての手順が書かれています
  */
 
-// Socket.ioインスタンスを保持
+// 📡 Socket.ioインスタンスを保持
+// 目的: リアルタイム通信の「電話回線」を保存しておく場所
 let socketInstance: Server | null = null;
 
+// 📡 Socket.io設定関数
+// 目的: リアルタイム通信の準備をする
 export const setSocketInstance = (io: Server) => {
   socketInstance = io;
 };
 
-// Socket.io通知を送信するヘルパー関数
+// 📢 Socket.io通知を送信するヘルパー関数
+// 目的: 全ての画面に「お知らせ」を送信する（例: 新しい注文が入りました）
+// 使用例: 注文が入ったら厨房画面に自動で表示される
 const emitSocketNotification = (event: string, data: any) => {
   if (socketInstance) {
     socketInstance.emit(event, {
       ...data,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString(), // いつ送信したかの時刻を追加
     });
   }
 };
 
-// 全注文を取得（管理者向け）
+// 📊 全注文を取得（管理者向け）
+// 目的: 管理者が全ての注文を一覧で見るための機能
+// 使用場面: 履歴画面、売上管理画面
+// 機能: フィルター機能付き（支払い状況別、ステータス別など）
 export const getAllOrders = async (
   req: Request,
   res: Response
@@ -165,7 +178,10 @@ export const getAllOrders = async (
   }
 };
 
-// 特定注文の詳細を取得
+// 🔍 特定注文の詳細を取得
+// 目的: 1つの注文の詳しい情報を取得する
+// 使用場面: 注文詳細画面、管理者がトラブル対応する時
+// 取得情報: 注文番号、商品内容、支払い状況、調理状況など
 export const getOrderById = async (
   req: Request,
   res: Response
@@ -222,7 +238,10 @@ export const getOrderById = async (
   }
 };
 
-// 注文番号で注文を取得（お客様向け）
+// 📱 注文番号で注文を取得（お客様向け）
+// 目的: お客さんが注文番号を使って自分の注文状況を確認する
+// 使用場面: QRコードを読み取った時、注文状況確認画面
+// 表示内容: 待ち時間、調理状況、「もうすぐ出来上がり」など
 export const getOrderByNumber = async (
   req: Request,
   res: Response
@@ -278,7 +297,10 @@ export const getOrderByNumber = async (
   }
 };
 
-// 新規注文を作成
+// 🆕 新規注文を作成
+// 目的: お客さんが注文ボタンを押した時に、注文をデータベースに保存する
+// 処理内容: 商品価格計算、在庫チェック、注文番号生成、QRコード作成
+// 重要: この処理が成功すると、厨房画面に新しい注文が表示される
 export const createOrder = async (
   req: Request,
   res: Response
@@ -524,7 +546,10 @@ export const createOrder = async (
   }
 };
 
-// 注文ステータスを更新
+// 🔄 注文ステータスを更新
+// 目的: 注文の状況を変更する（調理中→調理完了など）
+// 使用場面: 厨房で「調理開始」「調理完了」ボタンを押した時
+// 自動処理: 時刻の記録、リアルタイム通知の送信
 export const updateOrderStatus = async (
   req: Request,
   res: Response
@@ -648,7 +673,10 @@ export const updateOrderStatus = async (
   }
 };
 
-// 調理中の注文一覧を取得（厨房向け）
+// 👨‍🍳 調理中の注文一覧を取得（厨房向け）
+// 目的: 厨房画面で「今作るべき注文」を表示する
+// 表示内容: 調理待ち、調理中の注文を古い順に表示
+// 使用場面: 厨房スタッフが次に何を作るかを確認する時
 export const getCookingOrders = async (
   req: Request,
   res: Response
@@ -696,7 +724,10 @@ export const getCookingOrders = async (
   }
 };
 
-// 受け渡し待ちの注文一覧を取得
+// 📦 受け渡し待ちの注文一覧を取得
+// 目的: 調理が完了して、お客さんに渡す準備ができた注文を表示
+// 条件: 「調理完了」かつ「支払済み」の注文のみ
+// 使用場面: 受け渡し画面で、どの注文を渡すかを確認する時
 export const getReadyOrders = async (
   req: Request,
   res: Response
@@ -742,7 +773,10 @@ export const getReadyOrders = async (
   }
 };
 
-// 売上統計を取得
+// 📈 売上統計を取得
+// 目的: 今日の売上、注文数、人気商品などの統計情報を計算
+// 表示内容: 売上合計、注文数、商品別売上、キャンセル数など
+// 使用場面: 店舗監視画面、売上管理画面
 export const getSalesStats = async (
   req: Request,
   res: Response
@@ -804,7 +838,10 @@ export const getSalesStats = async (
   }
 };
 
-// 注文履歴をリセット（管理者専用）
+// 🗑️ 注文履歴をリセット（管理者専用）
+// 目的: 全ての注文データを削除して、新しい日の営業準備をする
+// 危険: 全てのデータが消去されるので、管理者だけが使用可能
+// 使用場面: 営業終了後、翌日の営業準備時
 export const resetOrderHistory = async (
   req: Request,
   res: Response

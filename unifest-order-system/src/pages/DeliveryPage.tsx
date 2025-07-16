@@ -1,200 +1,254 @@
-import React, { useState, useEffect, useCallback } from "react";
+// 📦 受け渡し管理ページ
+// 目的: 調理が完了した商品をお客さんに渡すための管理画面
+// 機能: QRコードスキャン、手動確認、受け渡し完了処理
+// 使用者: 受け渡し担当スタッフが使用
+
+import React, { useState, useEffect, useCallback } from "react"; // Reactの基本機能と状態管理
+import QrReader from "react-qr-reader";
 import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  Chip,
-  Paper,
-  Container,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
+  Box, // レイアウト用コンテナ
+  Typography, // テキスト表示コンポーネント
+  Card, // カード表示コンポーネント
+  CardContent, // カード内のコンテンツ
+  Button, // ボタンコンポーネント
+  Chip, // ステータス表示用タグ
+  Paper, // 紙のような背景コンポーネント
+  Container, // ページ全体を囲むコンテナ
+  Alert, // 警告メッセージ表示
+  Dialog, // ポップアップダイアログ
+  DialogTitle, // ダイアログのタイトル
+  DialogContent, // ダイアログのメインコンテンツ
+  DialogActions, // ダイアログのボタンエリア
+  TextField, // テキスト入力欄
 } from "@mui/material";
 import {
-  CheckCircle as CheckCircleIcon,
-  Refresh as RefreshIcon,
-  QrCodeScanner as QrIcon,
-  Person as PersonIcon,
+  CheckCircle as CheckCircleIcon, // チェックマークアイコン（完了時使用）
+  Refresh as RefreshIcon, // 更新アイコン（データ更新用）
+  QrCodeScanner as QrIcon, // QRコードスキャンアイコン
+  Person as PersonIcon, // 人アイコン（顧客表示用）
 } from "@mui/icons-material";
-import type { Order } from "../types";
-import MockApi from "../services/mockApi";
-import { OrderService } from "../services/apiService";
+import type { Order } from "../types"; // 注文データの型定義
+import MockApi from "../services/mockApi"; // テスト用モックAPI
+import { OrderService } from "../services/apiService"; // 本番用APIサービス
 
+// 📦 受け渡しページコンポーネント
 function DeliveryPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [deliveryDialogOpen, setDeliveryDialogOpen] = useState(false);
-  const [qrScannerOpen, setQrScannerOpen] = useState(false);
-  const [orderNumberInput, setOrderNumberInput] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // 📝 状態管理（コンポーネントが記憶しておく情報）
+  const [orders, setOrders] = useState<Order[]>([]); // 受け渡し待ちの注文リスト
+  const [loading, setLoading] = useState(false); // 処理中かどうかのフラグ
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null); // 現在選択されている注文
+  const [deliveryDialogOpen, setDeliveryDialogOpen] = useState(false); // 受け渡し確認ダイアログの開閉状態
+  const [qrScannerOpen, setQrScannerOpen] = useState(false); // QRコードスキャナーの開閉状態
+  const [orderNumberInput, setOrderNumberInput] = useState(""); // 手動入力された注文番号
+  const [refreshing, setRefreshing] = useState(false); // データ更新中かどうか
+  const [error, setError] = useState<string | null>(null); // エラーメッセージ
 
-  // 注文データ取得関数
+  // 📶 注文データ取得関数
+  // 目的: 受け渡し待ちの注文をサーバーから取得して画面に表示
+  // useCallback: 関数をメモ化して、不要な再作成を防ぐ
   const fetchOrders = useCallback(async () => {
-    setRefreshing(true);
-    setError(null);
+    setRefreshing(true); // 更新中スピナーを表示
+    setError(null); // 前回のエラーをクリア
     try {
-      // 本番環境かどうかでAPI切り替え
+      // 🌍 環境によってAPIを切り替え（本番はOrderService、開発はMockApi）
       if (process.env.NODE_ENV === "production") {
-        const result = await OrderService.getOrders();
+        const result = await OrderService.getOrders(); // 本番用APIでデータ取得
         setOrders(result);
       } else {
-        const result = await MockApi.getOrders();
+        const result = await MockApi.getOrders(); // テスト用APIでデータ取得
         setOrders(result.data);
       }
     } catch (err: unknown) {
+      // ❌ エラーハンドリング（ネットワークエラー、サーバーエラーなど）
       if (err instanceof Error) {
         setError("注文データの取得に失敗しました: " + err.message);
       } else {
         setError("注文データの取得に失敗しました");
       }
     } finally {
-      setRefreshing(false);
+      // 📍 最後に必ず実行される処理（成功でも失敗でも）
+      setRefreshing(false); // ローディング状態を終了
     }
-  }, []);
+  }, []); // 依存配列が空なので、コンポーネントの生存期間中は関数が変わらない
 
-  // 初期データ設定
+  // 🚀 初期化処理（コンポーネントが読み込まれた時に1回だけ実行）
+  // useEffect: コンポーネントのライフサイクルに合わせて処理を実行
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(); // 最初に一度データを取得
 
-    // 定期的にデータを更新（30秒ごとに変更）
+    // ⏰ 定期的な自動更新の設定（30秒ごとにデータを更新）
     const interval = setInterval(() => {
       console.log("📦 受け渡し画面: 注文データを自動更新中...");
-      fetchOrders();
-    }, 30000); // 30秒ごと
+      fetchOrders(); // 30秒ごとに新しい注文をチェック
+    }, 30000); // 30秒 = 30,000ミリ秒
 
-    // 他のタブからの更新通知を受信
+    // 📱 他のタブからの更新通知を受信する仕組み
+    // 例: 厨房ページで「調理完了」ボタンが押された時に、自動でこの画面も更新
     const handleDataUpdate = () => {
       console.log("🔔 受け渡し画面: 他のタブからの更新通知を受信");
-      fetchOrders();
+      fetchOrders(); // 通知を受けてすぐにデータを更新
     };
 
+    // 🔊 カスタムイベントリスナーを登録
     window.addEventListener("unifest-data-updated", handleDataUpdate);
 
+    // 🗑️ クリーンアップ関数（コンポーネントが破棄される時に実行）
     return () => {
-      clearInterval(interval);
-      window.removeEventListener("unifest-data-updated", handleDataUpdate);
+      clearInterval(interval); // タイマーを停止（メモリリーク防止）
+      window.removeEventListener("unifest-data-updated", handleDataUpdate); // イベントリスナーを削除
     };
-  }, [fetchOrders]);
+  }, [fetchOrders]); // fetchOrdersが変更された時に再実行
 
-  // 受け渡し処理
+  // 🎁 受け渡し処理
+  // 目的: お客さんに商品を渡して、注文を完了状態に変更する
   const handleDelivery = async (orderId: string) => {
     try {
-      setLoading(true);
-      // API呼び出し
+      setLoading(true); // ローディング開始（ボタンが無効化される）
+
+      // 🌍 API呼び出し（現在はテスト用に1秒待機）
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
+      // 📋 ローカル状態を更新（渡した注文をリストから削除）
       setOrders((prev) => prev.filter((order) => order.id !== orderId));
-      setDeliveryDialogOpen(false);
-      setSelectedOrder(null);
-      setOrderNumberInput("");
+      setDeliveryDialogOpen(false); // ダイアログを閉じる
+      setSelectedOrder(null); // 選択状態をクリア
+      setOrderNumberInput(""); // 入力欄をクリア
     } catch (error) {
+      // ❌ エラーが発生した場合のログ出力
       console.error("受け渡し処理エラー:", error);
     } finally {
-      setLoading(false);
+      // 📍 最後に必ず実行される処理
+      setLoading(false); // ローディング終了（ボタンが再び有効化）
     }
   };
 
-  // QRコード読み取り処理
+  // 📱 QRコード読み取り処理
+  // 目的: お客さんのQRコードを読み取って自動的に受け渡し処理を行う
+  // 引数: qrData - QRコードから読み取ったデータ（JSON形式または注文番号）
   const handleQRScan = (qrData: string) => {
     try {
       console.log("QRコード読み取り:", qrData);
 
-      // QRコードデータを解析
+      // 📋 QRコードデータを解析
+      // QRコードには注文情報がJSON形式で含まれている場合と、
+      // 単純な注文番号文字列の場合がある
       let orderInfo;
       try {
+        // 1. まずJSON形式として解析を試行
         orderInfo = JSON.parse(qrData);
       } catch {
-        // JSONでない場合は注文番号として扱う
+        // 2. JSON解析に失敗した場合は、単純な注文番号として扱う
         orderInfo = { orderNumber: qrData };
       }
 
-      // 注文番号で注文を検索
+      // 🔍 注文番号で注文を検索
+      // 複数の形式の注文番号フィールドに対応
+      // （データベースの変更に対応するため）
       const foundOrder = orders.find(
         (order) =>
-          order.orderNumber === orderInfo.orderNumber ||
-          order.order_number === orderInfo.orderNumber ||
-          order.id === orderInfo.orderNumber
+          order.orderNumber === orderInfo.orderNumber || // 新しい形式
+          order.order_number === orderInfo.orderNumber || // 古い形式
+          order.id === orderInfo.orderNumber // ID形式
       );
 
       if (foundOrder) {
+        // ✅ 注文が見つかった場合の処理
         setSelectedOrder(foundOrder);
         // QRコード読み取り成功時は自動的に受け渡し完了とする
+        // （手動確認を省略してスピードアップ）
         handleDelivery(foundOrder.id);
       } else {
+        // ❌ 注文が見つからなかった場合のエラー表示
         setError(`注文番号 ${orderInfo.orderNumber} が見つかりません。`);
       }
     } catch (error) {
+      // ❌ QRコード処理全般のエラーハンドリング
       console.error("QRコード処理エラー:", error);
       setError("QRコードの読み取りに失敗しました。");
     }
   };
 
-  // 手動確認ダイアログを開く
+  // 👤 手動確認ダイアログを開く
+  // 目的: QRコードが使えない場合の手動での注文番号確認処理
+  // 引数: order - 確認対象の注文データ
   const handleManualVerification = (order: Order) => {
-    setSelectedOrder(order);
-    setDeliveryDialogOpen(true);
+    setSelectedOrder(order); // 選択された注文を状態に保存
+    setDeliveryDialogOpen(true); // 手動確認ダイアログを開く
   };
 
-  // データ更新
+  // 🔄 データ更新処理
+  // 目的: ユーザーが手動で「更新」ボタンを押した時の処理
+  // 新しい注文が追加されたかどうかを確認する
   const handleRefresh = async () => {
     console.log("📦 受け渡し画面: 手動リフレッシュ実行");
-    await fetchOrders();
+    await fetchOrders(); // 最新の注文データを取得
   };
 
   return (
     <Box>
-      {/* ナビゲーションバーはApp.tsxで共通表示 */}
+      {/* 🧭 ナビゲーションバーはApp.tsxで共通表示 */}
+      {/* Container: Material-UIのレスポンシブコンテナ */}
+      {/* maxWidth="xl": 最大幅を設定（xs < sm < md < lg < xl） */}
+      {/* sx: Material-UIのスタイルプロパティ（CSSのようなもの） */}
+      {/* py: paddingのY軸（上下）方向の設定 */}
       <Container maxWidth="xl" sx={{ py: { xs: 1.5, sm: 2 } }}>
+        {/* Paper: 紙のような背景と影を持つコンテナ */}
+        {/* elevation={3}: 影の深さを設定（0-24） */}
+        {/* p: paddingの設定 */}
         <Paper elevation={3} sx={{ p: { xs: 2, sm: 3 } }}>
+          {/* 📋 ページヘッダー部分 */}
           <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-            <Typography 
-              variant="h4" 
+            {/* Typography: テキスト表示用のMaterial-UIコンポーネント */}
+            {/* variant="h4": 見出しレベル4のスタイル */}
+            {/* gutterBottom: 下にマージンを自動で追加 */}
+            <Typography
+              variant="h4"
               gutterBottom
-              sx={{ 
-                fontSize: { xs: '1.5rem', sm: '2rem' },
-                fontWeight: { xs: 600, sm: 400 }
+              sx={{
+                fontSize: { xs: "1.5rem", sm: "2rem" }, // レスポンシブなフォントサイズ
+                fontWeight: { xs: 600, sm: 400 }, // レスポンシブなフォントの太さ
               }}
             >
               受け渡し管理
             </Typography>
-            <Typography 
-              variant="body1" 
-              color="text.secondary"
-              sx={{ fontSize: { xs: '0.95rem', sm: '1rem' } }}
+            {/* サブタイトル: このページの説明 */}
+            <Typography
+              variant="body1"
+              color="text.secondary" // セカンダリーテキストの色
+              sx={{ fontSize: { xs: "0.95rem", sm: "1rem" } }}
             >
               調理完了した注文の受け渡しを管理します
             </Typography>
           </Box>
 
-          {/* 統計情報 */}
+          {/* 📊 統計情報カード */}
+          {/* 現在の受け渡し待ち件数を大きく表示 */}
           <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+            {/* Card: Material-UIのカードコンポーネント */}
             <Card>
+              {/* CardContent: カードの内容部分 */}
               <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                <Typography 
-                  variant="h6" 
+                {/* 統計のタイトル */}
+                <Typography
+                  variant="h6"
                   gutterBottom
-                  sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}
+                  sx={{ fontSize: { xs: "1.1rem", sm: "1.25rem" } }}
                 >
                   受け渡し待ち
                 </Typography>
-                <Typography 
-                  variant="h4" 
-                  color="primary"
-                  sx={{ fontSize: { xs: '2rem', sm: '2.5rem' } }}
+                {/* 件数を大きく表示 */}
+                <Typography
+                  variant="h4"
+                  color="primary" // テーマのプライマリーカラー
+                  sx={{ fontSize: { xs: "2rem", sm: "2.5rem" } }}
                 >
-                  {orders.length}
+                  {orders.length} {/* 配列の長さ = 受け渡し待ち件数 */}
                 </Typography>
-                <Typography 
-                  variant="body2" 
+                {/* 単位 */}
+                <Typography
+                  variant="body2"
                   color="text.secondary"
-                  sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}
+                  sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}
                 >
                   件
                 </Typography>
@@ -202,166 +256,201 @@ function DeliveryPage() {
             </Card>
           </Box>
 
-          {/* エラー表示 */}
+          {/* ⚠️ エラー表示 */}
+          {/* error状態がnullでない場合のみ表示される */}
+          {/* &&演算子: 左側がtrueの場合のみ右側を実行 */}
           {error && (
-            <Alert 
-              severity="error" 
-              sx={{ 
-                mb: { xs: 1.5, sm: 2 },
-                fontSize: { xs: '0.9rem', sm: '1rem' }
+            <Alert
+              severity="error" // エラーのアラート（赤色）
+              sx={{
+                mb: { xs: 1.5, sm: 2 }, // 下マージン
+                fontSize: { xs: "0.9rem", sm: "1rem" }, // フォントサイズ
               }}
             >
-              {error}
+              {error} {/* エラーメッセージを表示 */}
             </Alert>
           )}
 
-          {/* 受け渡し待ち注文一覧 */}
+          {/* 📋 受け渡し待ち注文一覧 */}
           <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+            {/* セクションヘッダー：タイトルと更新ボタン */}
             <Box
               sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: { xs: 1.5, sm: 2 },
-                flexDirection: { xs: 'column', sm: 'row' },
-                gap: { xs: 1, sm: 0 }
+                display: "flex", // フレックスボックスレイアウト
+                justifyContent: "space-between", // 左右に要素を配置
+                alignItems: "center", // 垂直方向の中央揃え
+                mb: { xs: 1.5, sm: 2 }, // 下マージン
+                flexDirection: { xs: "column", sm: "row" }, // スマホでは縦並び、PCでは横並び
+                gap: { xs: 1, sm: 0 }, // 要素間のスペース
               }}
             >
-              <Typography 
+              {/* セクションタイトル */}
+              <Typography
                 variant="h6"
-                sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}
+                sx={{ fontSize: { xs: "1.1rem", sm: "1.25rem" } }}
               >
                 受け渡し待ち注文
               </Typography>
+              {/* 更新ボタン */}
               <Button
-                variant="outlined"
-                startIcon={<RefreshIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />}
-                onClick={handleRefresh}
-                disabled={refreshing}
+                variant="outlined" // 枠線スタイル
+                startIcon={
+                  <RefreshIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
+                } // 左にアイコン
+                onClick={handleRefresh} // クリック時の処理
+                disabled={refreshing} // 更新中は無効化
                 sx={{
-                  py: { xs: 0.7, sm: 1 },
-                  px: { xs: 2, sm: 3 },
-                  fontSize: { xs: '0.95rem', sm: '1rem' },
-                  minHeight: { xs: 40, sm: 48 },
-                  width: { xs: '100%', sm: 'auto' }
+                  py: { xs: 0.7, sm: 1 }, // 上下パディング
+                  px: { xs: 2, sm: 3 }, // 左右パディング
+                  fontSize: { xs: "0.95rem", sm: "1rem" }, // フォントサイズ
+                  minHeight: { xs: 40, sm: 48 }, // 最小高さ
+                  width: { xs: "100%", sm: "auto" }, // スマホでは全幅、PCでは自動
                 }}
               >
                 更新
               </Button>
             </Box>
 
+            {/* 📄 注文リスト表示の条件分岐 */}
+            {/* 三項演算子: 条件 ? 真の場合 : 偽の場合 */}
             {orders.length === 0 ? (
-              <Alert 
-                severity="info" 
-                sx={{ 
+              // 📭 注文がない場合のメッセージ
+              <Alert
+                severity="info" // 情報アラート（青色）
+                sx={{
                   mb: { xs: 1.5, sm: 2 },
-                  fontSize: { xs: '0.9rem', sm: '1rem' }
+                  fontSize: { xs: "0.9rem", sm: "1rem" },
                 }}
               >
                 現在、受け渡し待ちの注文はありません。
               </Alert>
             ) : (
-              <Box 
-                sx={{ 
-                  display: "grid",
+              // 📋 注文がある場合のカード一覧
+              <Box
+                sx={{
+                  display: "grid", // CSS Grid レイアウト
                   gridTemplateColumns: {
-                    xs: "1fr",
-                    lg: "repeat(2, 1fr)",
+                    // グリッドの列数
+                    xs: "1fr", // スマホ: 1列
+                    lg: "repeat(2, 1fr)", // 大画面: 2列
                   },
-                  gap: { xs: 1.5, sm: 2 },
+                  gap: { xs: 1.5, sm: 2 }, // カード間のスペース
                 }}
               >
+                {/* 📝 各注文をカードとして表示 */}
+                {/* map関数: 配列の各要素に対して処理を実行 */}
                 {orders.map((order) => (
                   <Card key={order.id}>
+                    {" "}
+                    {/* key: React の一意識別子 */}
                     <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                      {/* 📋 注文番号とステータス表示 */}
                       <Box
                         sx={{
                           display: "flex",
-                          justifyContent: "space-between",
+                          justifyContent: "space-between", // 左右に要素を配置
                           alignItems: "center",
                           mb: { xs: 1.5, sm: 2 },
-                          flexDirection: { xs: 'column', sm: 'row' },
-                          gap: { xs: 1, sm: 0 }
+                          flexDirection: { xs: "column", sm: "row" },
+                          gap: { xs: 1, sm: 0 },
                         }}
                       >
-                        <Typography 
+                        {/* 注文番号 */}
+                        <Typography
                           variant="h6"
-                          sx={{ 
-                            fontSize: { xs: '1.1rem', sm: '1.25rem' },
-                            textAlign: { xs: 'center', sm: 'left' }
+                          sx={{
+                            fontSize: { xs: "1.1rem", sm: "1.25rem" },
+                            textAlign: { xs: "center", sm: "left" },
                           }}
                         >
                           注文番号: {order.orderNumber}
                         </Typography>
+                        {/* ステータスチップ */}
                         <Chip
                           label="受け渡し待ち"
-                          color="success"
-                          icon={<CheckCircleIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />}
+                          color="success" // 成功カラー（緑色）
+                          icon={
+                            <CheckCircleIcon
+                              sx={{ fontSize: { xs: 18, sm: 22 } }}
+                            />
+                          }
                           sx={{
-                            fontSize: { xs: '0.85rem', sm: '0.95rem' },
-                            height: { xs: 28, sm: 32 }
+                            fontSize: { xs: "0.85rem", sm: "0.95rem" },
+                            height: { xs: 28, sm: 32 },
                           }}
                         />
                       </Box>
 
+                      {/* 💰 注文詳細情報 */}
                       <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
-                        <Typography 
-                          variant="body2" 
+                        {/* 合計金額 */}
+                        <Typography
+                          variant="body2"
                           color="text.secondary"
-                          sx={{ 
-                            fontSize: { xs: '0.9rem', sm: '1rem' },
-                            mb: { xs: 0.5, sm: 0 }
+                          sx={{
+                            fontSize: { xs: "0.9rem", sm: "1rem" },
+                            mb: { xs: 0.5, sm: 0 },
                           }}
                         >
                           合計金額: ¥{order.total?.toLocaleString() || 0}
+                          {/* toLocaleString(): 数値を3桁区切りで表示 */}
+                          {/* オプショナルチェーン(?.): nullの場合は0を表示 */}
                         </Typography>
-                        <Typography 
-                          variant="body2" 
+                        {/* 注文時刻 */}
+                        <Typography
+                          variant="body2"
                           color="text.secondary"
-                          sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}
+                          sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}
                         >
                           注文時刻:{" "}
                           {order.createdAt
-                            ? new Date(order.createdAt).toLocaleString()
+                            ? new Date(order.createdAt).toLocaleString() // 日時を読みやすい形式に変換
                             : ""}
                         </Typography>
                       </Box>
 
-                      <Box 
-                        sx={{ 
-                          display: "flex", 
-                          gap: { xs: 1, sm: 2 },
-                          flexDirection: { xs: 'column', sm: 'row' }
+                      {/* 🎛️ 受け渡し操作ボタン */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: { xs: 1, sm: 2 }, // ボタン間のスペース
+                          flexDirection: { xs: "column", sm: "row" }, // レスポンシブ配置
                         }}
                       >
+                        {/* 📱 QRスキャンボタン */}
                         <Button
-                          variant="contained"
-                          color="primary"
-                          startIcon={<QrIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />}
-                          sx={{ 
-                            flex: 1,
-                            py: { xs: 1, sm: 1.2 },
-                            fontSize: { xs: '0.95rem', sm: '1rem' },
-                            minHeight: { xs: 44, sm: 48 }
+                          variant="contained" // 塗りつぶしスタイル
+                          color="primary" // プライマリーカラー
+                          startIcon={
+                            <QrIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
+                          }
+                          sx={{
+                            flex: 1, // 均等に幅を取る
+                            py: { xs: 1, sm: 1.2 }, // 上下パディング
+                            fontSize: { xs: "0.95rem", sm: "1rem" },
+                            minHeight: { xs: 44, sm: 48 },
                           }}
                           onClick={() => {
-                            setSelectedOrder(order);
-                            setQrScannerOpen(true);
+                            setSelectedOrder(order); // 選択した注文を設定
+                            setQrScannerOpen(true); // QRスキャナーダイアログを開く
                           }}
                         >
                           QRスキャン
                         </Button>
+                        {/* 👤 手動確認ボタン */}
                         <Button
-                          variant="outlined"
+                          variant="outlined" // 枠線スタイル
                           color="primary"
-                          startIcon={<PersonIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />}
-                          sx={{ 
+                          startIcon={
+                            <PersonIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
+                          }
+                          sx={{
                             flex: 1,
                             py: { xs: 1, sm: 1.2 },
-                            fontSize: { xs: '0.95rem', sm: '1rem' },
-                            minHeight: { xs: 44, sm: 48 }
+                            fontSize: { xs: "0.95rem", sm: "1rem" },
+                            minHeight: { xs: 44, sm: 48 },
                           }}
-                          onClick={() => handleManualVerification(order)}
+                          onClick={() => handleManualVerification(order)} // 手動確認ダイアログを開く
                         >
                           注文番号確認
                         </Button>
@@ -373,53 +462,61 @@ function DeliveryPage() {
             )}
           </Box>
 
-          {/* 受け渡し確認ダイアログ */}
-          {/* 手動確認ダイアログ */}
+          {/* 🗂️ 受け渡し確認ダイアログ */}
+          {/* 手動で注文番号を確認するためのポップアップ */}
           <Dialog
-            open={deliveryDialogOpen}
-            onClose={() => setDeliveryDialogOpen(false)}
-            maxWidth="sm"
-            fullWidth
+            open={deliveryDialogOpen} // ダイアログの開閉状態
+            onClose={() => setDeliveryDialogOpen(false)} // 閉じる処理
+            maxWidth="sm" // 最大幅（small）
+            fullWidth // 幅を最大まで使用
             PaperProps={{
+              // ダイアログ本体のスタイル
               sx: {
-                borderRadius: { xs: 2, sm: 3 },
-                maxHeight: { xs: "85vh", sm: "90vh" },
-                m: { xs: 1, sm: 2 },
+                borderRadius: { xs: 2, sm: 3 }, // 角の丸み
+                maxHeight: { xs: "85vh", sm: "90vh" }, // 最大高さ
+                m: { xs: 1, sm: 2 }, // 外側のマージン
               },
             }}
           >
-            <DialogTitle 
-              sx={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: { xs: 0.5, sm: 1 },
-                py: { xs: 1.5, sm: 2 },
-                fontSize: { xs: '1.1rem', sm: '1.25rem' }
+            {/* ダイアログタイトル */}
+            <DialogTitle
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: { xs: 0.5, sm: 1 }, // アイコンとテキストの間隔
+                py: { xs: 1.5, sm: 2 }, // 上下パディング
+                fontSize: { xs: "1.1rem", sm: "1.25rem" },
               }}
             >
               <PersonIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
               手動注文番号確認
             </DialogTitle>
+            {/* ダイアログの内容 */}
             <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
+              {/* 選択された注文がある場合のみ内容を表示 */}
+              {/* &&演算子: 左側がtrueの場合のみ右側を実行 */}
               {selectedOrder && (
                 <React.Fragment>
+                  {/* 📋 注文詳細情報 */}
                   <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
-                    <Typography 
-                      variant="body2" 
+                    {/* 合計金額 */}
+                    <Typography
+                      variant="body2"
                       color="text.secondary"
-                      sx={{ 
-                        fontSize: { xs: '0.9rem', sm: '1rem' },
-                        mb: { xs: 0.5, sm: 0 }
+                      sx={{
+                        fontSize: { xs: "0.9rem", sm: "1rem" },
+                        mb: { xs: 0.5, sm: 0 },
                       }}
                     >
                       合計金額: ¥{selectedOrder.total?.toLocaleString() || 0}
                     </Typography>
-                    <Typography 
-                      variant="body2" 
+                    {/* 注文時刻 */}
+                    <Typography
+                      variant="body2"
                       color="text.secondary"
-                      sx={{ 
-                        fontSize: { xs: '0.9rem', sm: '1rem' },
-                        mb: { xs: 0.5, sm: 0 }
+                      sx={{
+                        fontSize: { xs: "0.9rem", sm: "1rem" },
+                        mb: { xs: 0.5, sm: 0 },
                       }}
                     >
                       注文時刻:{" "}
@@ -427,28 +524,31 @@ function DeliveryPage() {
                         ? new Date(selectedOrder.createdAt).toLocaleString()
                         : ""}
                     </Typography>
+                    {/* 💳 支払い状況表示 */}
                     <Typography
                       variant="body2"
                       color="text.secondary"
-                      sx={{ 
+                      sx={{
                         mt: { xs: 0.5, sm: 1 },
-                        fontSize: { xs: '0.9rem', sm: '1rem' }
+                        fontSize: { xs: "0.9rem", sm: "1rem" },
                       }}
                     >
                       <span>
                         支払い状況:{" "}
+                        {/* 即座に実行される関数式（IIFE）で支払い状況を判定 */}
                         {(() => {
+                          // switch文で支払い状況に応じて色分けされたChipを返す
                           switch (selectedOrder.payment_status) {
                             case "paid":
                             case "支払い済み":
                               return (
                                 <Chip
                                   label="支払い済み"
-                                  color="primary"
+                                  color="primary" // 青色
                                   size="small"
                                   sx={{
-                                    fontSize: { xs: '0.75rem', sm: '0.85rem' },
-                                    height: { xs: 24, sm: 28 }
+                                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                    height: { xs: 24, sm: 28 },
                                   }}
                                 />
                               );
@@ -457,11 +557,11 @@ function DeliveryPage() {
                               return (
                                 <Chip
                                   label="支払い中"
-                                  color="warning"
+                                  color="warning" // 黄色
                                   size="small"
                                   sx={{
-                                    fontSize: { xs: '0.75rem', sm: '0.85rem' },
-                                    height: { xs: 24, sm: 28 }
+                                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                    height: { xs: 24, sm: 28 },
                                   }}
                                 />
                               );
@@ -470,11 +570,11 @@ function DeliveryPage() {
                               return (
                                 <Chip
                                   label="未払い"
-                                  color="error"
+                                  color="error" // 赤色
                                   size="small"
                                   sx={{
-                                    fontSize: { xs: '0.75rem', sm: '0.85rem' },
-                                    height: { xs: 24, sm: 28 }
+                                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                    height: { xs: 24, sm: 28 },
                                   }}
                                 />
                               );
@@ -483,23 +583,24 @@ function DeliveryPage() {
                               return (
                                 <Chip
                                   label="返金済み"
-                                  color="info"
+                                  color="info" // 水色
                                   size="small"
                                   sx={{
-                                    fontSize: { xs: '0.75rem', sm: '0.85rem' },
-                                    height: { xs: 24, sm: 28 }
+                                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                    height: { xs: 24, sm: 28 },
                                   }}
                                 />
                               );
                             default:
+                              // 不明な状態の場合
                               return (
                                 <Chip
                                   label={selectedOrder.payment_status || "不明"}
-                                  color="default"
+                                  color="default" // グレー
                                   size="small"
                                   sx={{
-                                    fontSize: { xs: '0.75rem', sm: '0.85rem' },
-                                    height: { xs: 24, sm: 28 }
+                                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                    height: { xs: 24, sm: 28 },
                                   }}
                                 />
                               );
@@ -508,95 +609,110 @@ function DeliveryPage() {
                       </span>
                     </Typography>
                   </Box>
-                  <Typography 
-                    variant="body1" 
+                  {/* 👤 お客様への指示メッセージ */}
+                  <Typography
+                    variant="body1"
                     gutterBottom
-                    sx={{ 
-                      fontSize: { xs: '1rem', sm: '1.1rem' },
-                      fontWeight: 600,
-                      color: 'primary.main',
-                      mb: { xs: 2, sm: 3 }
+                    sx={{
+                      fontSize: { xs: "1rem", sm: "1.1rem" },
+                      fontWeight: 600, // 太字
+                      color: "primary.main", // プライマリーカラー
+                      mb: { xs: 2, sm: 3 },
                     }}
                   >
                     お客様に注文番号の確認をお願いします
                   </Typography>
-                  
+
+                  {/* 🔢 注文番号入力フィールド */}
                   <TextField
                     label="注文番号（4桁）"
-                    value={orderNumberInput}
-                    onChange={(e) => setOrderNumberInput(e.target.value)}
-                    fullWidth
+                    value={orderNumberInput} // 入力値を状態と同期
+                    onChange={(e) => setOrderNumberInput(e.target.value)} // 入力時の処理
+                    fullWidth // 全幅使用
                     placeholder="例: 0001"
                     inputProps={{
-                      maxLength: 4,
-                      pattern: "[0-9]*"
+                      maxLength: 4, // 最大4文字
+                      pattern: "[0-9]*", // 数字のみ
                     }}
-                    sx={{ 
+                    sx={{
                       mb: { xs: 2, sm: 3 },
-                      '& .MuiInputBase-input': {
-                        fontSize: { xs: '1.2rem', sm: '1.4rem' },
-                        textAlign: 'center',
-                        letterSpacing: '0.2em'
+                      "& .MuiInputBase-input": {
+                        // 入力フィールドのスタイル
+                        fontSize: { xs: "1.2rem", sm: "1.4rem" }, // 大きな文字
+                        textAlign: "center", // 中央揃え
+                        letterSpacing: "0.2em", // 文字間隔
                       },
-                      '& .MuiInputLabel-root': {
-                        fontSize: { xs: '1rem', sm: '1.1rem' }
-                      }
+                      "& .MuiInputLabel-root": {
+                        // ラベルのスタイル
+                        fontSize: { xs: "1rem", sm: "1.1rem" },
+                      },
                     }}
                   />
 
-                  <Alert 
-                    severity="info" 
-                    sx={{ 
+                  {/* 📋 操作手順の案内 */}
+                  <Alert
+                    severity="info" // 情報アラート（青色）
+                    sx={{
                       mb: { xs: 1.5, sm: 2 },
-                      fontSize: { xs: '0.9rem', sm: '1rem' }
+                      fontSize: { xs: "0.9rem", sm: "1rem" },
                     }}
                   >
-                    <Typography variant="body2" sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
-                      <strong>確認手順:</strong><br />
-                      1. お客様に注文番号を口頭で確認<br />
-                      2. 上記に注文番号を入力<br />
+                    <Typography
+                      variant="body2"
+                      sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}
+                    >
+                      <strong>確認手順:</strong>
+                      <br />
+                      1. お客様に注文番号を口頭で確認
+                      <br />
+                      2. 上記に注文番号を入力
+                      <br />
                       3. 「受け渡し完了」ボタンを押して完了
                     </Typography>
                   </Alert>
                 </React.Fragment>
               )}
             </DialogContent>
-            <DialogActions 
-              sx={{ 
-                p: { xs: 2, sm: 3 },
-                gap: { xs: 1, sm: 2 },
-                flexDirection: { xs: 'column', sm: 'row' }
+            {/* 🎛️ ダイアログのアクションボタン */}
+            <DialogActions
+              sx={{
+                p: { xs: 2, sm: 3 }, // パディング
+                gap: { xs: 1, sm: 2 }, // ボタン間のスペース
+                flexDirection: { xs: "column", sm: "row" }, // レスポンシブ配置
               }}
             >
-              <Button 
-                onClick={() => setDeliveryDialogOpen(false)}
+              {/* キャンセルボタン */}
+              <Button
+                onClick={() => setDeliveryDialogOpen(false)} // ダイアログを閉じる
                 sx={{
                   py: { xs: 1, sm: 1.2 },
                   px: { xs: 3, sm: 4 },
-                  fontSize: { xs: '0.95rem', sm: '1rem' },
+                  fontSize: { xs: "0.95rem", sm: "1rem" },
                   minHeight: { xs: 44, sm: 48 },
-                  width: { xs: '100%', sm: 'auto' }
+                  width: { xs: "100%", sm: "auto" },
                 }}
               >
                 キャンセル
               </Button>
+              {/* 受け渡し完了ボタン */}
               <Button
-                variant="contained"
-                onClick={() =>
-                  selectedOrder && handleDelivery(selectedOrder.id)
+                variant="contained" // 塗りつぶしスタイル
+                onClick={
+                  () => selectedOrder && handleDelivery(selectedOrder.id) // 受け渡し処理を実行
                 }
                 disabled={
-                  loading ||
-                  !orderNumberInput ||
-                  orderNumberInput.length !== 4 ||
-                  orderNumberInput !== selectedOrder?.orderNumber
+                  // ボタンが無効化される条件
+                  loading || // 処理中
+                  !orderNumberInput || // 入力が空
+                  orderNumberInput.length !== 4 || // 4桁でない
+                  orderNumberInput !== selectedOrder?.orderNumber // 注文番号が一致しない
                 }
                 sx={{
                   py: { xs: 1, sm: 1.2 },
                   px: { xs: 3, sm: 4 },
-                  fontSize: { xs: '0.95rem', sm: '1rem' },
+                  fontSize: { xs: "0.95rem", sm: "1rem" },
                   minHeight: { xs: 44, sm: 48 },
-                  width: { xs: '100%', sm: 'auto' }
+                  width: { xs: "100%", sm: "auto" },
                 }}
               >
                 受け渡し完了
@@ -604,34 +720,38 @@ function DeliveryPage() {
             </DialogActions>
           </Dialog>
 
-          {/* QRスキャナーダイアログ */}
+          {/* 📱 QRスキャナーダイアログ */}
+          {/* QRコードを読み取るためのポップアップ */}
           <Dialog
-            open={qrScannerOpen}
-            onClose={() => setQrScannerOpen(false)}
-            maxWidth="sm"
-            fullWidth
+            open={qrScannerOpen} // ダイアログの開閉状態
+            onClose={() => setQrScannerOpen(false)} // 閉じる処理
+            maxWidth="sm" // 最大幅
+            fullWidth // 幅を最大まで使用
             PaperProps={{
               sx: {
-                borderRadius: { xs: 2, sm: 3 },
-                maxHeight: { xs: "85vh", sm: "90vh" },
-                m: { xs: 1, sm: 2 },
+                borderRadius: { xs: 2, sm: 3 }, // 角の丸み
+                maxHeight: { xs: "85vh", sm: "90vh" }, // 最大高さ
+                m: { xs: 1, sm: 2 }, // 外側のマージン
               },
             }}
           >
-            <DialogTitle 
-              sx={{ 
-                display: "flex", 
-                alignItems: "center", 
+            {/* ダイアログタイトル */}
+            <DialogTitle
+              sx={{
+                display: "flex",
+                alignItems: "center",
                 gap: { xs: 0.5, sm: 1 },
                 py: { xs: 1.5, sm: 2 },
-                fontSize: { xs: '1.1rem', sm: '1.25rem' }
+                fontSize: { xs: "1.1rem", sm: "1.25rem" },
               }}
             >
               <QrIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
               QRコードスキャン
             </DialogTitle>
+            {/* ダイアログの内容 */}
             <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Box sx={{ textAlign: "center", py: { xs: 2, sm: 3 } }}>
+                {/* 📸 QRコードスキャン領域（react-qr-readerによるカメラ実装） */}
                 <Paper
                   elevation={3}
                   sx={{
@@ -645,64 +765,51 @@ function DeliveryPage() {
                     justifyContent: "center",
                   }}
                 >
-                  <QrIcon 
-                    sx={{ 
-                      fontSize: { xs: 60, sm: 80 }, 
-                      color: "primary.main", 
-                      mb: { xs: 1.5, sm: 2 } 
-                    }} 
-                  />
-                  <Typography 
-                    variant="h6" 
+                  <Typography
+                    variant="h6"
                     gutterBottom
-                    sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}
+                    sx={{ fontSize: { xs: "1.1rem", sm: "1.25rem" } }}
                   >
-                    QRコードをスキャン
+                    カメラでQRコードをスキャン
                   </Typography>
+                  <Box sx={{ width: "100%", maxWidth: 350, minHeight: 200 }}>
+                    <QrReader
+                      delay={300}
+                      onScan={(data) => {
+                        if (data) {
+                          handleQRScan(data);
+                          setQrScannerOpen(false);
+                        }
+                      }}
+                      onError={(err) => {
+                        setError(
+                          "カメラの起動またはQRコードの読み取りに失敗しました"
+                        );
+                        console.error(err);
+                      }}
+                      style={{ width: "100%" }}
+                    />
+                  </Box>
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ 
-                      mb: { xs: 2, sm: 3 },
-                      fontSize: { xs: '0.9rem', sm: '1rem' }
-                    }}
+                    sx={{ mt: 2, fontSize: { xs: "0.9rem", sm: "1rem" } }}
                   >
                     お客様のQRコードをカメラに向けてください
                   </Typography>
-
-                  {/* 仮実装：手動入力で代用 */}
-                  <Button
-                    variant="contained"
-                    onClick={() => {
-                      const qrData = prompt(
-                        "QRコードデータを入力してください（テスト用）:"
-                      );
-                      if (qrData) {
-                        handleQRScan(qrData);
-                        setQrScannerOpen(false);
-                      }
-                    }}
-                    sx={{
-                      py: { xs: 1, sm: 1.2 },
-                      px: { xs: 3, sm: 4 },
-                      fontSize: { xs: '0.95rem', sm: '1rem' },
-                      minHeight: { xs: 44, sm: 48 }
-                    }}
-                  >
-                    テスト入力
-                  </Button>
                 </Paper>
 
-                <Alert 
-                  severity="info" 
-                  sx={{ 
-                    textAlign: "left",
-                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                {/* 📋 使用方法の説明 */}
+                <Alert
+                  severity="info" // 情報アラート
+                  sx={{
+                    textAlign: "left", // 左寄せ
+                    fontSize: { xs: "0.9rem", sm: "1rem" },
                   }}
                 >
-                  <Typography 
+                  <Typography
                     variant="body2"
-                    sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}
+                    sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}
                   >
                     <strong>使用方法:</strong>
                     <br />
@@ -715,15 +822,16 @@ function DeliveryPage() {
                 </Alert>
               </Box>
             </DialogContent>
+            {/* ダイアログのアクションボタン */}
             <DialogActions sx={{ p: { xs: 2, sm: 3 } }}>
-              <Button 
-                onClick={() => setQrScannerOpen(false)}
+              <Button
+                onClick={() => setQrScannerOpen(false)} // ダイアログを閉じる
                 sx={{
                   py: { xs: 1, sm: 1.2 },
                   px: { xs: 3, sm: 4 },
-                  fontSize: { xs: '0.95rem', sm: '1rem' },
+                  fontSize: { xs: "0.95rem", sm: "1rem" },
                   minHeight: { xs: 44, sm: 48 },
-                  width: { xs: '100%', sm: 'auto' }
+                  width: { xs: "100%", sm: "auto" },
                 }}
               >
                 キャンセル
@@ -736,4 +844,6 @@ function DeliveryPage() {
   );
 }
 
+// 🚀 デフォルトエクスポート
+// このコンポーネントを他のファイルから import できるようにする
 export default DeliveryPage;

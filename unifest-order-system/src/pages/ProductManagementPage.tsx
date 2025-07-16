@@ -1,102 +1,118 @@
-import { useState, useEffect } from "react";
+// 🍽️ 商品管理ページ
+// 目的: たこ焼きメニューの商品とトッピングを管理する管理者向けページ
+// 機能: 商品の追加・編集・削除、価格設定、在庫管理、トッピング管理
+// 使用者: 店長や管理者が商品情報を管理するために使用
+
+import { useState, useEffect } from "react"; // Reactの状態管理フック
 import {
-  Container,
-  Typography,
-  Box,
-  Card,
-  CardContent,
-  Button,
-  IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Switch,
-  FormControlLabel,
-  Alert,
-  Snackbar,
-  Tooltip,
-  Divider,
+  Container,      // ページ全体を囲むコンテナ
+  Typography,     // テキスト表示コンポーネント
+  Box,           // レイアウト用コンテナ
+  Card,          // カード表示コンポーネント
+  CardContent,   // カード内のコンテンツ
+  Button,        // ボタンコンポーネント
+  IconButton,    // アイコン付きボタン
+  Table,         // テーブル表示コンポーネント
+  TableBody,     // テーブルの本体部分
+  TableCell,     // テーブルのセル
+  TableContainer,// テーブルを囲むコンテナ
+  TableHead,     // テーブルのヘッダー部分
+  TableRow,      // テーブルの行
+  Paper,         // 紙のような背景コンポーネント
+  Chip,          // ステータス表示用タグ
+  Dialog,        // ポップアップダイアログ
+  DialogTitle,   // ダイアログのタイトル
+  DialogContent, // ダイアログのメインコンテンツ
+  DialogActions, // ダイアログのボタンエリア
+  TextField,     // テキスト入力欄
+  FormControl,   // フォーム要素のコンテナ
+  InputLabel,    // 入力欄のラベル
+  Select,        // セレクトボックス（選択肢）
+  MenuItem,      // セレクトボックスの項目
+  Switch,        // オン/オフ切り替えスイッチ
+  FormControlLabel, // フォーム要素とラベルのセット
+  Alert,         // 警告メッセージ表示
+  Snackbar,      // 画面下部に表示される通知
+  Tooltip,       // ホバー時のツールチップ
+  Divider,       // 区切り線
 } from "@mui/material";
 import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
-  Analytics as AnalyticsIcon,
-  Inventory as InventoryIcon,
-  TrendingUp as TrendingUpIcon,
-  Warning as WarningIcon,
+  Add as AddIcon,                   // 追加アイコン
+  Edit as EditIcon,                 // 編集アイコン
+  Delete as DeleteIcon,             // 削除アイコン
+  Visibility as VisibilityIcon,     // 表示アイコン
+  VisibilityOff as VisibilityOffIcon, // 非表示アイコン
+  Analytics as AnalyticsIcon,       // 分析アイコン
+  Inventory as InventoryIcon,       // 在庫アイコン
+  TrendingUp as TrendingUpIcon,     // 上昇トレンドアイコン
+  Warning as WarningIcon,           // 警告アイコン
 } from "@mui/icons-material";
-import { useAppContext } from "../hooks/useAppContext";
+import { useAppContext } from "../hooks/useAppContext"; // アプリケーション全体の状態管理
 // ナビゲーションバーはApp.tsxで共通表示
 
+// 🍽️ 在庫情報付き商品データの型定義
+// 目的: 商品の基本情報と在庫管理情報を一つにまとめた型
 interface ProductWithStock {
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-  description?: string;
-  available: boolean;
-  stock: number;
-  lowStockThreshold: number;
-  totalSold: number;
-  revenue: number;
+  id: string;                    // 商品の一意識別子
+  name: string;                  // 商品名（例: "たこ焼き8個セット"）
+  price: number;                 // 価格（円）
+  category: string;              // カテゴリ（例: "メイン"、"サイド"）
+  description?: string;          // 商品説明（オプション）
+  available: boolean;            // 販売可能かどうか
+  stock: number;                 // 現在の在庫数
+  lowStockThreshold: number;     // 在庫切れ警告の閾値
+  totalSold: number;             // 累計販売数
+  revenue: number;               // 累計売上金額
 }
 
+// 🧄 トッピング情報の型定義
+// 目的: たこ焼きに追加できるトッピングの情報を管理
 interface SimplifiedTopping {
-  id: string;
-  name: string;
-  price: number;
-  available: boolean;
+  id: string;        // トッピングの一意識別子
+  name: string;      // トッピング名（例: "マヨネーズ"、"チーズ"）
+  price: number;     // 追加料金（円）
+  available: boolean; // 提供可能かどうか
 }
 
+// 📝 商品フォームデータの型定義
+// 目的: 商品追加・編集フォームで使用するデータの型
 interface ProductFormData {
-  name: string;
-  price: number;
-  category: string;
-  description: string;
-  available: boolean;
-  stock: number;
-  lowStockThreshold: number;
+  name: string;              // 商品名
+  price: number;             // 価格
+  category: string;          // カテゴリ
+  description: string;       // 説明
+  available: boolean;        // 販売状態
+  stock: number;             // 在庫数
+  lowStockThreshold: number; // 在庫警告閾値
 }
 
+// 🧄 トッピングフォームデータの型定義
+// 目的: トッピング追加・編集フォームで使用するデータの型
 interface ToppingFormData {
-  name: string;
-  price: number;
-  available: boolean;
+  name: string;      // トッピング名
+  price: number;     // 追加料金
+  available: boolean; // 提供状態
 }
 
+// 🍽️ 商品管理ページコンポーネント
 function ProductManagementPage() {
+  // 🌐 アプリケーション全体の状態を取得
   const { state } = useAppContext();
   const { products: contextProducts, stockInfo } = state;
 
-  const [products, setProducts] = useState<ProductWithStock[]>([]);
-  const [toppings, setToppings] = useState<SimplifiedTopping[]>([]);
-  const [openProductDialog, setOpenProductDialog] = useState(false);
-  const [openToppingDialog, setOpenToppingDialog] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<ProductWithStock | null>(
+  // 📋 状態管理（コンポーネントが記憶しておく情報）
+  const [products, setProducts] = useState<ProductWithStock[]>([]);     // 商品一覧
+  const [toppings, setToppings] = useState<SimplifiedTopping[]>([]);    // トッピング一覧
+  const [openProductDialog, setOpenProductDialog] = useState(false);    // 商品編集ダイアログの開閉状態
+  const [openToppingDialog, setOpenToppingDialog] = useState(false);    // トッピング編集ダイアログの開閉状態
+  const [editingProduct, setEditingProduct] = useState<ProductWithStock | null>( // 現在編集中の商品
     null
   );
-  const [editingTopping, setEditingTopping] =
+  const [editingTopping, setEditingTopping] =                          // 現在編集中のトッピング
     useState<SimplifiedTopping | null>(null);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
+  const [snackbarOpen, setSnackbarOpen] = useState(false);             // 通知メッセージの表示状態
+  const [snackbarMessage, setSnackbarMessage] = useState("");           // 通知メッセージの内容
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">( // 通知の種類（成功/エラー）
     "success"
   );
 

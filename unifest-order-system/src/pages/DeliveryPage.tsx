@@ -44,6 +44,7 @@ function DeliveryPage() {
   const [error, setError] = useState<string | null>(null); // エラーメッセージ
   const [qrScanner, setQrScanner] = useState<Html5QrcodeScanner | null>(null); // QRスキャナーインスタンス
   const qrReaderRef = useRef<HTMLDivElement>(null); // QRリーダー要素への参照
+  const [cameraPermission, setCameraPermission] = useState<string>('checking'); // カメラ権限状態
 
   // 📶 注文データ取得関数
   // 目的: 受け渡し待ちの注文をサーバーから取得して画面に表示
@@ -101,70 +102,113 @@ function DeliveryPage() {
     };
   }, [fetchOrders]); // fetchOrdersが変更された時に再実行
 
+  // カメラ権限の事前チェック
+  const checkCameraPermission = async () => {
+    try {
+      console.log("カメラ権限をチェック中...");
+      
+      // navigator.mediaDevices.getUserMediaを直接テスト
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: "environment",
+          width: { min: 640, ideal: 1280, max: 1920 },
+          height: { min: 480, ideal: 720, max: 1080 }
+        }
+      });
+      
+      console.log("カメラ権限取得成功:", stream);
+      setCameraPermission('granted');
+      
+      // ストリームを停止
+      stream.getTracks().forEach(track => track.stop());
+      
+      return true;
+    } catch (error) {
+      console.error("カメラ権限エラー:", error);
+      setCameraPermission('denied');
+      
+      const errorStr = String(error);
+      if (errorStr.includes('NotAllowedError') || errorStr.includes('Permission')) {
+        setError("カメラの使用を許可してください。ブラウザのアドレスバーのカメラアイコンをクリックするか、設定 {'>'}  Safari {'>'}  カメラでアクセスを許可してください。");
+      } else if (errorStr.includes('NotFoundError')) {
+        setError("カメラが見つかりません。デバイスにカメラが搭載されていることを確認してください。");
+      } else if (errorStr.includes('NotSupportedError')) {
+        setError("このブラウザではカメラがサポートされていません。Safari または Chrome をお使いください。");
+      } else {
+        setError("カメラの起動に失敗しました。ブラウザを更新してもう一度お試しください。");
+      }
+      
+      return false;
+    }
+  };
+
   // QRスキャナーのセットアップ
   useEffect(() => {
     if (qrScannerOpen && qrReaderRef.current) {
-      // useRefを使用してDOM要素の存在確認
-      const element = qrReaderRef.current;
-      if (!element) {
-        console.error("QRリーダー要素が見つかりません");
-        setError("QRスキャナーの初期化に失敗しました");
-        return;
-      }
-
-      // 少し遅延を追加してDOMの描画を待つ
-      const timer = setTimeout(() => {
-        try {
-          // 要素にユニークIDを設定
-          const uniqueId = `qr-reader-${Date.now()}`;
-          element.id = uniqueId;
-          
-          const scanner = new Html5QrcodeScanner(
-            uniqueId,
-            { 
-              fps: 10, 
-              qrbox: { width: 250, height: 250 },
-              aspectRatio: 1.0,
-              // iOS対応のためのカメラ設定
-              videoConstraints: {
-                width: { min: 640, ideal: 1280, max: 1920 },
-                height: { min: 480, ideal: 720, max: 1080 },
-                facingMode: "environment" // 背面カメラを優先
-              }
-            },
-            false
-          );
-          
-          scanner.render(
-            (decodedText) => {
-              handleQRScan(decodedText);
-              setQrScannerOpen(false);
-              scanner.clear();
-            },
-            (error) => {
-              console.error("QRスキャンエラー:", error);
-              // iOS固有のエラーハンドリング
-              const errorStr = String(error);
-              if (errorStr.includes('NotAllowedError') || errorStr.includes('Permission')) {
-                setError("カメラの使用を許可してください。設定 {'>'}  Safari {'>'}  カメラでアクセスを許可してください。");
-              } else if (errorStr.includes('NotFoundError') || errorStr.includes('No camera')) {
-                setError("カメラが見つかりません。デバイスにカメラが搭載されていることを確認してください。");
-              } else if (errorStr.includes('HTTPS')) {
-                setError("カメラを使用するにはHTTPS接続が必要です。");
-              } else {
-                setError("カメラの起動に失敗しました。ブラウザを更新してもう一度お試しください。");
-              }
-            }
-          );
-          
-          setQrScanner(scanner);
-        } catch (error) {
-          console.error("QRスキャナー初期化エラー:", error);
-          setError("QRスキャナーの初期化に失敗しました");
+      // まずカメラ権限をチェック
+      checkCameraPermission().then((hasPermission) => {
+        if (!hasPermission) {
+          console.log("カメラ権限がありません");
+          return;
         }
-      }, 100); // 100ms遅延
+        
+        // useRefを使用してDOM要素の存在確認
+        const element = qrReaderRef.current;
+        if (!element) {
+          console.error("QRリーダー要素が見つかりません");
+          setError("QRスキャナーの初期化に失敗しました");
+          return;
+        }
 
-      return () => clearTimeout(timer);
+        // 少し遅延を追加してDOMの描画を待つ
+        const timer = setTimeout(() => {
+          try {
+            // 要素にユニークIDを設定
+            const uniqueId = `qr-reader-${Date.now()}`;
+            element.id = uniqueId;
+            
+            const scanner = new Html5QrcodeScanner(
+              uniqueId,
+              { 
+                fps: 10, 
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0,
+                // iOS対応のためのカメラ設定
+                videoConstraints: {
+                  width: { min: 640, ideal: 1280, max: 1920 },
+                  height: { min: 480, ideal: 720, max: 1080 },
+                  facingMode: "environment" // 背面カメラを優先
+                }
+              },
+              false
+            );
+            
+            scanner.render(
+              (decodedText) => {
+                handleQRScan(decodedText);
+                setQrScannerOpen(false);
+                scanner.clear();
+              },
+              (error) => {
+                console.error("QRスキャンエラー:", error);
+                const errorStr = String(error);
+                if (errorStr.includes('NotAllowedError') || errorStr.includes('Permission')) {
+                  setError("カメラの使用を許可してください。ブラウザのアドレスバーのカメラアイコンをクリックするか、設定 {'>'}  Safari {'>'}  カメラでアクセスを許可してください。");
+                } else {
+                  setError("カメラの起動に失敗しました。ブラウザを更新してもう一度お試しください。");
+                }
+              }
+            );
+            
+            setQrScanner(scanner);
+          } catch (error) {
+            console.error("QRスキャナー初期化エラー:", error);
+            setError("QRスキャナーの初期化に失敗しました");
+          }
+        }, 500); // 500ms遅延に延長
+
+        return () => clearTimeout(timer);
+      });
     }
     
     return () => {
@@ -827,6 +871,34 @@ function DeliveryPage() {
             {/* ダイアログの内容 */}
             <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Box sx={{ textAlign: "center", py: { xs: 2, sm: 3 } }}>
+                {/* カメラ権限チェック結果の表示 */}
+                {cameraPermission === 'checking' && (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    <Typography>カメラ権限をチェック中...</Typography>
+                  </Alert>
+                )}
+                
+                {cameraPermission === 'denied' && (
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    <Typography>
+                      カメラの使用が許可されていません。<br />
+                      ブラウザのアドレスバーのカメラアイコンをクリックするか、<br />
+                      設定 {'>'}  Safari {'>'}  カメラでアクセスを許可してください。
+                    </Typography>
+                  </Alert>
+                )}
+                
+                {/* カメラ権限テストボタン */}
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={checkCameraPermission}
+                  sx={{ mb: 2 }}
+                  startIcon={<QrIcon />}
+                >
+                  カメラ権限をテスト
+                </Button>
+                
                 {/* 📸 QRコードスキャン領域（react-qr-readerによるカメラ実装） */}
                 <Paper
                   elevation={3}
@@ -863,6 +935,7 @@ function DeliveryPage() {
                   <Alert severity="info" sx={{ mt: 2, fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
                     <Typography variant="body2">
                       📱 <strong>iPhone/iPad をお使いの場合:</strong><br />
+                      • まず上の「カメラ権限をテスト」ボタンを押してください<br />
                       • カメラの使用許可を求められたら「許可」を選択<br />
                       • カメラが起動しない場合は、設定 {'>'}  Safari {'>'}  カメラを確認<br />
                       • プライベートブラウズモードでは使用できません

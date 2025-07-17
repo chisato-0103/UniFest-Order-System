@@ -177,7 +177,11 @@ function DeliveryPage() {
   // BarcodeDetector APIを使用してQRコードをスキャンする関数
   const scanQRCode = async () => {
     if (!cameraPreviewRef.current || !canvasRef.current || !currentStream) {
-      console.error("QRスキャンに必要な要素が見つかりません");
+      console.error("QRスキャンに必要な要素が見つかりません", {
+        video: !!cameraPreviewRef.current,
+        canvas: !!canvasRef.current,
+        stream: !!currentStream
+      });
       return;
     }
 
@@ -190,10 +194,17 @@ function DeliveryPage() {
       return;
     }
 
+    // videoの準備ができているか確認
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+      console.log("video の準備ができていません。readyState:", video.readyState);
+      return;
+    }
+
     // BarcodeDetector APIのサポートを確認
     if (!('BarcodeDetector' in window)) {
       console.error("BarcodeDetector API がサポートされていません");
       setError("このブラウザではQRコードスキャンがサポートされていません。Chrome または Edge をお使いください。");
+      setIsScanning(false);
       return;
     }
 
@@ -204,10 +215,18 @@ function DeliveryPage() {
       // videoのフレームをcanvasに描画
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
+      
+      if (canvas.width === 0 || canvas.height === 0) {
+        console.log("video のサイズが0です", { width: canvas.width, height: canvas.height });
+        return;
+      }
+      
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      console.log("フレームをキャプチャしました", { width: canvas.width, height: canvas.height });
       
       // BarcodeDetectorでQRコードを検出
       const barcodes = await barcodeDetector.detect(canvas);
+      console.log("QRコード検出結果:", barcodes.length > 0 ? barcodes : "検出されませんでした");
       
       if (barcodes.length > 0) {
         console.log("QRコードを検出:", barcodes[0].rawValue);
@@ -230,11 +249,21 @@ function DeliveryPage() {
   // QRスキャンモードでの連続スキャン
   useEffect(() => {
     if (isQRScanMode && isScanning) {
+      console.log("QRスキャンモード開始");
+      
+      // 最初のスキャンを少し遅延させる
+      const initialDelay = setTimeout(() => {
+        scanQRCode();
+      }, 1000);
+
       const interval = setInterval(() => {
         scanQRCode();
-      }, 500); // 500ms間隔でスキャン
+      }, 1000); // 1秒間隔でスキャン（より安定性を向上）
 
-      return () => clearInterval(interval);
+      return () => {
+        clearTimeout(initialDelay);
+        clearInterval(interval);
+      };
     }
   }, [isQRScanMode, isScanning]);
 
@@ -1118,6 +1147,13 @@ function DeliveryPage() {
                             onClick={() => {
                               // QRスキャンモードに移行
                               console.log("QRスキャンモードに移行します");
+                              
+                              // BarcodeDetector APIのサポートを確認
+                              if (!('BarcodeDetector' in window)) {
+                                setError("このブラウザではQRコードスキャンがサポートされていません。Chrome または Edge をお使いください。");
+                                return;
+                              }
+                              
                               setIsQRScanMode(true);
                               setIsScanning(true);
                               

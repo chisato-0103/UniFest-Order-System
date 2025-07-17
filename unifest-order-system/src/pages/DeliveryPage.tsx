@@ -103,28 +103,46 @@ function DeliveryPage() {
   // QRスキャナーのセットアップ
   useEffect(() => {
     if (qrScannerOpen) {
-      const scanner = new Html5QrcodeScanner(
-        "qr-reader",
-        { 
-          fps: 10, 
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0
-        },
-        false
-      );
-      
-      scanner.render(
-        (decodedText) => {
-          handleQRScan(decodedText);
-          setQrScannerOpen(false);
-          scanner.clear();
-        },
-        (error) => {
-          console.error("QRスキャンエラー:", error);
+      // DOM要素の存在確認を追加
+      const element = document.getElementById("qr-reader");
+      if (!element) {
+        console.error("QRリーダー要素が見つかりません");
+        setError("QRスキャナーの初期化に失敗しました");
+        return;
+      }
+
+      // 少し遅延を追加してDOMの描画を待つ
+      const timer = setTimeout(() => {
+        try {
+          const scanner = new Html5QrcodeScanner(
+            "qr-reader",
+            { 
+              fps: 10, 
+              qrbox: { width: 250, height: 250 },
+              aspectRatio: 1.0
+            },
+            false
+          );
+          
+          scanner.render(
+            (decodedText) => {
+              handleQRScan(decodedText);
+              setQrScannerOpen(false);
+              scanner.clear();
+            },
+            (error) => {
+              console.error("QRスキャンエラー:", error);
+            }
+          );
+          
+          setQrScanner(scanner);
+        } catch (error) {
+          console.error("QRスキャナー初期化エラー:", error);
+          setError("QRスキャナーの初期化に失敗しました");
         }
-      );
-      
-      setQrScanner(scanner);
+      }, 100); // 100ms遅延
+
+      return () => clearTimeout(timer);
     }
     
     return () => {

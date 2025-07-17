@@ -122,23 +122,38 @@ function DeliveryPage() {
       setCameraPermission('granted');
       
       // カメラプレビューを表示
-      if (cameraPreviewRef.current) {
-        cameraPreviewRef.current.srcObject = stream;
-        cameraPreviewRef.current.play();
-        setShowCameraPreview(true);
-        
-        // 5秒後に自動的にストリームを停止
-        setTimeout(() => {
+      setShowCameraPreview(true);
+      
+      // 少し待ってからvideo要素にストリームを設定
+      setTimeout(() => {
+        if (cameraPreviewRef.current) {
+          console.log("video要素にストリームを設定:", cameraPreviewRef.current);
+          cameraPreviewRef.current.srcObject = stream;
+          
+          // play()の呼び出しをPromiseとして扱う
+          cameraPreviewRef.current.play().then(() => {
+            console.log("video再生開始成功");
+          }).catch((playError) => {
+            console.error("video再生エラー:", playError);
+            // 再生エラーの場合でもストリームは有効なので継続
+          });
+          
+          // 5秒後に自動的にストリームを停止
+          setTimeout(() => {
+            console.log("ストリームを停止します");
+            stream.getTracks().forEach(track => track.stop());
+            setShowCameraPreview(false);
+            if (cameraPreviewRef.current) {
+              cameraPreviewRef.current.srcObject = null;
+            }
+          }, 5000);
+        } else {
+          console.error("video要素が見つかりません");
+          // プレビューが表示できない場合はすぐに停止
           stream.getTracks().forEach(track => track.stop());
           setShowCameraPreview(false);
-          if (cameraPreviewRef.current) {
-            cameraPreviewRef.current.srcObject = null;
-          }
-        }, 5000);
-      } else {
-        // プレビューが表示できない場合はすぐに停止
-        stream.getTracks().forEach(track => track.stop());
-      }
+        }
+      }, 100); // 100ms待機
       
       return true;
     } catch (error) {
@@ -941,23 +956,36 @@ function DeliveryPage() {
                   
                   {/* カメラプレビュー */}
                   {showCameraPreview && (
-                    <Box sx={{ width: "100%", maxWidth: 350, minHeight: 200, mb: 2 }}>
-                      <video
-                        ref={cameraPreviewRef}
-                        style={{
-                          width: "100%",
-                          height: "200px",
-                          objectFit: "cover",
-                          borderRadius: "8px",
-                          border: "2px solid #4caf50"
+                    <Box sx={{ width: "100%", maxWidth: 350, mb: 2 }}>
+                      <Paper
+                        elevation={2}
+                        sx={{
+                          p: 2,
+                          bgcolor: "success.light",
+                          border: "2px solid #4caf50",
+                          borderRadius: "8px"
                         }}
-                        autoPlay
-                        playsInline
-                        muted
-                      />
-                      <Typography variant="body2" color="success.main" sx={{ mt: 1, textAlign: "center" }}>
-                        ✅ カメラが正常に動作しています（5秒後に自動停止）
-                      </Typography>
+                      >
+                        <Typography variant="h6" color="success.dark" sx={{ mb: 1, textAlign: "center" }}>
+                          📹 カメラテスト中
+                        </Typography>
+                        <video
+                          ref={cameraPreviewRef}
+                          style={{
+                            width: "100%",
+                            height: "200px",
+                            objectFit: "cover",
+                            borderRadius: "4px",
+                            backgroundColor: "#000"
+                          }}
+                          autoPlay
+                          playsInline
+                          muted
+                        />
+                        <Typography variant="body2" color="success.dark" sx={{ mt: 1, textAlign: "center" }}>
+                          ✅ カメラが正常に動作しています（5秒後に自動停止）
+                        </Typography>
+                      </Paper>
                     </Box>
                   )}
                   

@@ -124,7 +124,13 @@ function DeliveryPage() {
             { 
               fps: 10, 
               qrbox: { width: 250, height: 250 },
-              aspectRatio: 1.0
+              aspectRatio: 1.0,
+              // iOS対応のためのカメラ設定
+              videoConstraints: {
+                width: { min: 640, ideal: 1280, max: 1920 },
+                height: { min: 480, ideal: 720, max: 1080 },
+                facingMode: "environment" // 背面カメラを優先
+              }
             },
             false
           );
@@ -137,6 +143,17 @@ function DeliveryPage() {
             },
             (error) => {
               console.error("QRスキャンエラー:", error);
+              // iOS固有のエラーハンドリング
+              const errorStr = String(error);
+              if (errorStr.includes('NotAllowedError') || errorStr.includes('Permission')) {
+                setError("カメラの使用を許可してください。設定 {'>'}  Safari {'>'}  カメラでアクセスを許可してください。");
+              } else if (errorStr.includes('NotFoundError') || errorStr.includes('No camera')) {
+                setError("カメラが見つかりません。デバイスにカメラが搭載されていることを確認してください。");
+              } else if (errorStr.includes('HTTPS')) {
+                setError("カメラを使用するにはHTTPS接続が必要です。");
+              } else {
+                setError("カメラの起動に失敗しました。ブラウザを更新してもう一度お試しください。");
+              }
             }
           );
           
@@ -841,6 +858,16 @@ function DeliveryPage() {
                   >
                     お客様のQRコードをカメラに向けてください
                   </Typography>
+                  
+                  {/* iOS Safari用の追加説明 */}
+                  <Alert severity="info" sx={{ mt: 2, fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
+                    <Typography variant="body2">
+                      📱 <strong>iPhone/iPad をお使いの場合:</strong><br />
+                      • カメラの使用許可を求められたら「許可」を選択<br />
+                      • カメラが起動しない場合は、設定 {'>'}  Safari {'>'}  カメラを確認<br />
+                      • プライベートブラウズモードでは使用できません
+                    </Typography>
+                  </Alert>
                 </Paper>
 
                 {/* 📋 使用方法の説明 */}

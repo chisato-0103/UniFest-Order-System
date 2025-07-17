@@ -3,7 +3,7 @@
 // 機能: QRコードスキャン、手動確認、受け渡し完了処理
 // 使用者: 受け渡し担当スタッフが使用
 
-import React, { useState, useEffect, useCallback } from "react"; // Reactの基本機能と状態管理
+import React, { useState, useEffect, useCallback, useRef } from "react"; // Reactの基本機能と状態管理
 import { Html5QrcodeScanner } from "html5-qrcode";
 import {
   Box, // レイアウト用コンテナ
@@ -43,6 +43,7 @@ function DeliveryPage() {
   const [refreshing, setRefreshing] = useState(false); // データ更新中かどうか
   const [error, setError] = useState<string | null>(null); // エラーメッセージ
   const [qrScanner, setQrScanner] = useState<Html5QrcodeScanner | null>(null); // QRスキャナーインスタンス
+  const qrReaderRef = useRef<HTMLDivElement>(null); // QRリーダー要素への参照
 
   // 📶 注文データ取得関数
   // 目的: 受け渡し待ちの注文をサーバーから取得して画面に表示
@@ -102,9 +103,9 @@ function DeliveryPage() {
 
   // QRスキャナーのセットアップ
   useEffect(() => {
-    if (qrScannerOpen) {
-      // DOM要素の存在確認を追加
-      const element = document.getElementById("qr-reader");
+    if (qrScannerOpen && qrReaderRef.current) {
+      // useRefを使用してDOM要素の存在確認
+      const element = qrReaderRef.current;
       if (!element) {
         console.error("QRリーダー要素が見つかりません");
         setError("QRスキャナーの初期化に失敗しました");
@@ -114,8 +115,12 @@ function DeliveryPage() {
       // 少し遅延を追加してDOMの描画を待つ
       const timer = setTimeout(() => {
         try {
+          // 要素にユニークIDを設定
+          const uniqueId = `qr-reader-${Date.now()}`;
+          element.id = uniqueId;
+          
           const scanner = new Html5QrcodeScanner(
-            "qr-reader",
+            uniqueId,
             { 
               fps: 10, 
               qrbox: { width: 250, height: 250 },
@@ -827,7 +832,7 @@ function DeliveryPage() {
                     カメラでQRコードをスキャン
                   </Typography>
                   <Box sx={{ width: "100%", maxWidth: 350, minHeight: 200 }}>
-                    <div id="qr-reader" style={{ width: "100%" }}></div>
+                    <div ref={qrReaderRef} style={{ width: "100%" }}></div>
                   </Box>
                   <Typography
                     variant="body2"

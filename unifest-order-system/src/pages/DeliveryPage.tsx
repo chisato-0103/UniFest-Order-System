@@ -47,6 +47,8 @@ function DeliveryPage() {
   const [cameraPermission, setCameraPermission] = useState<string>('checking'); // カメラ権限状態
   const [showCameraPreview, setShowCameraPreview] = useState(false); // カメラプレビュー表示状態
   const cameraPreviewRef = useRef<HTMLVideoElement>(null); // カメラプレビュー要素への参照
+  const [isQRScanMode, setIsQRScanMode] = useState(false); // QRスキャンモード状態
+  const [currentStream, setCurrentStream] = useState<MediaStream | null>(null); // 現在のカメラストリーム
 
   // 📶 注文データ取得関数
   // 目的: 受け渡し待ちの注文をサーバーから取得して画面に表示
@@ -120,6 +122,7 @@ function DeliveryPage() {
       
       console.log("カメラ権限取得成功:", stream);
       setCameraPermission('granted');
+      setCurrentStream(stream); // ストリームを保存
       
       // カメラプレビューを表示
       setShowCameraPreview(true);
@@ -145,6 +148,7 @@ function DeliveryPage() {
           // プレビューが表示できない場合はすぐに停止
           stream.getTracks().forEach(track => track.stop());
           setShowCameraPreview(false);
+          setCurrentStream(null);
         }
       }, 100); // 100ms待機
       
@@ -1029,33 +1033,60 @@ function DeliveryPage() {
                           muted
                         />
                         <Typography variant="body2" color="success.dark" sx={{ mt: 1, textAlign: "center" }}>
-                          ✅ カメラが正常に動作しています
+                          {isQRScanMode ? "📱 QRコードをカメラに向けてください" : "✅ カメラが正常に動作しています"}
                         </Typography>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => {
-                            // QRスキャナーを起動
-                            console.log("QRスキャナーを起動します");
-                            // 既存のプレビューを非表示にしてQRスキャンモードに移行
-                            setShowCameraPreview(false);
-                            if (cameraPreviewRef.current && cameraPreviewRef.current.srcObject) {
-                              const stream = cameraPreviewRef.current.srcObject as MediaStream;
-                              stream.getTracks().forEach(track => track.stop());
-                              cameraPreviewRef.current.srcObject = null;
-                            }
-                            // QRスキャナーを起動（既存のuseEffectロジックを利用）
-                            // 少し待ってからQRスキャンモードを開始
-                            setTimeout(() => {
-                              console.log("QRスキャンモードを開始");
-                              // html5-qrcodeのQRスキャナーを起動
-                              startQRScanner();
-                            }, 100);
-                          }}
-                          sx={{ mt: 2 }}
-                        >
-                          QRスキャンを開始
-                        </Button>
+                        
+                        {!isQRScanMode && (
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => {
+                              // QRスキャンモードに移行
+                              console.log("QRスキャンモードに移行します");
+                              setIsQRScanMode(true);
+                              
+                              // カメラプレビューを継続表示してQRスキャンモードのUIを表示
+                              // ストリームは停止せず、同じvideo要素を使用
+                            }}
+                            sx={{ mt: 2 }}
+                          >
+                            QRスキャンを開始
+                          </Button>
+                        )}
+                        
+                        {isQRScanMode && (
+                          <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                            <Button
+                              variant="outlined"
+                              color="secondary"
+                              onClick={() => {
+                                console.log("QRスキャンモードを終了");
+                                setIsQRScanMode(false);
+                              }}
+                            >
+                              テストモードに戻る
+                            </Button>
+                            <Button
+                              variant="contained"
+                              color="warning"
+                              onClick={() => {
+                                // 手動でQRコードデータを入力するモードに切り替え
+                                const qrData = prompt("QRコードのデータを入力してください（テスト用）:");
+                                if (qrData) {
+                                  handleQRScan(qrData);
+                                  setIsQRScanMode(false);
+                                  setShowCameraPreview(false);
+                                  if (currentStream) {
+                                    currentStream.getTracks().forEach(track => track.stop());
+                                    setCurrentStream(null);
+                                  }
+                                }
+                              }}
+                            >
+                              手動入力
+                            </Button>
+                          </Box>
+                        )}
                       </Paper>
                     </Box>
                   )}

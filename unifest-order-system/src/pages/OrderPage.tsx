@@ -321,8 +321,8 @@ const OrderPage: React.FC = () => {
     };
     loadProducts();
 
-    // 30秒ごとに商品情報を更新（在庫状況の変化を反映）
-    const interval = setInterval(loadProducts, 30000);
+    // 90秒ごとに商品情報を更新（在庫状況の変化を反映）
+    const interval = setInterval(loadProducts, 90000);
 
     return () => clearInterval(interval);
   }, []);

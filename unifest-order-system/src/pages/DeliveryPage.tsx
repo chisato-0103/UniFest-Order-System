@@ -49,6 +49,8 @@ function DeliveryPage() {
   const cameraPreviewRef = useRef<HTMLVideoElement>(null); // カメラプレビュー要素への参照
   const [isQRScanMode, setIsQRScanMode] = useState(false); // QRスキャンモード状態
   const [currentStream, setCurrentStream] = useState<MediaStream | null>(null); // 現在のカメラストリーム
+  const [isScanning, setIsScanning] = useState(false); // QRスキャン実行中状態
+  const canvasRef = useRef<HTMLCanvasElement>(null); // Canvas要素への参照
 
   // 📶 注文データ取得関数
   // 目的: 受け渡し待ちの注文をサーバーから取得して画面に表示
@@ -171,6 +173,70 @@ function DeliveryPage() {
       return false;
     }
   };
+
+  // BarcodeDetector APIを使用してQRコードをスキャンする関数
+  const scanQRCode = async () => {
+    if (!cameraPreviewRef.current || !canvasRef.current || !currentStream) {
+      console.error("QRスキャンに必要な要素が見つかりません");
+      return;
+    }
+
+    const video = cameraPreviewRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    
+    if (!context) {
+      console.error("Canvas context が取得できません");
+      return;
+    }
+
+    // BarcodeDetector APIのサポートを確認
+    if (!('BarcodeDetector' in window)) {
+      console.error("BarcodeDetector API がサポートされていません");
+      setError("このブラウザではQRコードスキャンがサポートされていません。Chrome または Edge をお使いください。");
+      return;
+    }
+
+    try {
+      // @ts-ignore - BarcodeDetectorはTypeScriptの型定義にない場合があります
+      const barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+      
+      // videoのフレームをcanvasに描画
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // BarcodeDetectorでQRコードを検出
+      const barcodes = await barcodeDetector.detect(canvas);
+      
+      if (barcodes.length > 0) {
+        console.log("QRコードを検出:", barcodes[0].rawValue);
+        handleQRScan(barcodes[0].rawValue);
+        setIsQRScanMode(false);
+        setShowCameraPreview(false);
+        setIsScanning(false);
+        
+        // ストリームを停止
+        if (currentStream) {
+          currentStream.getTracks().forEach(track => track.stop());
+          setCurrentStream(null);
+        }
+      }
+    } catch (error) {
+      console.error("QRコードスキャンエラー:", error);
+    }
+  };
+
+  // QRスキャンモードでの連続スキャン
+  useEffect(() => {
+    if (isQRScanMode && isScanning) {
+      const interval = setInterval(() => {
+        scanQRCode();
+      }, 500); // 500ms間隔でスキャン
+
+      return () => clearInterval(interval);
+    }
+  }, [isQRScanMode, isScanning]);
 
   // QRスキャナーを手動で起動する関数
   const startQRScanner = async () => {
@@ -1032,8 +1098,17 @@ function DeliveryPage() {
                           playsInline
                           muted
                         />
+                        {/* QRコード検出用のCanvas（非表示） */}
+                        <canvas
+                          ref={canvasRef}
+                          style={{ display: 'none' }}
+                        />
                         <Typography variant="body2" color="success.dark" sx={{ mt: 1, textAlign: "center" }}>
-                          {isQRScanMode ? "📱 QRコードをカメラに向けてください" : "✅ カメラが正常に動作しています"}
+                          {isQRScanMode ? (
+                            isScanning ? "📱 QRコードをスキャン中..." : "📱 QRコードをカメラに向けてください"
+                          ) : (
+                            "✅ カメラが正常に動作しています"
+                          )}
                         </Typography>
                         
                         {!isQRScanMode && (
@@ -1044,6 +1119,7 @@ function DeliveryPage() {
                               // QRスキャンモードに移行
                               console.log("QRスキャンモードに移行します");
                               setIsQRScanMode(true);
+                              setIsScanning(true);
                               
                               // カメラプレビューを継続表示してQRスキャンモードのUIを表示
                               // ストリームは停止せず、同じvideo要素を使用
@@ -1062,6 +1138,7 @@ function DeliveryPage() {
                               onClick={() => {
                                 console.log("QRスキャンモードを終了");
                                 setIsQRScanMode(false);
+                                setIsScanning(false);
                               }}
                             >
                               テストモードに戻る
@@ -1075,6 +1152,7 @@ function DeliveryPage() {
                                 if (qrData) {
                                   handleQRScan(qrData);
                                   setIsQRScanMode(false);
+                                  setIsScanning(false);
                                   setShowCameraPreview(false);
                                   if (currentStream) {
                                     currentStream.getTracks().forEach(track => track.stop());

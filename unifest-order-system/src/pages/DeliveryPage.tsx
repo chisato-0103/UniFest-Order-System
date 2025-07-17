@@ -4,7 +4,7 @@
 // 使用者: 受け渡し担当スタッフが使用
 
 import React, { useState, useEffect, useCallback } from "react"; // Reactの基本機能と状態管理
-import QrReader from "react-qr-reader";
+import { Html5QrcodeScanner } from "html5-qrcode";
 import {
   Box, // レイアウト用コンテナ
   Typography, // テキスト表示コンポーネント
@@ -42,6 +42,7 @@ function DeliveryPage() {
   const [orderNumberInput, setOrderNumberInput] = useState(""); // 手動入力された注文番号
   const [refreshing, setRefreshing] = useState(false); // データ更新中かどうか
   const [error, setError] = useState<string | null>(null); // エラーメッセージ
+  const [qrScanner, setQrScanner] = useState<Html5QrcodeScanner | null>(null); // QRスキャナーインスタンス
 
   // 📶 注文データ取得関数
   // 目的: 受け渡し待ちの注文をサーバーから取得して画面に表示
@@ -98,6 +99,41 @@ function DeliveryPage() {
       window.removeEventListener("unifest-data-updated", handleDataUpdate); // イベントリスナーを削除
     };
   }, [fetchOrders]); // fetchOrdersが変更された時に再実行
+
+  // QRスキャナーのセットアップ
+  useEffect(() => {
+    if (qrScannerOpen) {
+      const scanner = new Html5QrcodeScanner(
+        "qr-reader",
+        { 
+          fps: 10, 
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0
+        },
+        false
+      );
+      
+      scanner.render(
+        (decodedText) => {
+          handleQRScan(decodedText);
+          setQrScannerOpen(false);
+          scanner.clear();
+        },
+        (error) => {
+          console.error("QRスキャンエラー:", error);
+        }
+      );
+      
+      setQrScanner(scanner);
+    }
+    
+    return () => {
+      if (qrScanner) {
+        qrScanner.clear();
+        setQrScanner(null);
+      }
+    };
+  }, [qrScannerOpen]);
 
   // 🎁 受け渡し処理
   // 目的: お客さんに商品を渡して、注文を完了状態に変更する
@@ -773,22 +809,7 @@ function DeliveryPage() {
                     カメラでQRコードをスキャン
                   </Typography>
                   <Box sx={{ width: "100%", maxWidth: 350, minHeight: 200 }}>
-                    <QrReader
-                      delay={300}
-                      onScan={(data) => {
-                        if (data) {
-                          handleQRScan(data);
-                          setQrScannerOpen(false);
-                        }
-                      }}
-                      onError={(err) => {
-                        setError(
-                          "カメラの起動またはQRコードの読み取りに失敗しました"
-                        );
-                        console.error(err);
-                      }}
-                      style={{ width: "100%" }}
-                    />
+                    <div id="qr-reader" style={{ width: "100%" }}></div>
                   </Box>
                   <Typography
                     variant="body2"

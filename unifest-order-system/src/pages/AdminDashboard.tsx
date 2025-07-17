@@ -45,7 +45,7 @@ const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   // 🔐 認証関連の機能（ログアウト処理など）
   const { logout } = useAuth();
-  
+
   // 🗑️ 注文履歴リセット関連の状態管理
   const [resetDialogOpen, setResetDialogOpen] = useState(false); // リセットダイアログの開閉状態
   const [resetLoading, setResetLoading] = useState(false);       // リセット処理中かどうか
@@ -80,7 +80,7 @@ const AdminDashboard: React.FC = () => {
 
       // ✅ 成功時の処理
       setResetDialogOpen(false);  // ダイアログを閉じる
-      
+
       // 🔄 ページをリロードして最新状態を反映
       window.location.reload();
     } catch (error) {
@@ -408,19 +408,19 @@ const AdminDashboard: React.FC = () => {
             <DeleteSweep sx={{ mr: 1 }} />              {/* アイコンを右に1単位のマージンで表示 */}
             注文履歴をリセット
           </DialogTitle>
-          
+
           {/* 📝 ダイアログのメインコンテンツ */}
           <DialogContent>
             {/* ⚠️ 重要な警告メッセージ */}
             <Alert severity="warning" sx={{ mb: 2 }}>
               この操作は元に戻すことができません！
             </Alert>
-            
+
             {/* 📋 削除される内容の説明 */}
             <Typography variant="body1" sx={{ mb: 2 }}>
               以下のデータが完全に削除されます：
             </Typography>
-            
+
             {/* 📄 削除対象のリスト表示 */}
             <Box component="ul" sx={{ pl: 2 }}>          {/* ulタグとして表示、左に2単位のパディング */}
               <Typography component="li" variant="body2">
@@ -433,12 +433,12 @@ const AdminDashboard: React.FC = () => {
                 支払い履歴
               </Typography>
             </Box>
-            
+
             {/* 📌 保持されるデータの説明 */}
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
               ※ 商品・カテゴリ・トッピングデータは保持されます
             </Typography>
-            
+
             {/* 🚫 エラーメッセージの表示（エラーがある場合のみ） */}
             {resetError && (
               <Alert severity="error" sx={{ mt: 2 }}>
@@ -446,7 +446,7 @@ const AdminDashboard: React.FC = () => {
               </Alert>
             )}
           </DialogContent>
-          
+
           {/* 🎮 ダイアログのアクションボタン群 */}
           <DialogActions>
             {/* ❌ キャンセルボタン */}
@@ -456,7 +456,7 @@ const AdminDashboard: React.FC = () => {
             >
               キャンセル
             </Button>
-            
+
             {/* 🗑️ リセット実行ボタン */}
             <Button
               onClick={handleResetOrders}               // リセット処理を実行

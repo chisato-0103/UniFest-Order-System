@@ -138,15 +138,8 @@ function DeliveryPage() {
             // 再生エラーの場合でもストリームは有効なので継続
           });
           
-          // 5秒後に自動的にストリームを停止
-          setTimeout(() => {
-            console.log("ストリームを停止します");
-            stream.getTracks().forEach(track => track.stop());
-            setShowCameraPreview(false);
-            if (cameraPreviewRef.current) {
-              cameraPreviewRef.current.srcObject = null;
-            }
-          }, 5000);
+          // プレビューを表示したままにする（手動で停止するまで）
+          console.log("カメラプレビューを表示中（手動停止まで継続）");
         } else {
           console.error("video要素が見つかりません");
           // プレビューが表示できない場合はすぐに停止
@@ -172,6 +165,59 @@ function DeliveryPage() {
       }
       
       return false;
+    }
+  };
+
+  // QRスキャナーを手動で起動する関数
+  const startQRScanner = async () => {
+    if (!qrReaderRef.current) {
+      console.error("QRリーダー要素が見つかりません");
+      setError("QRスキャナーの初期化に失敗しました");
+      return;
+    }
+
+    try {
+      // 要素にユニークIDを設定
+      const uniqueId = `qr-reader-${Date.now()}`;
+      qrReaderRef.current.id = uniqueId;
+      
+      const scanner = new Html5QrcodeScanner(
+        uniqueId,
+        { 
+          fps: 10, 
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+          // iOS対応のためのカメラ設定
+          videoConstraints: {
+            width: { min: 640, ideal: 1280, max: 1920 },
+            height: { min: 480, ideal: 720, max: 1080 },
+            facingMode: "environment" // 背面カメラを優先
+          }
+        },
+        false
+      );
+      
+      scanner.render(
+        (decodedText) => {
+          handleQRScan(decodedText);
+          setQrScannerOpen(false);
+          scanner.clear();
+        },
+        (error) => {
+          console.error("QRスキャンエラー:", error);
+          const errorStr = String(error);
+          if (errorStr.includes('NotAllowedError') || errorStr.includes('Permission')) {
+            setError("カメラの使用を許可してください。ブラウザのアドレスバーのカメラアイコンをクリックするか、設定 {'>'}  Safari {'>'}  カメラでアクセスを許可してください。");
+          } else {
+            setError("カメラの起動に失敗しました。ブラウザを更新してもう一度お試しください。");
+          }
+        }
+      );
+      
+      setQrScanner(scanner);
+    } catch (error) {
+      console.error("QRスキャナー初期化エラー:", error);
+      setError("QRスキャナーの初期化に失敗しました");
     }
   };
 
@@ -983,8 +1029,33 @@ function DeliveryPage() {
                           muted
                         />
                         <Typography variant="body2" color="success.dark" sx={{ mt: 1, textAlign: "center" }}>
-                          ✅ カメラが正常に動作しています（5秒後に自動停止）
+                          ✅ カメラが正常に動作しています
                         </Typography>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => {
+                            // QRスキャナーを起動
+                            console.log("QRスキャナーを起動します");
+                            // 既存のプレビューを非表示にしてQRスキャンモードに移行
+                            setShowCameraPreview(false);
+                            if (cameraPreviewRef.current && cameraPreviewRef.current.srcObject) {
+                              const stream = cameraPreviewRef.current.srcObject as MediaStream;
+                              stream.getTracks().forEach(track => track.stop());
+                              cameraPreviewRef.current.srcObject = null;
+                            }
+                            // QRスキャナーを起動（既存のuseEffectロジックを利用）
+                            // 少し待ってからQRスキャンモードを開始
+                            setTimeout(() => {
+                              console.log("QRスキャンモードを開始");
+                              // html5-qrcodeのQRスキャナーを起動
+                              startQRScanner();
+                            }, 100);
+                          }}
+                          sx={{ mt: 2 }}
+                        >
+                          QRスキャンを開始
+                        </Button>
                       </Paper>
                     </Box>
                   )}

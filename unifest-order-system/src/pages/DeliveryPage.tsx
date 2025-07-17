@@ -45,6 +45,8 @@ function DeliveryPage() {
   const [qrScanner, setQrScanner] = useState<Html5QrcodeScanner | null>(null); // QRスキャナーインスタンス
   const qrReaderRef = useRef<HTMLDivElement>(null); // QRリーダー要素への参照
   const [cameraPermission, setCameraPermission] = useState<string>('checking'); // カメラ権限状態
+  const [showCameraPreview, setShowCameraPreview] = useState(false); // カメラプレビュー表示状態
+  const cameraPreviewRef = useRef<HTMLVideoElement>(null); // カメラプレビュー要素への参照
 
   // 📶 注文データ取得関数
   // 目的: 受け渡し待ちの注文をサーバーから取得して画面に表示
@@ -119,8 +121,24 @@ function DeliveryPage() {
       console.log("カメラ権限取得成功:", stream);
       setCameraPermission('granted');
       
-      // ストリームを停止
-      stream.getTracks().forEach(track => track.stop());
+      // カメラプレビューを表示
+      if (cameraPreviewRef.current) {
+        cameraPreviewRef.current.srcObject = stream;
+        cameraPreviewRef.current.play();
+        setShowCameraPreview(true);
+        
+        // 5秒後に自動的にストリームを停止
+        setTimeout(() => {
+          stream.getTracks().forEach(track => track.stop());
+          setShowCameraPreview(false);
+          if (cameraPreviewRef.current) {
+            cameraPreviewRef.current.srcObject = null;
+          }
+        }, 5000);
+      } else {
+        // プレビューが表示できない場合はすぐに停止
+        stream.getTracks().forEach(track => track.stop());
+      }
       
       return true;
     } catch (error) {
@@ -920,6 +938,29 @@ function DeliveryPage() {
                   >
                     カメラでQRコードをスキャン
                   </Typography>
+                  
+                  {/* カメラプレビュー */}
+                  {showCameraPreview && (
+                    <Box sx={{ width: "100%", maxWidth: 350, minHeight: 200, mb: 2 }}>
+                      <video
+                        ref={cameraPreviewRef}
+                        style={{
+                          width: "100%",
+                          height: "200px",
+                          objectFit: "cover",
+                          borderRadius: "8px",
+                          border: "2px solid #4caf50"
+                        }}
+                        autoPlay
+                        playsInline
+                        muted
+                      />
+                      <Typography variant="body2" color="success.main" sx={{ mt: 1, textAlign: "center" }}>
+                        ✅ カメラが正常に動作しています（5秒後に自動停止）
+                      </Typography>
+                    </Box>
+                  )}
+                  
                   <Box sx={{ width: "100%", maxWidth: 350, minHeight: 200 }}>
                     <div ref={qrReaderRef} style={{ width: "100%" }}></div>
                   </Box>

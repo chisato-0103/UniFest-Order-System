@@ -76,6 +76,12 @@ const QRScanner: React.FC<QRScannerProps> = ({
           aspectRatio: 1.0,
           experimentalFeatures: {
             useBarCodeDetectorIfSupported: true
+          },
+          // iOS Safari対応のための設定追加
+          videoConstraints: {
+            facingMode: "environment", // 背面カメラを優先
+            width: { min: 640, ideal: 1280, max: 1920 },
+            height: { min: 480, ideal: 720, max: 1080 }
           }
         };
 
@@ -101,8 +107,9 @@ const QRScanner: React.FC<QRScannerProps> = ({
     } catch (err) {
       console.error("QRスキャナー初期化エラー:", err);
       setHasPermission(false);
+      const errorMessage = err instanceof Error ? err.message : "不明なエラー";
       setError(
-        "カメラにアクセスできません。ブラウザの設定でカメラの許可を確認してください。"
+        `カメラにアクセスできません。${errorMessage}。ブラウザの設定でカメラの許可を確認してください。`
       );
       setIsScanning(false);
     }

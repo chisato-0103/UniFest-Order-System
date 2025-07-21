@@ -119,12 +119,20 @@ app.use(
 );
 
 // 🚦 アクセス制限（一度にたくさんアクセスされるのを防ぐ）
+// 開発・テスト環境では制限を大幅に緩和
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15分の間に
-  max: 100, // 最大100回までしかアクセスできない
+  windowMs: 5 * 60 * 1000, // 5分の間に
+  max: 1000, // 最大1000回までアクセス可能（大幅に緩和）
   message: {
     error: "Too many requests from this IP, please try again later.", // 制限メッセージ
   },
+  // 開発環境では制限をさらに緩和
+  skip: (req) => {
+    // 開発環境（localhost）からのアクセスは制限しない
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const isLocalhost = req.ip === '127.0.0.1' || req.ip === '::1' || req.ip?.includes('localhost');
+    return isDevelopment || isLocalhost;
+  }
 });
 app.use("/api/", limiter);
 
